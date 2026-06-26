@@ -1,0 +1,114 @@
+# Sensation Ride Saddles — TODO
+
+- [x] Custom saddle order form with all customer fields
+- [x] All saddle customisation options from specification file
+- [x] Girth accessories section
+- [x] Breastplate accessories section
+- [x] Live upgrade pricing summary panel
+- [x] $2,500 base saddle price in order summary
+- [x] Brass hardware +$40 surcharge
+- [x] Order submission with printable confirmation modal
+- [x] Auto-generated submission number and order date
+- [x] Upgrade to full-stack (database, backend, user auth)
+- [x] Database schema for orders table
+- [x] Backend API route to save orders to database
+- [x] Email confirmation to customer on order submission
+- [x] Email notification to team on new order
+- [x] Password-protected admin dashboard
+- [x] Admin: view all orders in a table
+- [x] Admin: search orders by customer name or date
+- [x] Admin: export orders to CSV
+- [x] Mobile floating collapsible Order Summary bar at bottom of screen
+- [x] Wire backend routers with order submit + admin procedures
+- [x] Connect order form to backend API
+- [x] Admin dashboard page (orders table, search, status, CSV export)
+- [x] Admin route with login guard in App.tsx
+- [x] Seat Cheyenne Roll Bling Upgrade only visible when Cheyenne Roll is selected for Seat Binding Style
+- [ ] Tooling Amount only visible when a Tooling Style is selected (not "no tooling")
+- [x] Add conditional text box asking for previous model when user answers "Yes" to "Have they ordered a Sensation Ride before?"
+- [x] Add "Quote or Purchase" radio selection after the "Have they owned a Sensation Ride before?" question
+- [x] Add bold section headers A–E (Customer Info, Saddle Customisation, Girth, Breastplate, Special Notes)
+- [x] Add 8 Cantle Detail design options to B9
+- [x] Rear Rigging Billets: replace colour options with Yes (match base leather) / No Thanks only
+- [x] Rear Rigging Assembly: add description, replace colour options with Yes+size-selector (20-40" + Custom) / No Thanks
+- [x] B23: when Leather Tubes selected in B22, auto-fill tube colour from B3 base colour and remove B24 from form
+- [x] Model selector at top of Saddle Customisation (Chinook + 9 placeholder models)
+- [x] Dynamic customisation sections that change based on selected model
+- [x] Dynamic base price per model in Order Summary
+- [x] Add Classic Dressage Trail, Formal Dressage Trail, English A/P Trail models
+- [x] Add Base Leather Special Request text input after Saddle Base Colour, hidden when a colour is selected
+- [x] Add saddle diagram image to Saddle Base Colour section
+- [x] Add toggle button "Base Leather Special Request" inside Saddle Base Colour section to show/hide the text field
+- [x] Move Base Leather Special Request button to appear after the Tan option in Saddle Base Colour
+- [x] Add Swell Type section after Thread Colour with 3 options: Western (included), Western Tall +$80, Swommel +$80
+- [x] Add swell type diagram image to Swell Type section
+- [x] Add Swell Detail section after Swell Type with 9 options and Custom Design contact note
+- [x] Add Cantle & Swell Designs reference image to Swell Detail section
+- [x] Add Cantle Height section after Swell Detail: Western (4") included, Western Tall (4.5") +$80
+- [x] Move Cantle Detail under Cantle Height and Cantle Patch under Cantle Detail
+- [x] B25 Chinook selected → show Chinook Fender Inlay question after B27 with 35 colour/finish options
+- [x] After B45, show "Chinook Seat Pattern" radio (Chinook Pattern Incl / Going with a different seat / Swirl Pattern Upgrade) when Chinook model is selected
+- [x] Add tooltip to "Swirl Pattern Upgrade" option in Chinook Seat Pattern explaining pattern is not visible on shearling seat
+- [x] Hide B46 and B47 when B45 Seat Binding Style is "Black Wool Shearling (Fuzzy)"
+- [x] Hide Seat Texture and Seat Colour Overlay Upgrade when "Black Wool Shearling (Fuzzy)" is selected in Seat Colour
+- [x] B7 Swell Detail: add #1–#6 numbers to Flourish, Flourish (Premium), Simple Flourish, Flowers, Single Heart, Double Heart
+- [x] B7 Swell Detail: reorder to #1 Flourish, #2 Flowers, #3 Flourish (Premium), #4 Single Heart, #5 Simple Flourish, #6 Double Hearts
+- [x] B9 Cantle Detail: add #1–#6 numbers and reorder to #1 Flourish, #2 Flowers, #3 Flourish (Premium), #4 Single Heart, #5 Simple Flourish, #6 Double Hearts
+- [x] B9 Cantle Detail images: click to expand in a lightbox overlay (dismiss on click outside or Escape)
+- [x] B9 Cantle Detail: show Aztec Designs photo when "Aztec Designs" option is selected
+- [x] B9 Cantle Detail: show Flourish Premium photo when "#3 Flourish (Premium)" is selected
+- [x] Move B11 (Hardware) to appear immediately after B3 (Saddle Base Colour)
+- [x] Move B40 (Seat Colour / seatColour) to appear immediately after B6 (Thread Colour)
+- [x] Move B43 (External Panels / externalPanels) to appear immediately after B6 (Thread Colour)
+- [x] Move B21 (Edge Binding Colour / edgeBindingColour) to appear immediately after B7 (External Panels)
+- [x] Move B23 (Ring Coverings Colour / ringCoveringsColour) to appear immediately after B8 (Edge Binding Colour)
+- [x] Move B23 (Swell & Cantle Beading / swellCantleBeading) to appear immediately after B9 (Ring Coverings Colour)
+- [x] Move B44 (Seat Style / seatStyle) to appear immediately after B10 (Swell & Cantle Beading)
+- [x] Move B47 (Additional Poron / additionalPoron) to appear immediately after B11 (Seat Style)
+- [x] Add Review & Edit Order button on confirmation screen (returns to pre-filled form)
+- [x] Fix Print/PDF generating 23 pages instead of ~2 (full form bleeds into print layout)
+- [x] Fix form not clearing after Submit Order / modal close
+- [x] Add loading animation while PDF is being generated (Print/Save PDF button)
+- [x] Add Chinook saddle image to B1 model selector (show when Chinook is selected)
+- [x] Add external panels image to B06 section in saddleData.ts
+- [x] Add Chinook Pattern image to B14 (show when Chinook Pattern is selected)
+- [x] Add Swirl Pattern Upgrade image to B14 (show when Swirl Pattern Upgrade is selected)
+- [x] Add seat jockey area diagram image to B17 Seat Jockey Color (HW LEATHER) section
+- [x] Add concho placement diagram image with caption "Concho Placement" to B18 section
+- [x] Add standard seat binding photo to "Standard Seat Binding (Included)" option in B20
+- [x] Add Cheyenne Roll binding photo to "Cheyenne Roll" option in B20
+- [x] Add Cheyenne Roll with bling photo as section image on left side of B21
+- [x] Update B21 Cheyenne Roll Bling options with correct prices
+- [x] Add rear rigging billet sample photo to B29 section
+- [x] Add extra swell rings/pommel photo to B31 section
+- [x] Add decorative stripe sample photo to B43 section
+- [x] Add stirrup adapter photo to B54 section (left side)
+- [x] Add description "Adapt Any Stirrups to 1\" Leathers" to B54
+- [x] Add B16 Western Sport Seat Jockey Detail Inlay Colour/Texture Upgrade field after B15 with Smooth/Roughout options and 23 LW leather colours
+- [x] Upload WSSportSeatJockeyInlayColourTextureUpgrade.png to CDN and attach to B16 field
+- [x] Map Western Sport model to full chinookSections customisation form (was placeholder)
+- [x] Auto-set seatStyle = "Western Sport" when Western Sport model is selected or loaded from localStorage
+- [x] Hide B10 Seat Style selector when model is Western Sport (seat style is fixed)
+- [x] Fix form printing not working
+- [x] Print reference page: add model selector so user can filter sections by model (starting with Chinook)
+- [x] Add WSseatarea.png as reference image for B13 Seat Colour/Texture field
+- [x] B13: rename "Seat Colour/Texture" to "Seat Colour" (remove word Texture)
+- [x] B13: remove word "Texture" from any remaining option labels that say "Colour Texture"
+- [x] B14: add Western Sport Stitch Pattern / Western Sport Swoosh Overlay field
+- [x] B15: add Western Sport Smooth Overlay Options field
+- [x] B17: update Seat Jockey Colour to also apply to Western Sport (Match base or HW Options)
+- [x] B39: update Chinook Fender Inlay list to 24 options at $45 each
+- [x] B48: change description to "½" Leather Saddle Strings (4 each)"
+- [x] E01: replace Ecogold Saddle Pad list with 8 new Chinook options at $425 each
+- [x] F01: add "$30 Value" to Free Saddle Cover description
+- [x] B48: update title to "1/2\" Leather Saddle Strings (4 Each)"
+- [x] B15/B16: hide Western Sport Stitch Pattern and Smooth Overlay fields when B10 is Chinook or Hybrid (only show for Western Sport)
+- [x] Hybrid Trail Seat Colour: only show when B10 = Hybrid
+- [x] Audit and fix B12/B13 (Seat Leather Finish / Seat Colour) interaction logic
+- [x] B17/B18: only show when B10 = Western Sport (hide for Chinook and Hybrid)
+- [x] B17 Western Sport Seat Jockey Colour: add "Match Base Leather" as first option
+- [x] B23 (Seat Jockey Colour HW Leather): show for both Chinook and Western Sport models (already working)
+- [x] Add "Saddle Flap Length" field after Thread Colour in Section B, visible only for Hybrid seat style
+- [ ] A02: convert Dealer Name field to dropdown with 8 specific dealer options
+- [x] A02 conditional required: Customer Name, Street Address, City/Town, Province/State become required only when A02 = "No Dealer"; optional when a named dealer is selected
+- [x] B18 conditional required: Western Sport Seat Jockey Colour/Texture only required when seatStyle = Western Sport; validation skips it for other seat styles
