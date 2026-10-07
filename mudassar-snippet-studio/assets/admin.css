@@ -1,0 +1,75 @@
+/* Mudassar Snippet Studio – Apple-style flat admin UI. Borders only, no shadows. */
+.msst{--blue:#0071e3;--ink:#1d1d1f;--mut:#6e6e73;--line:#d2d2d7;--fill:#f5f5f7;--ok:#248a3d;--warn:#b25000;--err:#d70015;max-width:1200px;margin:20px 20px 0 2px;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.47}
+.msst *{box-sizing:border-box}
+.msst a{color:var(--blue);text-decoration:none}
+.msst-hero{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.msst-logo{width:48px;height:48px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font:600 18px ui-monospace,SFMono-Regular,Menlo,monospace;flex:none}
+.msst-logo-center{margin:0 auto 10px}
+.msst-title{margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em}
+.msst-sub{margin:2px 0 0;color:var(--mut)}
+.msst-by{margin-left:auto;display:flex;align-items:center;gap:14px;color:var(--mut);font-size:13px}
+.msst-by strong{color:var(--ink)}
+.msst .msst-btn{display:inline-block;border-radius:980px;padding:6px 16px;border:1px solid var(--blue);background:var(--blue);color:#fff;font-size:13px;font-weight:500;cursor:pointer;line-height:1.5}
+.msst .msst-btn:hover{opacity:.88;color:#fff}
+.msst .msst-btn-outline{background:#fff;color:var(--blue);border-color:var(--line)}
+.msst .msst-btn-outline:hover{color:var(--blue);border-color:var(--blue)}
+.msst-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:20px;background:#e8e8ed;border:1px solid var(--line);padding:3px;border-radius:12px}
+.msst-tabs a{padding:6px 12px;color:var(--ink);border-radius:9px;font-weight:500;font-size:13px;border:1px solid transparent}
+.msst-tabs a.is-active{background:#fff;border-color:var(--line)}
+.msst-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+.msst-card h2{margin:0 0 4px;padding:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.msst-desc{color:var(--mut);margin:0 0 14px}
+.msst-grid{display:grid;gap:16px}
+.msst-grid-main{grid-template-columns:2fr 1fr;align-items:start}
+.msst-grid-2{grid-template-columns:1fr 1fr}
+.msst-grid-4{grid-template-columns:repeat(4,1fr);margin-bottom:16px}
+.msst-grid-4 .msst-card{margin-bottom:0}
+@media(max-width:900px){.msst-grid-main,.msst-grid-2,.msst-grid-4{grid-template-columns:1fr}}
+.msst-stat{text-align:center}.msst-stat b{display:block;font-size:30px;font-weight:600;letter-spacing:-.02em}.msst-stat span{color:var(--mut)}
+.msst-ok{color:var(--ok)}.msst-warn{color:var(--warn)}.msst-err{color:var(--err)}
+.msst-center{text-align:center}
+.msst .msst-input{width:100%;max-width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:14px;min-height:34px;color:var(--ink);box-shadow:none}
+.msst .msst-input:focus,.msst .msst-code:focus{border-color:var(--blue);outline:0;box-shadow:none}
+.msst-w-240{width:240px}.msst-w-140{width:140px}.msst-w-30{width:30px}
+.msst-label{display:block;font-weight:600;margin:0 0 4px;font-size:13px}
+.msst textarea.msst-code,.msst .msst-code{width:100%;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--fill);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:none}
+.msst .CodeMirror{border:1px solid var(--line);border-radius:10px;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;height:auto;min-height:240px;background:var(--fill)}
+.msst-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.msst-spacer{flex:1}
+.msst-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.msst-card .msst-table{border-radius:10px;margin-bottom:0}
+.msst-table th,.msst-table td{text-align:left;padding:11px 14px;border-bottom:1px solid #e8e8ed;vertical-align:top}
+.msst-table th{background:var(--fill);font-weight:600;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.msst-table tr:last-child td{border-bottom:0}
+.msst-right{text-align:right!important}
+.msst-empty{text-align:center!important;color:var(--mut);padding:30px!important}
+.msst-strong{font-weight:600}
+.msst-row-actions{font-size:12px;color:var(--mut);margin-top:2px}
+.msst-pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:11px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--mut)}
+.msst-type-php{color:#5e5ce6;border-color:#5e5ce6}.msst-type-js{color:#b25000;border-color:#b25000}.msst-type-css{color:#0071e3;border-color:#0071e3}.msst-type-html{color:#d70015;border-color:#d70015}
+.msst-pill-err{color:var(--err);border-color:var(--err)}.msst-pill-warn{color:var(--warn);border-color:var(--warn)}
+.msst-toggle{display:inline-block;width:38px;height:22px;border-radius:99px;background:#e8e8ed;border:1px solid var(--line);position:relative}
+.msst-toggle:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;border:1px solid var(--line)}
+.msst-toggle.is-on{background:#34c759;border-color:#34c759}.msst-toggle.is-on:after{left:18px;border-color:#fff}
+.msst-types{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.msst-type input{position:absolute;opacity:0;pointer-events:none}
+.msst-type span{display:inline-block;padding:5px 14px;border-radius:980px;border:1px solid var(--line);color:var(--blue);background:#fff;cursor:pointer;font-size:13px}
+.msst-type input:checked+span{background:var(--blue);border-color:var(--blue);color:#fff}
+.msst-type input:disabled+span{opacity:.4;cursor:not-allowed}
+.msst-type input:focus-visible+span{outline:2px solid var(--blue);outline-offset:2px}
+.msst-note{border:1px solid var(--line);background:var(--fill);padding:10px 14px;border-radius:10px;margin:0 0 10px}
+.msst-note-warning{border-color:#ffd9a8;background:#fffaf2}.msst-note-error{border-color:#ffb3ba;background:#fff5f6}.msst-note-success{border-color:#b7e4c4;background:#f3fbf6}
+.msst-rule{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.msst-rule .msst-input{flex:1;min-width:120px}
+.msst-group{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:var(--fill)}
+.msst-or{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;margin:0 0 8px}
+.msst-list{margin:0;padding-left:18px;color:var(--ink)}
+.msst-hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.msst-foot{margin-top:20px;padding:14px 20px;background:#fff;border:1px solid var(--line);border-radius:14px;display:flex;align-items:center;gap:12px;color:var(--mut);font-size:13px;flex-wrap:wrap}
+.msst-foot strong{color:var(--ink)}.msst-foot .msst-right{margin-left:auto}
+.msst-diff{white-space:pre-wrap;overflow:auto;max-height:420px}
+.msst-diff-add{background:#e9f8ee;color:#1a6b30}.msst-diff-del{background:#fdecee;color:#a1121f}
+.msst code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--fill);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:12px;word-break:break-all}
+.msst-pager{margin:12px 0}
+.msst-pager .page-numbers{padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-right:4px}
+.msst-pager .current{background:var(--blue);color:#fff;border-color:var(--blue)}
