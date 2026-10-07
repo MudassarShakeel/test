@@ -47,13 +47,10 @@
 
 	var form = document.getElementById( 'msst-edit-form' );
 	var textarea = document.getElementById( 'msst_code' );
-	var titleInput = document.getElementById( 'msst_title' );
 	var locationSelect = document.getElementById( 'msst_location' );
 	var paramWrap = document.getElementById( 'msst-param-wrap' );
-	var paramInput = document.getElementById( 'msst_param' );
 	var exampleSelect = document.getElementById( 'msst-example' );
 	var rulesWrap = document.getElementById( 'msst-rules-wrap' );
-	var summary = document.getElementById( 'msst-summary' );
 	var editor = null;
 
 	function currentType() {
@@ -72,48 +69,6 @@
 			editor.codemirror.setValue( value );
 		} else if ( textarea ) {
 			textarea.value = value;
-		}
-	}
-
-	/* ---- live sentence + checklist ---- */
-	function bold( parent, text ) {
-		parent.appendChild( el( 'b', {}, text ) );
-	}
-	function refresh() {
-		if ( ! summary ) {
-			return;
-		}
-		var type = currentType();
-		var kindName = ( data.kinds && data.kinds[ type ] ) || type;
-		var loc = locationSelect ? locationSelect.value : '';
-		var phrase = ( data.phrases && data.phrases[ loc ] ) || '';
-		if ( /_paragraph$/.test( loc ) && paramInput ) {
-			phrase += ' ' + paramInput.value;
-		}
-		summary.textContent = '';
-		summary.appendChild( document.createTextNode( ( i18n.itWill || 'This' ) + ' ' ) );
-		bold( summary, kindName );
-		summary.appendChild( document.createTextNode( ' ' + ( type === 'php' ? i18n.willRun : i18n.willAppear ) + ' ' ) );
-		bold( summary, phrase );
-		summary.appendChild( document.createTextNode( ', ' ) );
-		bold( summary, pagesChoice() === 'some' ? i18n.onSome : i18n.onEvery );
-		summary.appendChild( document.createTextNode( '. ' + ( i18n.itIs || 'It is currently' ) + ' ' ) );
-		var isOn = form && '1' === form.getAttribute( 'data-active' );
-		bold( summary, isOn ? i18n.on : i18n.off );
-		summary.appendChild( document.createTextNode( '.' ) );
-
-		var checks = {
-			name: titleInput && titleInput.value.trim() !== '',
-			code: getCode().trim() !== '',
-			where: !! loc,
-			on: !! isOn
-		};
-		document.querySelectorAll( '#msst-checklist [data-check]' ).forEach( function ( row ) {
-			row.classList.toggle( 'msst-chk-off', ! checks[ row.getAttribute( 'data-check' ) ] );
-		} );
-		var hint = document.getElementById( 'msst-loc-hint' );
-		if ( hint && phrase ) {
-			hint.textContent = phrase.charAt( 0 ).toUpperCase() + phrase.slice( 1 ) + '.';
 		}
 	}
 
@@ -154,8 +109,7 @@
 	if ( form && textarea && ! textarea.readOnly && data.editor && window.wp && window.wp.codeEditor ) {
 		editor = window.wp.codeEditor.initialize( textarea, data.editor );
 		editor.codemirror.setOption( 'mode', data.modes[ currentType() ] );
-		editor.codemirror.on( 'change', refresh );
-	}
+			}
 	document.querySelectorAll( 'input[name="msst_type"]' ).forEach( function ( input ) {
 		input.addEventListener( 'change', function () {
 			syncLocations( false );
@@ -163,24 +117,13 @@
 			if ( editor ) {
 				editor.codemirror.setOption( 'mode', data.modes[ currentType() ] );
 			}
-			refresh();
 		} );
 	} );
 	if ( locationSelect ) {
 		locationSelect.addEventListener( 'change', function () {
 			syncParam();
-			refresh();
 		} );
 		syncParam();
-	}
-	if ( paramInput ) {
-		paramInput.addEventListener( 'input', refresh );
-	}
-	if ( titleInput ) {
-		titleInput.addEventListener( 'input', refresh );
-	}
-	if ( textarea ) {
-		textarea.addEventListener( 'input', refresh );
 	}
 	if ( exampleSelect ) {
 		exampleSelect.addEventListener( 'change', function () {
@@ -193,7 +136,6 @@
 				}
 			}
 			exampleSelect.selectedIndex = 0;
-			refresh();
 		} );
 		fillExamples();
 	}
@@ -317,10 +259,7 @@
 					holder.insertBefore( buildGroup( 0, [ { type: 'page_type', op: 'is', value: 'front_page' } ] ), addGroup );
 					reindex();
 				}
-				refresh();
 			} );
 		} );
 	}
-
-	refresh();
 }() );

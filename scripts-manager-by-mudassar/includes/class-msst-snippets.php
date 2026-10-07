@@ -76,28 +76,6 @@ class MSST_Snippets {
 	}
 
 	/**
-	 * Short phrases used in the live "what will happen" sentence.
-	 *
-	 * @return array location slug => phrase
-	 */
-	public static function phrases() {
-		return array(
-			'everywhere'       => __( 'in the background of your whole site', 'scripts-manager-by-mudassar' ),
-			'admin'            => __( 'in the background of the dashboard only', 'scripts-manager-by-mudassar' ),
-			'frontend'         => __( 'in the background of the public site only', 'scripts-manager-by-mudassar' ),
-			'header'           => __( 'at the top of the page (header)', 'scripts-manager-by-mudassar' ),
-			'body'             => __( 'right after the page opens', 'scripts-manager-by-mudassar' ),
-			'footer'           => __( 'at the bottom of the page (footer)', 'scripts-manager-by-mudassar' ),
-			'before_content'   => __( 'above the post text', 'scripts-manager-by-mudassar' ),
-			'after_content'    => __( 'below the post text', 'scripts-manager-by-mudassar' ),
-			'before_paragraph' => __( 'before the chosen paragraph', 'scripts-manager-by-mudassar' ),
-			'after_paragraph'  => __( 'after the chosen paragraph', 'scripts-manager-by-mudassar' ),
-			'admin_footer'     => __( 'at the bottom of the dashboard', 'scripts-manager-by-mudassar' ),
-			'shortcode'        => __( 'wherever you place its shortcode', 'scripts-manager-by-mudassar' ),
-		);
-	}
-
-	/**
 	 * Register the private post type.
 	 */
 	public static function register_post_type() {

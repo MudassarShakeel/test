@@ -96,17 +96,6 @@ ok( 0 === strpos( MSST_Brand::url( 'website', 'x' ), 'https://mudassar.work/?' )
 $link = MSST_Brand::link( 'website', 'footer', 'mudassar.work' );
 ok( false !== strpos( $link, 'rel="noopener noreferrer"' ) && false !== strpos( $link, 'target="_blank"' ), 'external link has noopener' );
 
-echo "Library generator\n";
-$g = MSST_Library::generate( 'cpt', "Port'folio", 'portfolio' );
-ok( $g && MSST_Snippets::lint_php( $g['code'] )['ok'], 'generated CPT code is valid PHP (quote in name escaped)' );
-ok( null === MSST_Library::generate( 'cpt', 'X', str_repeat( 'a', 30 ) ), 'overlong slug rejected' );
-ok( null === MSST_Library::generate( 'evil', 'X', 'x' ), 'unknown generator rejected' );
-foreach ( MSST_Library::items() as $key => $item ) {
-	if ( 'php' === $item['type'] ) {
-		ok( MSST_Snippets::lint_php( $item['code'] )['ok'], "library '$key' is valid PHP" );
-	}
-}
-
 echo "Error log lines\n";
 $line = MSST_Logger::format_line( 0, 'error', 7, "Evil\n[2099-01-01 00:00:00 UTC] ERROR snippet#1 \"fake\"", "msg\r\nforged: line\x00", 'path=/x user=1' );
 ok( 1 === substr_count( $line, "\n" ) && "\n" === substr( $line, -1 ), 'newlines in titles/messages cannot forge extra log lines' );

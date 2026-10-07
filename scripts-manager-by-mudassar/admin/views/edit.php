@@ -36,7 +36,6 @@ $msst_fmt       = static function ( $ts ) {
 	return $ts ? wp_date( 'Y-m-d\TH:i', $ts ) : '';
 };
 
-MSST_Admin::intro( $msst_new ? __( 'Add a snippet in 4 easy steps', 'scripts-manager-by-mudassar' ) : __( 'Edit your snippet', 'scripts-manager-by-mudassar' ), __( 'Go from top to bottom. The sentence on the right always tells you, in plain words, what will happen.', 'scripts-manager-by-mudassar' ) );
 ?>
 <?php if ( ! $msst_new && ! MSST_Snippets::is_intact( $msst_snippet ) ) : ?>
 	<div class="msst-note msst-note-error"><?php esc_html_e( 'Safety warning: this snippet was changed outside the plugin, so it is blocked. Read the code below. If it looks right, click Save to approve it again.', 'scripts-manager-by-mudassar' ); ?></div>
@@ -48,20 +47,18 @@ MSST_Admin::intro( $msst_new ? __( 'Add a snippet in 4 easy steps', 'scripts-man
 	<div class="msst-note msst-note-warning"><?php esc_html_e( 'PHP is locked on this site for your account. You can still use HTML, CSS, JavaScript and Text.', 'scripts-manager-by-mudassar' ); ?></div>
 <?php endif; ?>
 
-<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="msst-grid msst-grid-main" id="msst-edit-form" data-active="<?php echo $msst_snippet['active'] ? '1' : '0'; ?>">
+<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="msst-edit" id="msst-edit-form" data-active="<?php echo $msst_snippet['active'] ? '1' : '0'; ?>">
 	<input type="hidden" name="action" value="msst_save_snippet">
 	<input type="hidden" name="msst_id" value="<?php echo esc_attr( (string) $msst_snippet['id'] ); ?>">
 	<?php wp_nonce_field( 'msst_save_snippet' ); ?>
 	<div>
 		<div class="msst-card">
 			<h2><span class="msst-step">1</span> <?php esc_html_e( 'Give it a name', 'scripts-manager-by-mudassar' ); ?></h2>
-			<p class="msst-desc"><?php esc_html_e( 'Only you will see this. Example: “Facebook Pixel”.', 'scripts-manager-by-mudassar' ); ?></p>
 			<input class="msst-input" type="text" id="msst_title" name="msst_title" value="<?php echo esc_attr( $msst_snippet['title'] ); ?>" maxlength="200" required placeholder="<?php esc_attr_e( 'My new snippet', 'scripts-manager-by-mudassar' ); ?>">
 		</div>
 
 		<div class="msst-card">
 			<h2><span class="msst-step">2</span> <?php esc_html_e( 'What kind of code is it?', 'scripts-manager-by-mudassar' ); ?></h2>
-			<p class="msst-desc"><?php echo wp_kses( __( 'Not sure? Choose <b>HTML</b>. It is the safest.', 'scripts-manager-by-mudassar' ), array( 'b' => array() ) ); ?></p>
 			<div class="msst-kinds" role="radiogroup" aria-label="<?php esc_attr_e( 'Kind of code', 'scripts-manager-by-mudassar' ); ?>">
 				<?php foreach ( $msst_kinds as $msst_slug => $msst_kind ) : ?>
 					<label class="msst-kind">
@@ -93,7 +90,6 @@ MSST_Admin::intro( $msst_new ? __( 'Add a snippet in 4 easy steps', 'scripts-man
 			<?php elseif ( $msst_lint ) : ?>
 				<div class="msst-note msst-note-error"><strong><?php esc_html_e( 'There is a mistake in your PHP:', 'scripts-manager-by-mudassar' ); ?></strong> <?php echo esc_html( $msst_lint['error'] ); ?></div>
 			<?php else : ?>
-				<p class="msst-hint"><?php esc_html_e( 'PHP code is checked for mistakes when you save. Do not type <?php at the start.', 'scripts-manager-by-mudassar' ); ?></p>
 			<?php endif; ?>
 		</div>
 
@@ -106,7 +102,6 @@ MSST_Admin::intro( $msst_new ? __( 'Add a snippet in 4 easy steps', 'scripts-man
 						<option value="<?php echo esc_attr( $msst_slug ); ?>" <?php selected( $msst_snippet['location'], $msst_slug ); ?>><?php echo esc_html( $msst_label ); ?></option>
 					<?php endforeach; ?>
 				</select>
-				<span class="msst-hint" id="msst-loc-hint"></span>
 			</p>
 			<p id="msst-param-wrap" hidden>
 				<label class="msst-label" for="msst_param"><?php esc_html_e( 'Which paragraph number?', 'scripts-manager-by-mudassar' ); ?></label>
@@ -118,14 +113,12 @@ MSST_Admin::intro( $msst_new ? __( 'Add a snippet in 4 easy steps', 'scripts-man
 				<label><input type="radio" name="msst_pages" value="some" <?php checked( $msst_some ); ?>><span><?php esc_html_e( 'Only some pages', 'scripts-manager-by-mudassar' ); ?></span></label>
 			</div>
 			<div id="msst-rules-wrap" <?php echo $msst_some ? '' : 'hidden'; ?>>
-				<p class="msst-hint"><?php esc_html_e( 'Show it when ANY group matches. A group matches when ALL its rules are true. Example: “Page type is Home page”.', 'scripts-manager-by-mudassar' ); ?></p>
 				<div id="msst-rules"></div>
 			</div>
 		</div>
 
 		<div class="msst-card">
 			<h2><span class="msst-step">4</span> <?php esc_html_e( 'Turn it on', 'scripts-manager-by-mudassar' ); ?></h2>
-			<p class="msst-desc"><?php esc_html_e( 'You can save it OFF first and turn it on later.', 'scripts-manager-by-mudassar' ); ?></p>
 			<?php if ( ! $msst_locked ) : ?>
 				<div class="msst-actions">
 					<?php if ( $msst_snippet['active'] ) : ?>
@@ -156,31 +149,10 @@ MSST_Admin::intro( $msst_new ? __( 'Add a snippet in 4 easy steps', 'scripts-man
 						<input class="msst-input" type="datetime-local" id="msst_end" name="msst_end" value="<?php echo esc_attr( $msst_fmt( $msst_snippet['end'] ) ); ?>">
 					</p>
 				</div>
-				<p class="msst-hint"><?php esc_html_e( 'Dates use your site time. Leave empty to show it all the time.', 'scripts-manager-by-mudassar' ); ?></p>
 				<?php if ( ! $msst_new ) : ?>
-					<p><?php esc_html_e( 'Shortcode:', 'scripts-manager-by-mudassar' ); ?> <code class="msst-copy">[msst_snippet id="<?php echo esc_html( (string) $msst_snippet['id'] ); ?>"]</code> <span class="msst-hint"><?php esc_html_e( '(works when “Where on the page?” is “Only where I put the shortcode”)', 'scripts-manager-by-mudassar' ); ?></span></p>
+					<p><?php esc_html_e( 'Shortcode:', 'scripts-manager-by-mudassar' ); ?> <code class="msst-copy">[msst_snippet id="<?php echo esc_html( (string) $msst_snippet['id'] ); ?>"]</code></p>
 				<?php endif; ?>
 			</details>
-		</div>
-	</div>
-	<div class="msst-side">
-		<div class="msst-card msst-card-blue">
-			<h2><?php esc_html_e( 'What will happen', 'scripts-manager-by-mudassar' ); ?></h2>
-			<div class="msst-sentence" id="msst-summary" aria-live="polite"></div>
-		</div>
-		<div class="msst-card">
-			<h2><?php esc_html_e( 'Checklist', 'scripts-manager-by-mudassar' ); ?></h2>
-			<div id="msst-checklist">
-				<div class="msst-chk" data-check="name"><i>✓</i> <?php esc_html_e( 'Name added', 'scripts-manager-by-mudassar' ); ?></div>
-				<div class="msst-chk" data-check="code"><i>✓</i> <?php esc_html_e( 'Code added', 'scripts-manager-by-mudassar' ); ?></div>
-				<div class="msst-chk" data-check="where"><i>✓</i> <?php esc_html_e( 'Location chosen', 'scripts-manager-by-mudassar' ); ?></div>
-				<div class="msst-chk" data-check="on"><i>✓</i> <?php esc_html_e( 'Turned ON', 'scripts-manager-by-mudassar' ); ?></div>
-			</div>
-		</div>
-		<div class="msst-card">
-			<h2><?php esc_html_e( 'Need help?', 'scripts-manager-by-mudassar' ); ?></h2>
-			<p class="msst-desc"><?php esc_html_e( 'We answer quickly.', 'scripts-manager-by-mudassar' ); ?></p>
-			<?php echo MSST_Brand::link( 'contact', 'add-snippet-need-help', __( 'Contact Us', 'scripts-manager-by-mudassar' ), 'msst-btn msst-btn-outline' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
 	</div>
 </form>

@@ -130,3 +130,5 @@
 .msst-pager .page-numbers{padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-right:4px}
 .msst-pager .current{background:var(--blue);color:#fff;border-color:var(--blue)}
 @media (prefers-reduced-motion:no-preference){.msst .msst-btn,.msst-toggle,.msst-toggle:after{transition:all .12s ease}}
+.msst-edit{max-width:920px}
+.msst-grid-support{display:grid;gap:16px;grid-template-columns:1fr;max-width:640px}

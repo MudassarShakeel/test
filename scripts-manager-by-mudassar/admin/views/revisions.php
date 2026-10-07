@@ -11,7 +11,6 @@ $msst_all     = MSST_Snippets::query( array( 'per_page' => 200 ) );
 $msst_current = MSST_Admin::current_snippet();
 $msst_compare = isset( $_GET['compare'] ) ? absint( $_GET['compare'] ) : -1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only view.
 
-MSST_Admin::intro( __( 'History & schedule', 'scripts-manager-by-mudassar' ), __( 'Every time you change code, the old version is saved. You can go back any time.', 'scripts-manager-by-mudassar' ) );
 ?>
 <form method="get" class="msst-card msst-inline-card">
 	<input type="hidden" name="page" value="<?php echo esc_attr( MSST_Admin::PAGE ); ?>">
@@ -31,7 +30,6 @@ MSST_Admin::intro( __( 'History & schedule', 'scripts-manager-by-mudassar' ), __
 		<div class="msst-card">
 			<h2><?php echo esc_html( sprintf( /* translators: %s: snippet title */ __( 'Older versions of “%s”', 'scripts-manager-by-mudassar' ), $msst_current['title'] ) ); ?></h2>
 			<?php if ( ! $msst_revisions ) : ?>
-				<p class="msst-desc"><?php esc_html_e( 'No older versions yet. One is saved each time the code changes.', 'scripts-manager-by-mudassar' ); ?></p>
 			<?php else : ?>
 				<table class="msst-table">
 					<?php foreach ( $msst_revisions as $msst_i => $msst_rev ) : ?>
@@ -74,14 +72,12 @@ MSST_Admin::intro( __( 'History & schedule', 'scripts-manager-by-mudassar' ), __
 		<div class="msst-card">
 			<h2><?php esc_html_e( 'What changed', 'scripts-manager-by-mudassar' ); ?></h2>
 			<?php if ( isset( $msst_revisions[ $msst_compare ] ) ) : ?>
-				<p class="msst-hint"><?php esc_html_e( 'Red lines were removed. Green lines were added.', 'scripts-manager-by-mudassar' ); ?></p>
 				<div class="msst-code msst-diff">
 					<?php foreach ( MSST_Diff::lines( $msst_revisions[ $msst_compare ]['code'], $msst_current['code'] ) as $msst_line ) : ?>
 						<div class="msst-diff-<?php echo esc_attr( $msst_line['op'] ); ?>"><?php echo esc_html( ( 'add' === $msst_line['op'] ? '+ ' : ( 'del' === $msst_line['op'] ? '- ' : '  ' ) ) . $msst_line['text'] ); ?></div>
 					<?php endforeach; ?>
 				</div>
 			<?php else : ?>
-				<p class="msst-desc"><?php esc_html_e( 'Click “See changes” on an older version.', 'scripts-manager-by-mudassar' ); ?></p>
 			<?php endif; ?>
 		</div>
 	</div>
@@ -99,7 +95,7 @@ MSST_Admin::intro( __( 'History & schedule', 'scripts-manager-by-mudassar' ), __
 					)
 				);
 			} else {
-				esc_html_e( 'No schedule – it shows whenever it is ON. Set dates in Add Snippet → More options (great for sales banners).', 'scripts-manager-by-mudassar' );
+				esc_html_e( 'No schedule.', 'scripts-manager-by-mudassar' );
 			}
 			?>
 		</p>

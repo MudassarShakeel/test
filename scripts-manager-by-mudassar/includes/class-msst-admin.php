@@ -22,7 +22,7 @@ class MSST_Admin {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( MSST_FILE ), array( __CLASS__, 'action_links' ) );
 
-		$handlers = array( 'save_headers', 'save_snippet', 'toggle', 'delete', 'duplicate', 'bulk', 'import', 'export', 'restore', 'save_settings', 'regen_secret', 'clear_log', 'download_log', 'test_mode', 'generate', 'use_library' );
+		$handlers = array( 'save_headers', 'save_snippet', 'toggle', 'delete', 'duplicate', 'bulk', 'import', 'export', 'restore', 'save_settings', 'regen_secret', 'clear_log', 'download_log', 'test_mode' );
 		foreach ( $handlers as $handler ) {
 			add_action( 'admin_post_msst_' . $handler, array( __CLASS__, 'handle_' . $handler ) );
 		}
@@ -35,11 +35,9 @@ class MSST_Admin {
 	 */
 	public static function main_tabs() {
 		return array(
-			'start'    => __( 'Start Here', 'scripts-manager-by-mudassar' ),
+			'headers'  => __( 'Headers & Footers', 'scripts-manager-by-mudassar' ),
 			'snippets' => __( 'My Snippets', 'scripts-manager-by-mudassar' ),
 			'edit'     => __( 'Add Snippet', 'scripts-manager-by-mudassar' ),
-			'headers'  => __( 'Headers & Footers', 'scripts-manager-by-mudassar' ),
-			'library'  => __( 'Ready-made', 'scripts-manager-by-mudassar' ),
 		);
 	}
 
@@ -50,12 +48,11 @@ class MSST_Admin {
 	 */
 	public static function more_tabs() {
 		return array(
-			'conditions' => __( 'Rules guide', 'scripts-manager-by-mudassar' ),
-			'revisions'  => __( 'History & Schedule', 'scripts-manager-by-mudassar' ),
-			'tools'      => __( 'Import / Export', 'scripts-manager-by-mudassar' ),
-			'logs'       => __( 'Problems & Activity', 'scripts-manager-by-mudassar' ),
-			'settings'   => __( 'Settings & Safety', 'scripts-manager-by-mudassar' ),
-			'support'    => __( 'Help & Contact', 'scripts-manager-by-mudassar' ),
+			'revisions' => __( 'History & Schedule', 'scripts-manager-by-mudassar' ),
+			'tools'     => __( 'Import / Export', 'scripts-manager-by-mudassar' ),
+			'logs'      => __( 'Problems & Activity', 'scripts-manager-by-mudassar' ),
+			'settings'  => __( 'Settings & Safety', 'scripts-manager-by-mudassar' ),
+			'support'   => __( 'Help & Contact', 'scripts-manager-by-mudassar' ),
 		);
 	}
 
@@ -66,20 +63,6 @@ class MSST_Admin {
 	 */
 	public static function tabs() {
 		return self::main_tabs() + self::more_tabs();
-	}
-
-	/**
-	 * Print the grey "what is this page?" box.
-	 *
-	 * @param string $title Bold line.
-	 * @param string $text  Plain explanation.
-	 */
-	public static function intro( $title, $text ) {
-		printf(
-			'<div class="msst-intro"><div class="msst-intro-i" aria-hidden="true">i</div><div><strong>%1$s</strong><span>%2$s</span></div></div>',
-			esc_html( $title ),
-			esc_html( $text )
-		);
 	}
 
 	/**
@@ -154,7 +137,7 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	 * @param array  $args Extra query args.
 	 * @return string
 	 */
-	public static function url( $tab = 'start', array $args = array() ) {
+	public static function url( $tab = 'headers', array $args = array() ) {
 		return add_query_arg(
 			array_merge(
 				array(
@@ -235,20 +218,9 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 			),
 			'editor'    => false,
 			'examples'  => self::examples(),
-			'phrases'   => MSST_Snippets::phrases(),
-			'kinds'     => wp_list_pluck( MSST_Snippets::kinds(), 0 ),
 			'i18n'      => array(
 				'showWhen'   => __( 'Show when', 'scripts-manager-by-mudassar' ),
 				'exampleAsk' => __( 'Replace what you wrote with this example?', 'scripts-manager-by-mudassar' ),
-				'on'         => __( 'ON', 'scripts-manager-by-mudassar' ),
-				'off'        => __( 'OFF', 'scripts-manager-by-mudassar' ),
-				'itWill'     => __( 'This', 'scripts-manager-by-mudassar' ),
-				'willRun'    => __( 'code will run', 'scripts-manager-by-mudassar' ),
-				'willAppear' => __( 'code will appear', 'scripts-manager-by-mudassar' ),
-				'onEvery'    => __( 'on every page', 'scripts-manager-by-mudassar' ),
-				'onSome'     => __( 'only on the pages you choose', 'scripts-manager-by-mudassar' ),
-				'itIs'       => __( 'It is currently', 'scripts-manager-by-mudassar' ),
-				'paragraph'  => __( 'paragraph', 'scripts-manager-by-mudassar' ),
 				'addRule'    => __( '+ Add rule', 'scripts-manager-by-mudassar' ),
 				'addGroup'   => __( '+ Add OR group', 'scripts-manager-by-mudassar' ),
 				'remove'     => __( 'Remove', 'scripts-manager-by-mudassar' ),
@@ -265,8 +237,8 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	 * @return string
 	 */
 	public static function current_tab() {
-		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'start'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
-		return isset( self::tabs()[ $tab ] ) ? $tab : 'start';
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'headers'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
+		return isset( self::tabs()[ $tab ] ) ? $tab : 'headers';
 	}
 
 	/**
@@ -391,7 +363,7 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 			'priority'   => absint( self::post_raw( 'msst_priority' ) ),
 			'active'     => '1' === self::post_raw( 'msst_active' ),
 			'conditions' => 'every' === self::post_raw( 'msst_pages' ) ? array() : MSST_Conditions::clean( self::normalise_rules( $rules ) ),
-			'start'      => self::parse_datetime( self::post_raw( 'msst_start' ) ),
+			'headers'    => self::parse_datetime( self::post_raw( 'msst_start' ) ),
 			'end'        => self::parse_datetime( self::post_raw( 'msst_end' ) ),
 		);
 	}
@@ -664,73 +636,5 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 		header( 'X-Content-Type-Options: nosniff' );
 		readfile( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Our own protected log file.
 		exit;
-	}
-
-	/**
-	 * Create an inactive snippet from the generator.
-	 */
-	public static function handle_generate() {
-		MSST_Security::guard( 'generate' );
-		$generated = MSST_Library::generate( sanitize_key( self::post_raw( 'msst_generator' ) ), self::post_text( 'msst_gen_name' ), self::post_text( 'msst_gen_slug' ) );
-		if ( ! $generated ) {
-			self::flash( 'error', __( 'Please enter a valid name and slug (max 20 characters).', 'scripts-manager-by-mudassar' ) );
-			self::back( 'library' );
-		}
-		$result = MSST_Snippets::save(
-			array(
-				'title'      => $generated['title'],
-				'type'       => 'php',
-				'code'       => $generated['code'],
-				'location'   => 'everywhere',
-				'param'      => 1,
-				'priority'   => 10,
-				'active'     => false,
-				'conditions' => array(),
-				'start'      => 0,
-				'end'        => 0,
-			),
-			0
-		);
-		if ( is_wp_error( $result ) ) {
-			self::flash( 'error', $result->get_error_message() );
-			self::back( 'library' );
-		}
-		self::flash( 'success', __( 'Snippet generated (inactive). Review it, then activate.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'edit', array( 'snippet' => $result ) );
-	}
-
-	/**
-	 * Copy a library item into a new inactive snippet.
-	 */
-	public static function handle_use_library() {
-		MSST_Security::guard( 'use_library' );
-		$key   = isset( $_GET['item'] ) ? sanitize_key( wp_unslash( $_GET['item'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
-		$items = MSST_Library::items();
-		if ( ! isset( $items[ $key ] ) ) {
-			self::flash( 'error', __( 'Library item not found.', 'scripts-manager-by-mudassar' ) );
-			self::back( 'library' );
-		}
-		$item   = $items[ $key ];
-		$result = MSST_Snippets::save(
-			array(
-				'title'      => $item['title'],
-				'type'       => $item['type'],
-				'code'       => $item['code'],
-				'location'   => $item['location'],
-				'param'      => 1,
-				'priority'   => 10,
-				'active'     => false,
-				'conditions' => array(),
-				'start'      => 0,
-				'end'        => 0,
-			),
-			0
-		);
-		if ( is_wp_error( $result ) ) {
-			self::flash( 'error', $result->get_error_message() );
-			self::back( 'library' );
-		}
-		self::flash( 'success', __( 'Added to your snippets (inactive). Review it, then activate.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'edit', array( 'snippet' => $result ) );
 	}
 }

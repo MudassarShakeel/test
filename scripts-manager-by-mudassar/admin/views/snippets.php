@@ -23,7 +23,6 @@ $msst_list   = MSST_Snippets::query(
 );
 $msst_kinds  = MSST_Snippets::kinds();
 
-MSST_Admin::intro( __( 'Your snippets', 'scripts-manager-by-mudassar' ), __( 'Every box of code you added is listed here. Use the switch to turn each one ON or OFF.', 'scripts-manager-by-mudassar' ) );
 ?>
 <div class="msst-grid msst-grid-4">
 	<div class="msst-card msst-stat"><b><?php echo esc_html( (string) $msst_counts['total'] ); ?></b><span><?php esc_html_e( 'Snippets', 'scripts-manager-by-mudassar' ); ?></span></div>
@@ -74,9 +73,7 @@ MSST_Admin::intro( __( 'Your snippets', 'scripts-manager-by-mudassar' ), __( 'Ev
 	<div class="msst-card msst-center msst-empty-card">
 		<div class="msst-ic msst-ic-center" aria-hidden="true">🗂️</div>
 		<h2><?php echo $msst_search || $msst_status ? esc_html__( 'Nothing matches your search', 'scripts-manager-by-mudassar' ) : esc_html__( 'No snippets yet', 'scripts-manager-by-mudassar' ); ?></h2>
-		<p class="msst-desc"><?php esc_html_e( 'Start with a ready-made snippet, or add your own in 4 easy steps.', 'scripts-manager-by-mudassar' ); ?></p>
-		<a class="msst-btn" href="<?php echo esc_url( MSST_Admin::url( 'edit' ) ); ?>"><?php esc_html_e( 'Add my first snippet', 'scripts-manager-by-mudassar' ); ?></a>
-		<a class="msst-btn msst-btn-outline" href="<?php echo esc_url( MSST_Admin::url( 'library' ) ); ?>"><?php esc_html_e( 'Browse ready-made', 'scripts-manager-by-mudassar' ); ?></a>
+		<a class="msst-btn" href="<?php echo esc_url( MSST_Admin::url( 'edit' ) ); ?>"><?php esc_html_e( 'Add your first snippet', 'scripts-manager-by-mudassar' ); ?></a>
 	</div>
 <?php else : ?>
 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">

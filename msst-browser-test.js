@@ -97,7 +97,7 @@
 
     // ---------------------------------------------------------------- 1. admin UI
     log('1. Admin tabs');
-    const tabs = ['start', 'headers', 'snippets', 'edit', 'conditions', 'library', 'revisions', 'tools', 'logs', 'settings', 'support'];
+    const tabs = ['headers', 'snippets', 'edit', 'revisions', 'tools', 'logs', 'settings', 'support'];
     for (const t of tabs) {
       const p = await get(PAGE + t);
       check(`tab "${t}" loads with branding`, p.status === 200 && p.text.includes('Mudassar Shakeel') && p.text.includes('Contact Us'), 'HTTP ' + p.status);

@@ -10,7 +10,7 @@ define( 'MSST_DIR', dirname( __DIR__ ) . '/' );
 define( 'MSST_FILE', MSST_DIR . 'scripts-manager-by-mudassar.php' );
 define( 'MSST_URL', 'http://x.test/wp-content/plugins/scripts-manager-by-mudassar/' );
 define( 'MSST_SLUG', 'scripts-manager-by-mudassar' );
-define( 'MSST_VERSION', '1.1.0' );
+define( 'MSST_VERSION', '1.2.0' );
 define( 'PHP_URL_PATH_', 5 );
 
 // ---- fake WordPress -------------------------------------------------------

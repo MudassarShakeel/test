@@ -15,7 +15,6 @@ $msst_fmt    = static function ( $ts ) {
 	return wp_date( get_option( 'date_format' ) . ' H:i', (int) $ts );
 };
 
-MSST_Admin::intro( __( 'Problems & activity', 'scripts-manager-by-mudassar' ), __( 'If a snippet breaks, it is switched OFF for you and shown here. Below you can also see who changed what, and download the error log file.', 'scripts-manager-by-mudassar' ) );
 ?>
 <div class="msst-grid msst-grid-2">
 	<div class="msst-card">
@@ -39,7 +38,6 @@ MSST_Admin::intro( __( 'Problems & activity', 'scripts-manager-by-mudassar' ), _
 	<div class="msst-card">
 		<h2><?php esc_html_e( 'Who changed what', 'scripts-manager-by-mudassar' ); ?></h2>
 		<?php if ( ! $msst_audit ) : ?>
-			<p class="msst-desc"><?php esc_html_e( 'Nothing recorded yet.', 'scripts-manager-by-mudassar' ); ?></p>
 		<?php else : ?>
 			<table class="msst-table">
 				<?php foreach ( array_slice( $msst_audit, 0, 30 ) as $msst_row ) : ?>
@@ -53,7 +51,6 @@ MSST_Admin::intro( __( 'Problems & activity', 'scripts-manager-by-mudassar' ), _
 
 <div class="msst-card" id="msst-error-file">
 	<h2><?php esc_html_e( 'Error log file', 'scripts-manager-by-mudassar' ); ?></h2>
-	<p class="msst-desc"><?php esc_html_e( 'A real text file on your server. Every snippet problem is written here, even if you are not looking at this page. Send it to us if you need help.', 'scripts-manager-by-mudassar' ); ?></p>
 	<?php if ( ! $msst_file['writable'] ) : ?>
 		<div class="msst-note msst-note-warning"><?php esc_html_e( 'The uploads folder is not writable, so the log file cannot be created. Problems are still shown in the list above.', 'scripts-manager-by-mudassar' ); ?></div>
 	<?php endif; ?>
