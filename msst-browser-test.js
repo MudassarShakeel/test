@@ -102,6 +102,13 @@
       const p = await get(PAGE + t);
       check(`tab "${t}" loads with branding`, p.status === 200 && p.text.includes('Mudassar Shakeel') && p.text.includes('Contact Us'), 'HTTP ' + p.status);
     }
+    const nav = await get(PAGE + 'headers');
+    const mainTabs = [...nav.doc.querySelectorAll('.msst-tabs a')].map((x) => x.textContent.trim());
+    check('main tabs are Headers & Footers, My Snippets, Add Snippet, Settings', JSON.stringify(mainTabs) === JSON.stringify(['Headers & Footers', 'My Snippets', 'Add Snippet', 'Settings']), mainTabs.join(' | '));
+    for (const sec of ['general', 'history', 'tools', 'logs', 'support']) {
+      const sp = await get(PAGE + 'settings&section=' + sec);
+      check(`Settings > ${sec} loads inside the Settings tab`, sp.status === 200 && !!sp.doc.querySelector('.msst-subnav a.is-active') && sp.text.includes('Mudassar Shakeel'), 'HTTP ' + sp.status);
+    }
     const sup = await get(PAGE + 'support');
     const links = [...sup.doc.querySelectorAll('a[href*="mudassar.work"]')].map((a) => a.getAttribute('href'));
     check('Contact Us / website links all have UTM tags',

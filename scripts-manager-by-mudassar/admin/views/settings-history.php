@@ -14,7 +14,8 @@ $msst_compare = isset( $_GET['compare'] ) ? absint( $_GET['compare'] ) : -1; // 
 ?>
 <form method="get" class="msst-card msst-inline-card">
 	<input type="hidden" name="page" value="<?php echo esc_attr( MSST_Admin::PAGE ); ?>">
-	<input type="hidden" name="tab" value="revisions">
+	<input type="hidden" name="tab" value="settings">
+	<input type="hidden" name="section" value="history">
 	<label class="msst-label" for="msst_pick"><?php esc_html_e( 'Choose a snippet', 'scripts-manager-by-mudassar' ); ?></label>
 	<select class="msst-input msst-w-320" id="msst_pick" name="snippet" onchange="this.form.submit()">
 		<option value=""><?php esc_html_e( 'Choose…', 'scripts-manager-by-mudassar' ); ?></option>

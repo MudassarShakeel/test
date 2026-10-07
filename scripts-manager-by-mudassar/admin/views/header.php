@@ -27,9 +27,3 @@ defined( 'ABSPATH' ) || exit;
 		<a href="<?php echo esc_url( MSST_Admin::url( $msst_slug ) ); ?>" class="<?php echo $msst_slug === $tab ? 'is-active' : ''; ?>"<?php echo $msst_slug === $tab ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $msst_label ); ?></a>
 	<?php endforeach; ?>
 </nav>
-<nav class="msst-more" aria-label="<?php esc_attr_e( 'More sections', 'scripts-manager-by-mudassar' ); ?>">
-	<strong><?php esc_html_e( 'More:', 'scripts-manager-by-mudassar' ); ?></strong>
-	<?php foreach ( MSST_Admin::more_tabs() as $msst_slug => $msst_label ) : ?>
-		<a href="<?php echo esc_url( MSST_Admin::url( $msst_slug ) ); ?>" class="<?php echo $msst_slug === $tab ? 'is-active' : ''; ?>"<?php echo $msst_slug === $tab ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $msst_label ); ?></a>
-	<?php endforeach; ?>
-</nav>

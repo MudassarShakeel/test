@@ -29,7 +29,7 @@ class MSST_Admin {
 	}
 
 	/**
-	 * Main tabs (always visible).
+	 * Main tabs.
 	 *
 	 * @return array slug => label
 	 */
@@ -38,21 +38,7 @@ class MSST_Admin {
 			'headers'  => __( 'Headers & Footers', 'scripts-manager-by-mudassar' ),
 			'snippets' => __( 'My Snippets', 'scripts-manager-by-mudassar' ),
 			'edit'     => __( 'Add Snippet', 'scripts-manager-by-mudassar' ),
-		);
-	}
-
-	/**
-	 * Secondary tabs (shown under "More").
-	 *
-	 * @return array slug => label
-	 */
-	public static function more_tabs() {
-		return array(
-			'revisions' => __( 'History & Schedule', 'scripts-manager-by-mudassar' ),
-			'tools'     => __( 'Import / Export', 'scripts-manager-by-mudassar' ),
-			'logs'      => __( 'Problems & Activity', 'scripts-manager-by-mudassar' ),
-			'settings'  => __( 'Settings & Safety', 'scripts-manager-by-mudassar' ),
-			'support'   => __( 'Help & Contact', 'scripts-manager-by-mudassar' ),
+			'settings' => __( 'Settings', 'scripts-manager-by-mudassar' ),
 		);
 	}
 
@@ -62,7 +48,36 @@ class MSST_Admin {
 	 * @return array slug => label
 	 */
 	public static function tabs() {
-		return self::main_tabs() + self::more_tabs();
+		return self::main_tabs();
+	}
+
+	/**
+	 * Sections inside the Settings tab.
+	 *
+	 * @return array slug => label
+	 */
+	public static function sections() {
+		return array(
+			'general' => __( 'General & Safety', 'scripts-manager-by-mudassar' ),
+			'history' => __( 'History & Schedule', 'scripts-manager-by-mudassar' ),
+			'tools'   => __( 'Import / Export', 'scripts-manager-by-mudassar' ),
+			'logs'    => __( 'Problems & Activity', 'scripts-manager-by-mudassar' ),
+			'support' => __( 'Help & Contact', 'scripts-manager-by-mudassar' ),
+		);
+	}
+
+	/**
+	 * Old tab names that now live inside Settings (old links keep working).
+	 *
+	 * @return array old tab => section
+	 */
+	public static function legacy_tabs() {
+		return array(
+			'revisions' => 'history',
+			'tools'     => 'tools',
+			'logs'      => 'logs',
+			'support'   => 'support',
+		);
 	}
 
 	/**
@@ -138,6 +153,11 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	 * @return string
 	 */
 	public static function url( $tab = 'headers', array $args = array() ) {
+		$legacy = self::legacy_tabs();
+		if ( isset( $legacy[ $tab ] ) ) {
+			$args['section'] = $legacy[ $tab ];
+			$tab             = 'settings';
+		}
 		return add_query_arg(
 			array_merge(
 				array(
@@ -232,13 +252,31 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	}
 
 	/**
-	 * Active tab slug from the query string (whitelisted).
+	 * Active tab slug from the query string (whitelisted). Old tab names map to Settings.
 	 *
 	 * @return string
 	 */
 	public static function current_tab() {
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'headers'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
-		return isset( self::tabs()[ $tab ] ) ? $tab : 'headers';
+		if ( isset( self::legacy_tabs()[ $tab ] ) || 'settings' === $tab ) {
+			return 'settings';
+		}
+		return isset( self::main_tabs()[ $tab ] ) ? $tab : 'headers';
+	}
+
+	/**
+	 * Active section inside Settings (whitelisted).
+	 *
+	 * @return string
+	 */
+	public static function current_section() {
+		$tab     = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
+		$section = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$legacy  = self::legacy_tabs();
+		if ( '' === $section && isset( $legacy[ $tab ] ) ) {
+			$section = $legacy[ $tab ];
+		}
+		return isset( self::sections()[ $section ] ) ? $section : 'general';
 	}
 
 	/**

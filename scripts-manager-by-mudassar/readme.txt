@@ -4,7 +4,7 @@ Tags: snippets, header, footer, code, conditional logic
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,9 @@ Scripts Manager By Mudassar lives under Settings > Scripts Manager.
 * Add `define( 'MSST_DISABLE_SNIPPETS', true );` to wp-config.php to turn every snippet off.
 
 == Changelog ==
+
+= 1.3.0 =
+* New main tab: Settings. General & Safety, History & Schedule, Import / Export, Problems & Activity and Help & Contact now live inside it. The "More" row is gone; old links still work.
 
 = 1.2.0 =
 * Cleaner screens: removed the Start Here, Ready-made and Rules guide tabs and all help/guide text. Headers & Footers is now the first tab, then My Snippets.

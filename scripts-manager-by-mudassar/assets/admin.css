@@ -132,3 +132,7 @@
 @media (prefers-reduced-motion:no-preference){.msst .msst-btn,.msst-toggle,.msst-toggle:after{transition:all .12s ease}}
 .msst-edit{max-width:920px}
 .msst-grid-support{display:grid;gap:16px;grid-template-columns:1fr;max-width:640px}
+.msst-subnav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.msst-subnav a{padding:7px 16px;border:1px solid var(--line);border-radius:99px;background:#fff;color:var(--ink);font-weight:500;font-size:14px}
+.msst-subnav a.is-active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.msst-subnav a:hover:not(.is-active){border-color:var(--blue);color:var(--blue)}

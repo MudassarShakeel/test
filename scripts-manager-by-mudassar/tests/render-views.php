@@ -10,7 +10,7 @@ define( 'MSST_DIR', dirname( __DIR__ ) . '/' );
 define( 'MSST_FILE', MSST_DIR . 'scripts-manager-by-mudassar.php' );
 define( 'MSST_URL', 'http://x.test/wp-content/plugins/scripts-manager-by-mudassar/' );
 define( 'MSST_SLUG', 'scripts-manager-by-mudassar' );
-define( 'MSST_VERSION', '1.2.0' );
+define( 'MSST_VERSION', '1.3.0' );
 define( 'PHP_URL_PATH_', 5 );
 
 // ---- fake WordPress -------------------------------------------------------
@@ -129,6 +129,23 @@ foreach ( array_keys( MSST_Admin::tabs() ) as $tab ) {
 		ok( false, "tab '$tab' threw: " . $e->getMessage() . ' @' . basename( $e->getFile() ) . ':' . $e->getLine() );
 	}
 }
+foreach ( array_keys( MSST_Admin::sections() ) as $section ) {
+	try {
+		$html = render_tab( 'settings', array( 'section' => $section, 'snippet' => 5, 'compare' => 0 ) );
+		ok( strlen( $html ) > 500 && false !== strpos( $html, 'msst-subnav' ) && false !== strpos( $html, 'Contact Us' ), "settings section '$section' renders inside the Settings tab" );
+	} catch ( Throwable $e ) {
+		while ( ob_get_level() ) { ob_end_clean(); }
+		ok( false, "settings section '$section' threw: " . $e->getMessage() . ' @' . basename( $e->getFile() ) . ':' . $e->getLine() );
+	}
+}
+foreach ( array( 'revisions' => 'history', 'tools' => 'tools', 'logs' => 'logs', 'support' => 'support', 'settings' => 'general' ) as $old => $sec ) {
+	$_GET = array( 'tab' => $old );
+	ok( 'settings' === MSST_Admin::current_tab() && $sec === MSST_Admin::current_section(), "old tab '$old' still opens Settings > $sec" );
+}
+ok( false !== strpos( MSST_Admin::url( 'logs' ), 'tab=settings' ) && false !== strpos( MSST_Admin::url( 'logs' ), 'section=logs' ), 'url() maps old tab names to Settings sections' );
+$tabs_html = render_tab( 'headers' );
+preg_match( '/<nav class="msst-tabs".*?<\/nav>/s', $tabs_html, $nav );
+ok( false === strpos( $tabs_html, 'msst-more' ) && 4 === substr_count( $nav[0], '<a ' ), 'only the 4 main tabs are shown (no More row)' );
 $edit = render_tab( 'edit', array( 'snippet' => 5 ) );
 ok( false !== strpos( $edit, 'name="msst_pages"' ) && 1 === preg_match( '/value="some"\s+checked="checked"/', $edit ), 'edit: existing rules => "Only some pages" selected' );
 ok( false !== strpos( $edit, 'name="msst_active" value="1"' ) && false !== strpos( $edit, 'Save and turn OFF' ), 'edit: active snippet offers Save changes / Save and turn OFF' );
@@ -151,6 +168,13 @@ if ( in_array( '--dump', $argv, true ) ) {
 		$_GET  = array_merge( array( 'tab' => $tab ), $extra );
 		$json  = json_encode( MSST_Admin::script_data() );
 		file_put_contents( "$out/$tab.html", '<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../assets/admin.css"><style>body{margin:0;background:#f0f0f1;font:13px -apple-system,Arial,sans-serif;color:#1d2327}.wp-side{float:left;width:160px;min-height:100vh;background:#1d2327}#wpbody{margin-left:160px;padding:10px}</style></head><body><div class="wp-side"></div><div id="wpbody"><div class="wrap msst">' . $body . '</div></div><script>window.msstData=' . $json . ';</script><script src="../../assets/admin.js"></script></body></html>' );
+	}
+	foreach ( array_keys( MSST_Admin::sections() ) as $section ) {
+		$extra = array( 'section' => $section, 'snippet' => 5, 'compare' => 0 );
+		$body  = render_tab( 'settings', $extra );
+		$_GET  = array_merge( array( 'tab' => 'settings' ), $extra );
+		$json  = json_encode( MSST_Admin::script_data() );
+		file_put_contents( "$out/settings-$section.html", '<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../assets/admin.css"><style>body{margin:0;background:#f0f0f1;font:13px -apple-system,Arial,sans-serif;color:#1d2327}.wp-side{float:left;width:160px;min-height:100vh;background:#1d2327}#wpbody{margin-left:160px;padding:10px}</style></head><body><div class="wp-side"></div><div id="wpbody"><div class="wrap msst">' . $body . '</div></div><script>window.msstData=' . $json . ';</script><script src="../../assets/admin.js"></script></body></html>' );
 	}
 	file_put_contents( "$out/new.html", str_replace( '', '', file_get_contents( "$out/edit.html" ) ) );
 }
