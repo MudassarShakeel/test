@@ -35,18 +35,18 @@ final class MSST_Plugin {
 	 * Constructor.
 	 */
 	private function __construct() {
-		add_action( 'init', array( 'MSST_Snippets', 'register_post_type' ), 0 );
+		add_action( 'plugins_loaded', array( 'MSST_Snippets', 'maybe_install' ) );
 		MSST_Runner::init();
-		MSST_Page_Code::init();
 		if ( is_admin() ) {
 			MSST_Admin::init();
 		}
 	}
 
 	/**
-	 * Activation: capability and safe-mode secret.
+	 * Activation: table, capability and safe-mode secret.
 	 */
 	public static function activate() {
+		MSST_Snippets::install();
 		$role = get_role( 'administrator' );
 		if ( $role ) {
 			$role->add_cap( MSST_Security::CAP );
@@ -61,6 +61,6 @@ final class MSST_Plugin {
 	 * Deactivation: nothing is deleted.
 	 */
 	public static function deactivate() {
-		wp_cache_delete( 'active', 'msst' );
+		MSST_Snippets::flush_cache();
 	}
 }

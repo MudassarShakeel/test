@@ -1,37 +1,38 @@
 === Scripts Manager By Mudassar ===
 Contributors: mudassarshakeel
-Tags: snippets, header, footer, code, conditional logic
-Requires at least: 6.0
+Tags: snippets, header, footer, code, scripts
+Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Safely manage header/footer scripts and PHP, JavaScript, CSS and HTML snippets in simple step-by-step screens, with conditional logic, history, scheduling and an error log file.
+Add HTML, CSS, JavaScript and PHP snippets with a simple list and form.
 
 == Description ==
 
-Scripts Manager By Mudassar lives under Settings > Scripts Manager.
+Scripts Manager By Mudassar adds HTML, CSS, JavaScript and PHP snippets to your site, with a simple list, a simple form and nothing else to learn.
 
-* Global header, body and footer code, plus GA4, GTM, Meta Pixel and TikTok Pixel fields
-* PHP, JavaScript, CSS, HTML, text and universal snippets
-* Auto-insert locations, shortcode `[msst_snippet id=""]` and per-page header/footer code
-* Smart conditional logic (page, user, device, date, WooCommerce, EDD)
-* Revisions with compare and restore, scheduling, import and export (JSON)
-* Error log file, problem list, activity list, auto-disable on errors, safe mode
-* No external connections and no tracking.
+* All Snippets list with ON/OFF switch, search, filters, bulk actions and shortcodes
+* Add New form: name, type, where to show it (site wide, specific pages, posts, categories, tags, post types, home, search, archives, latest posts or shortcode only), location (header, body, footer, before or after content), device and status
+* Tools: export selected snippets and import them again (imported snippets arrive OFF)
+* Settings: PHP switch, auto-OFF on errors, test view for you only, Safe Mode link
+* No external connections and no tracking
 
 == Security ==
 
 * Every action requires a nonce and the `msst_manage_snippets` capability.
 * PHP snippets additionally require `unfiltered_html`, super admin on multisite and file editing allowed (or `MSST_ALLOW_PHP_EDIT` in wp-config.php).
-* Snippets are HMAC-signed; code changed outside the plugin is blocked until re-approved.
+* Snippets are HMAC-signed; code changed outside the plugin is blocked until you turn it ON again.
 * Add `define( 'MSST_DISABLE_SNIPPETS', true );` to wp-config.php to turn every snippet off.
 
 == Changelog ==
 
-= 1.3.0 =
+= 2.0.0 =
+* Rebuilt around a simple All Snippets / Add New / Tools / Settings workflow with its own top-level menu. Starts fresh (snippets from 1.x are not converted).
+
+= 2.0.0 =
 * New main tab: Settings. General & Safety, History & Schedule, Import / Export, Problems & Activity and Help & Contact now live inside it. The "More" row is gone; old links still work.
 
 = 1.2.0 =

@@ -17,24 +17,10 @@ if ( empty( $msst_settings['delete_on_uninstall'] ) ) {
 	return;
 }
 
-$msst_ids = get_posts(
-	array(
-		'post_type'      => 'msst_snippet',
-		'post_status'    => 'any',
-		'posts_per_page' => -1,
-		'fields'         => 'ids',
-	)
-);
-foreach ( $msst_ids as $msst_id ) {
-	wp_delete_post( $msst_id, true );
-}
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-msst-logger.php';
-MSST_Logger::delete_files();
+global $wpdb;
+$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $wpdb->prefix . 'msst_snippets' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removing our own table on request.
 
-foreach ( array( 'msst_settings', 'msst_global', 'msst_safe_secret', 'msst_audit', 'msst_errors', 'msst_log_name' ) as $msst_option ) {
+foreach ( array( 'msst_settings', 'msst_safe_secret', 'msst_db_version' ) as $msst_option ) {
 	delete_option( $msst_option );
 }
 delete_metadata( 'user', 0, 'msst_test_mode', '', true );
-delete_post_meta_by_key( '_msst_page_header' );
-delete_post_meta_by_key( '_msst_page_footer' );
-delete_post_meta_by_key( '_msst_page_sig' );

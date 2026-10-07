@@ -39,16 +39,14 @@ class MSST_Runner {
 		add_action( 'wp_head', array( __CLASS__, 'print_header' ), 99 );
 		add_action( 'wp_body_open', array( __CLASS__, 'print_body' ), 99 );
 		add_action( 'wp_footer', array( __CLASS__, 'print_footer' ), 99 );
-		add_action( 'admin_footer', array( __CLASS__, 'print_admin_footer' ), 99 );
 		add_filter( 'the_content', array( __CLASS__, 'filter_content' ), 20 );
 
 		self::run_php_snippets( false );
 		add_action( 'wp', array( __CLASS__, 'run_query_php' ), 1 );
-		add_action( 'admin_init', array( __CLASS__, 'run_query_php' ), 1 );
 	}
 
 	/**
-	 * PHP snippets whose conditions need the main query.
+	 * PHP snippets that need the main query.
 	 */
 	public static function run_query_php() {
 		self::run_php_snippets( true );
@@ -64,15 +62,21 @@ class MSST_Runner {
 		if ( empty( $settings['php_enabled'] ) ) {
 			return;
 		}
+		$is_admin = is_admin();
 		foreach ( MSST_Snippets::active() as $snippet ) {
-			if ( 'php' !== $snippet['type'] || MSST_Conditions::needs_query( $snippet['conditions'] ) !== $deferred ) {
+			if ( 'php' !== $snippet['type'] ) {
 				continue;
 			}
-			$admin = is_admin();
-			if ( ( 'admin' === $snippet['location'] && ! $admin ) || ( 'frontend' === $snippet['location'] && $admin ) ) {
+			$location = $snippet['location'];
+			if ( ( 'admin' === $location && ! $is_admin ) || ( 'frontend' === $location && $is_admin ) ) {
 				continue;
 			}
-			if ( ! self::eligible( $snippet ) ) {
+			// Page rules only make sense on the public site; admin PHP always runs from init.
+			$needs_query = ! $is_admin && 'admin' !== $location && MSST_Display::needs_query( $snippet );
+			if ( $needs_query !== $deferred ) {
+				continue;
+			}
+			if ( ! self::eligible( $snippet ) || ( $needs_query && ! MSST_Display::page_ok( $snippet ) ) ) {
 				continue;
 			}
 			self::run_php( $snippet );
@@ -80,29 +84,17 @@ class MSST_Runner {
 	}
 
 	/**
-	 * Schedule, integrity and condition checks.
+	 * Integrity and device checks.
 	 *
 	 * @param array $snippet Snippet.
 	 * @return bool
 	 */
 	private static function eligible( array $snippet ) {
-		if ( ! MSST_Snippets::in_schedule( $snippet ) ) {
-			return false;
-		}
 		if ( ! MSST_Snippets::is_intact( $snippet ) ) {
-			self::flag_tampered( $snippet );
+			MSST_Snippets::disable_with_error( $snippet['id'], __( 'Blocked: the stored code changed outside the plugin. Check it, then save or turn it ON again.', 'scripts-manager-by-mudassar' ) );
 			return false;
 		}
-		return MSST_Conditions::passes( $snippet['conditions'] );
-	}
-
-	/**
-	 * Tampered snippets are disabled until an administrator re-approves them.
-	 *
-	 * @param array $snippet Snippet.
-	 */
-	private static function flag_tampered( array $snippet ) {
-		MSST_Snippets::disable_with_error( $snippet['id'], __( 'Blocked: the stored code changed outside the plugin. Review it and activate it again.', 'scripts-manager-by-mudassar' ) );
+		return MSST_Display::device_ok( $snippet['device'] );
 	}
 
 	/**
@@ -118,15 +110,13 @@ class MSST_Runner {
 			$settings = MSST_Settings::get();
 			if ( ! empty( $settings['auto_disable'] ) ) {
 				MSST_Snippets::disable_with_error( $snippet['id'], $e->getMessage() );
-			} else {
-				MSST_Logger::error( $snippet['id'], $snippet['title'], $e->getMessage() );
 			}
 		}
 		self::$current = 0;
 	}
 
 	/**
-	 * Detect a fatal error raised inside a snippet and disable it.
+	 * Detect a fatal error raised inside a snippet and switch it off.
 	 */
 	public static function on_shutdown() {
 		if ( ! self::$current ) {
@@ -142,7 +132,7 @@ class MSST_Runner {
 	}
 
 	/**
-	 * Snippets for an output location that should render now.
+	 * Snippets for an output location that should show on this page.
 	 *
 	 * @param string $location Location slug.
 	 * @return array[]
@@ -150,10 +140,10 @@ class MSST_Runner {
 	private static function for_location( $location ) {
 		$out = array();
 		foreach ( MSST_Snippets::active() as $snippet ) {
-			if ( 'php' === $snippet['type'] || $snippet['location'] !== $location ) {
+			if ( 'php' === $snippet['type'] || $snippet['location'] !== $location || 'shortcode' === $snippet['display_on'] ) {
 				continue;
 			}
-			if ( self::eligible( $snippet ) ) {
+			if ( self::eligible( $snippet ) && MSST_Display::page_ok( $snippet ) ) {
 				$out[] = $snippet;
 			}
 		}
@@ -161,26 +151,20 @@ class MSST_Runner {
 	}
 
 	/**
-	 * Render a snippet's markup by type.
+	 * Markup for a snippet by type.
 	 *
 	 * @param array $snippet Snippet.
 	 * @return string
 	 */
 	public static function render( array $snippet ) {
 		$code = $snippet['code'];
-		switch ( $snippet['type'] ) {
-			case 'js':
-				return false !== stripos( $code, '<script' ) ? $code : "<script>\n" . $code . "\n</script>";
-			case 'css':
-				return false !== stripos( $code, '<style' ) ? $code : "<style>\n" . $code . "\n</style>";
-			case 'text':
-				return wpautop( wp_kses_post( $code ) );
-			case 'universal':
-				return do_shortcode( $code );
-			case 'html':
-			default:
-				return $code;
+		if ( 'js' === $snippet['type'] ) {
+			return false !== stripos( $code, '<script' ) ? $code : "<script>\n" . $code . "\n</script>";
 		}
+		if ( 'css' === $snippet['type'] ) {
+			return false !== stripos( $code, '<style' ) ? $code : "<style>\n" . $code . "\n</style>";
+		}
+		return $code;
 	}
 
 	/**
@@ -195,27 +179,9 @@ class MSST_Runner {
 	}
 
 	/**
-	 * Output the global box and integrations for one slot.
-	 *
-	 * @param string $slot header|body|footer.
-	 */
-	private static function print_global( $slot ) {
-		if ( is_admin() ) {
-			return;
-		}
-		$global = MSST_Settings::get_global();
-		$signed = MSST_Security::verify( 'global|' . $global['header'] . '|' . $global['body'] . '|' . $global['footer'], $global['sig'] );
-		echo MSST_Integrations::render( $slot, $global ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from strictly validated IDs.
-		if ( $signed && '' !== $global[ $slot ] ) {
-			echo "\n" . $global[ $slot ] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Intentional raw output of signed, administrator-authored code.
-		}
-	}
-
-	/**
 	 * Header output.
 	 */
 	public static function print_header() {
-		self::print_global( 'header' );
 		self::print_location( 'header' );
 	}
 
@@ -223,7 +189,6 @@ class MSST_Runner {
 	 * Body output.
 	 */
 	public static function print_body() {
-		self::print_global( 'body' );
 		self::print_location( 'body' );
 	}
 
@@ -231,19 +196,11 @@ class MSST_Runner {
 	 * Footer output.
 	 */
 	public static function print_footer() {
-		self::print_global( 'footer' );
 		self::print_location( 'footer' );
 	}
 
 	/**
-	 * Admin footer output.
-	 */
-	public static function print_admin_footer() {
-		self::print_location( 'admin_footer' );
-	}
-
-	/**
-	 * Insert snippets around or inside post content.
+	 * Add snippets before or after post content.
 	 *
 	 * @param string $content Content.
 	 * @return string
@@ -260,42 +217,11 @@ class MSST_Runner {
 		foreach ( self::for_location( 'after_content' ) as $snippet ) {
 			$after .= self::render( $snippet );
 		}
-		foreach ( array( 'before_paragraph', 'after_paragraph' ) as $location ) {
-			foreach ( self::for_location( $location ) as $snippet ) {
-				$content = self::insert_paragraph( $content, self::render( $snippet ), $snippet['param'], 'after_paragraph' === $location );
-			}
-		}
 		return $before . $content . $after;
 	}
 
 	/**
-	 * Insert markup before/after the Nth paragraph.
-	 *
-	 * @param string $content Content.
-	 * @param string $markup  Markup to insert.
-	 * @param int    $n       Paragraph number (1-based).
-	 * @param bool   $after   After the paragraph (true) or before it (false).
-	 * @return string
-	 */
-	private static function insert_paragraph( $content, $markup, $n, $after ) {
-		$parts = explode( '</p>', $content );
-		$last  = count( $parts ) - 1;
-		if ( $last < 1 || $n > $last ) {
-			return $content;
-		}
-		$out = '';
-		foreach ( $parts as $i => $part ) {
-			$piece = $part . ( $i < $last ? '</p>' : '' );
-			if ( $i === $n - 1 ) {
-				$piece = $after ? $piece . $markup : $markup . $piece;
-			}
-			$out .= $piece;
-		}
-		return $out;
-	}
-
-	/**
-	 * Shortcode: [msst_snippet id="12"]. PHP snippets never run from shortcodes.
+	 * Shortcode: [msst_snippet id="1"]. PHP snippets never run from shortcodes.
 	 *
 	 * @param array $atts Attributes.
 	 * @return string
@@ -306,7 +232,7 @@ class MSST_Runner {
 		}
 		$atts    = shortcode_atts( array( 'id' => 0 ), $atts, 'msst_snippet' );
 		$snippet = MSST_Snippets::get( (int) $atts['id'] );
-		if ( ! $snippet || ! $snippet['active'] || 'php' === $snippet['type'] || 'shortcode' !== $snippet['location'] ) {
+		if ( ! $snippet || ! $snippet['status'] || 'php' === $snippet['type'] ) {
 			return '';
 		}
 		return self::eligible( $snippet ) ? self::render( $snippet ) : '';

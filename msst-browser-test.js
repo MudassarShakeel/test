@@ -1,37 +1,36 @@
 /*
- * Scripts Manager By Mudassar – browser console test
+ * Scripts Manager By Mudassar v2 – browser console test
  *
  * HOW TO RUN
  *  1. Log in as an ADMINISTRATOR on your TEST site and open any wp-admin page.
  *  2. Press F12 -> Console. (Chrome may ask you to type "allow pasting" first.)
  *  3. Paste this whole file and press Enter. Takes about 1-2 minutes.
  *
- * It uses the real plugin forms/links with your real nonces, creates snippets
- * named MSST-TEST-xxxx, checks the public site as a logged-out visitor, and
- * deletes everything it created. Your global header/footer settings are restored.
+ * It uses the real plugin forms and links with your real nonces, creates snippets
+ * named MSST-TEST-xxxx plus a few test pages/posts, checks the public site as a
+ * logged-out visitor, then deletes everything it created.
  * Run it on a staging/test site, not on a live client site.
  * If the site has page caching, disable it first (visitor checks add a cache-buster).
  */
 (async () => {
   const ADMIN = new URL(typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php', location.href).href.replace(/admin-ajax\.php.*$/, '');
   const HOME = ADMIN.replace(/wp-admin\/$/, '');
-  const PAGE = ADMIN + 'options-general.php?page=scripts-manager-by-mudassar&tab=';
+  const PAGE = (slug) => ADMIN + 'admin.php?page=' + slug;
+  const LIST = PAGE('scripts-manager');
+  const ADD = PAGE('scripts-manager-add');
   const POST = ADMIN + 'admin-post.php';
   const TAG = 'MSST-TEST-' + Date.now().toString(36);
   const results = [];
-  const madeSnippets = [];
-  const madePosts = [];
+  const posts = []; // [restBase, id]
   let restNonce = '';
-  let originalGlobal = null;
 
   const log = (...a) => console.log('%c' + a.join(' '), 'color:#0071e3');
   const check = (name, cond, detail = '') => {
-    results.push({ check: name, result: cond ? 'PASS' : 'FAIL', detail: cond ? '' : String(detail).slice(0, 180) });
-    console.log((cond ? '%c PASS ' : '%c FAIL ') + name + (cond ? '' : '  -> ' + String(detail).slice(0, 180)),
+    results.push({ check: name, result: cond ? 'PASS' : 'FAIL', detail: cond ? '' : String(detail).slice(0, 200) });
+    console.log((cond ? '%c PASS ' : '%c FAIL ') + name + (cond ? '' : '  -> ' + String(detail).slice(0, 200)),
       cond ? 'color:#248a3d' : 'color:#d70015;font-weight:bold');
   };
   const dom = (t) => new DOMParser().parseFromString(t, 'text/html');
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function get(url, opts = {}) {
     const r = await fetch(url, { credentials: 'same-origin', ...opts });
@@ -43,272 +42,235 @@
     const r = await fetch(u, { credentials: 'omit', cache: 'no-store' });
     return { status: r.status, text: await r.text() };
   }
-  const formNonce = (doc, action) => {
+  const nonceOf = (doc, action) => {
     const input = doc.querySelector(`form input[name="action"][value="${action}"]`);
     return input ? input.closest('form').querySelector('input[name="_wpnonce"]').value : '';
   };
 
-  async function saveSnippet(f) {
-    const page = await get(PAGE + 'edit');
-    const nonce = formNonce(page.doc, 'msst_save_snippet');
+  async function save(f) {
+    const page = await get(ADD);
     const body = new URLSearchParams({
-      action: 'msst_save_snippet', _wpnonce: nonce, msst_id: String(f.id || 0), msst_title: f.title,
-      msst_type: f.type, msst_code: f.code, msst_location: f.location,
-      msst_param: String(f.param || 1), msst_priority: String(f.priority || 10),
-      msst_start: f.start || '', msst_end: f.end || '',
-      msst_pages: (f.rules && f.rules.length) ? 'some' : 'every',
+      action: 'msst_save_snippet', _wpnonce: nonceOf(page.doc, 'msst_save_snippet'), msst_id: String(f.id || 0),
+      msst_name: f.name, msst_type: f.type || 'html', msst_code: f.code,
+      msst_display_on: f.display || 'site_wide', msst_location: f.location || 'footer',
+      msst_device: f.device || 'all', msst_status: f.status === false ? '0' : '1',
     });
-    if (f.active !== false) body.set('msst_active', '1');
-    (f.rules || []).forEach((group, gi) => group.forEach((r, ri) => {
-      body.set(`msst_rules[${gi}][${ri}][type]`, r.type);
-      body.set(`msst_rules[${gi}][${ri}][op]`, r.op);
-      body.set(`msst_rules[${gi}][${ri}][value]`, r.value);
-    }));
+    const t = f.targets || {};
+    Object.keys(t).forEach((k) => t[k].forEach((v) => body.append('msst_' + k + '[]', String(v))));
     const res = await fetch(POST, { method: 'POST', credentials: 'same-origin', body });
-    const text = await res.text();
-    const d = dom(text);
-    const m = res.url.match(/snippet=(\d+)/);
-    const id = m ? m[1] : null;
-    if (id && !madeSnippets.includes(id)) madeSnippets.push(id);
-    return { id, flash: (d.querySelector('.msst-note') || {}).textContent || '', status: res.status, url: res.url };
+    const doc = dom(await res.text());
+    const m = res.url.match(/[?&]id=(\d+)/);
+    return { id: m ? m[1] : null, flash: ((doc.querySelector('.msst-note') || {}).textContent || '').trim(), url: res.url };
   }
 
-  async function listRow(id) {
-    const p = await get(PAGE + 'snippets&s=' + encodeURIComponent(TAG));
-    const toggle = [...p.doc.querySelectorAll('a.msst-toggle')].find((a) => new RegExp('snippet=' + id + '(&|$)').test(a.getAttribute('href')));
+  async function row(id) {
+    const p = await get(LIST + '&s=' + encodeURIComponent(TAG));
+    const toggle = [...p.doc.querySelectorAll('a.msst-toggle')].find((a) => new RegExp('[?&]id=' + id + '(&|$)').test(a.getAttribute('href')));
     if (!toggle) return null;
     const tr = toggle.closest('tr');
-    return { on: toggle.classList.contains('is-on'), text: tr.textContent, toggleHref: toggle.getAttribute('href'), doc: p.doc };
+    return { on: toggle.classList.contains('is-on'), text: tr.textContent.replace(/\s+/g, ' '), toggle: toggle.getAttribute('href'), del: tr.querySelector('a.msst-danger').getAttribute('href'), doc: p.doc };
   }
 
-  async function restPost(content, title) {
-    const r = await fetch(HOME + 'wp-json/wp/v2/posts', {
+  async function rest(base, payload) {
+    const r = await fetch(HOME + 'wp-json/wp/v2/' + base, {
       method: 'POST', credentials: 'same-origin',
-      headers: { 'X-WP-Nonce': restNonce, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, status: 'publish', content }),
+      headers: { 'X-WP-Nonce': restNonce, 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     const j = await r.json();
-    if (j.id) madePosts.push(j.id);
+    if (j.id) posts.push([base, j.id]);
     return j;
   }
 
   try {
-    log('== Scripts Manager By Mudassar – browser console test ==  tag:', TAG);
+    log('== Scripts Manager By Mudassar v2 – browser test ==  tag:', TAG);
+    restNonce = (await (await fetch(ADMIN + 'admin-ajax.php?action=rest-nonce', { credentials: 'same-origin' })).text()).trim();
 
-    // ---------------------------------------------------------------- 1. admin UI
-    log('1. Admin tabs');
-    const tabs = ['headers', 'snippets', 'edit', 'revisions', 'tools', 'logs', 'settings', 'support'];
-    for (const t of tabs) {
-      const p = await get(PAGE + t);
-      check(`tab "${t}" loads with branding`, p.status === 200 && p.text.includes('Mudassar Shakeel') && p.text.includes('Contact Us'), 'HTTP ' + p.status);
+    // ------------------------------------------------------------ 1. screens
+    log('1. Screens and branding');
+    for (const [name, slug] of [['All Snippets', 'scripts-manager'], ['Add New', 'scripts-manager-add'], ['Tools', 'scripts-manager-tools'], ['Settings', 'scripts-manager-settings']]) {
+      const p = await get(PAGE(slug));
+      check(`${name} screen loads with branding`, p.status === 200 && p.text.includes('Mudassar Shakeel') && p.text.includes('Contact Us'), 'HTTP ' + p.status);
     }
-    const nav = await get(PAGE + 'headers');
-    const mainTabs = [...nav.doc.querySelectorAll('.msst-tabs a')].map((x) => x.textContent.trim());
-    check('main tabs are Headers & Footers, My Snippets, Add Snippet, Settings', JSON.stringify(mainTabs) === JSON.stringify(['Headers & Footers', 'My Snippets', 'Add Snippet', 'Settings']), mainTabs.join(' | '));
-    for (const sec of ['general', 'history', 'tools', 'logs', 'support']) {
-      const sp = await get(PAGE + 'settings&section=' + sec);
-      check(`Settings > ${sec} loads inside the Settings tab`, sp.status === 200 && !!sp.doc.querySelector('.msst-subnav a.is-active') && sp.text.includes('Mudassar Shakeel'), 'HTTP ' + sp.status);
-    }
-    const sup = await get(PAGE + 'support');
-    const links = [...sup.doc.querySelectorAll('a[href*="mudassar.work"]')].map((a) => a.getAttribute('href'));
-    check('Contact Us / website links all have UTM tags',
-      links.length >= 4 && links.every((h) => h.includes('utm_source=scripts-manager-by-mudassar') && h.includes('utm_medium=wordpress-plugin') && h.includes('utm_content=')), links.join(' | '));
-    check('contact links point to /contact/', links.some((h) => h.includes('mudassar.work/contact/')), links.join(' | '));
-    check('external links have rel=noopener', [...sup.doc.querySelectorAll('a[href*="mudassar.work"]')].every((a) => /noopener/.test(a.rel)), '');
+    const set = await get(PAGE('scripts-manager-settings'));
+    const links = [...set.doc.querySelectorAll('a[href*="mudassar.work"]')];
+    const hrefs = links.map((a) => a.getAttribute('href'));
+    check('Contact Us / website links all have UTM tags', hrefs.length >= 4 && hrefs.every((h) => h.includes('utm_source=scripts-manager-by-mudassar') && h.includes('utm_medium=wordpress-plugin') && h.includes('utm_content=')), hrefs.join(' | '));
+    check('contact links point to /contact/', hrefs.some((h) => h.includes('mudassar.work/contact/')), hrefs.join(' | '));
+    check('external links have rel=noopener', links.every((a) => /noopener/.test(a.rel)), '');
+    const form = (await get(ADD)).doc;
+    const labels = [...form.querySelectorAll('.msst-row > .msst-label')].map((x) => x.textContent.trim());
+    check('form has Snippet Name, Type, Site Display, Location, Device, Status, Code', ['Snippet Name', 'Snippet Type', 'Site Display', 'Location', 'Device Display', 'Status', 'Snippet / Code'].every((l) => labels.includes(l)), labels.join(', '));
+    const displays = [...form.querySelectorAll('#msst_display_on option')].map((o) => o.value);
+    check('Site Display has all 11 choices', ['site_wide', 'posts', 'pages', 'categories', 'post_types', 'tags', 'home', 'search', 'archives', 'latest', 'shortcode'].every((d) => displays.includes(d)), displays.join(','));
 
-    // ---------------------------------------------------------------- 2. output types
-    log('2. HTML / CSS / JS output');
-    const html = await saveSnippet({ title: TAG + ' html', type: 'html', location: 'footer', code: `<div id="${TAG}-html">HTML-OK-${TAG}</div>` });
+    // ------------------------------------------------------------ 2. types and locations
+    log('2. HTML / CSS / JS in header, footer, content');
+    const html = await save({ name: TAG + ' html', code: `<div id="${TAG}-html">HTML-OK-${TAG}</div>`, location: 'footer' });
     check('HTML snippet saved', !!html.id, html.flash);
-    const css = await saveSnippet({ title: TAG + ' css', type: 'css', location: 'header', code: `.${TAG}{color:red}` });
-    const js = await saveSnippet({ title: TAG + ' js', type: 'js', location: 'footer', code: `window.${TAG.replace(/-/g, '_')}=1;` });
+    const css = await save({ name: TAG + ' css', type: 'css', code: `.${TAG}{color:red}`, location: 'header' });
+    const js = await save({ name: TAG + ' js', type: 'js', code: `window.${TAG.replace(/-/g, '_')}=1;`, location: 'header' });
     let home = await visitor(HOME);
-    check('visitor sees HTML snippet', home.text.includes('HTML-OK-' + TAG), 'status ' + home.status);
-    check('CSS wrapped in <style> in <head>', new RegExp(`<style>\\s*\\.${TAG}\\{color:red\\}`).test(home.text), '');
+    check('HTML printed in the footer', home.text.includes('HTML-OK-' + TAG), 'HTTP ' + home.status);
+    check('CSS wrapped in <style> inside <head>', new RegExp(`<head[\\s\\S]*<style>\\s*\\.${TAG}\\{color:red\\}[\\s\\S]*</head>`).test(home.text), '');
     check('JS wrapped in <script>', new RegExp(`<script>\\s*window\\.${TAG.replace(/-/g, '_')}=1;`).test(home.text), '');
+    const post = await rest('posts', { title: TAG + ' post', status: 'publish', content: `<p>CONTENT-MARK-${TAG}</p>` });
+    const before = await save({ name: TAG + ' before', code: `<i>BEFORE-${TAG}</i>`, location: 'before_content' });
+    const after = await save({ name: TAG + ' after', code: `<i>AFTER-${TAG}</i>`, location: 'after_content' });
+    const pv = await visitor(post.link);
+    const iB = pv.text.indexOf('BEFORE-' + TAG), iC = pv.text.indexOf('CONTENT-MARK-' + TAG), iA = pv.text.indexOf('AFTER-' + TAG);
+    check('Before Content / After Content wrap the post text', iB > -1 && iC > iB && iA > iC, `${iB} ${iC} ${iA}`);
 
-    // ---------------------------------------------------------------- 3. toggle
-    log('3. Toggle on/off');
-    let row = await listRow(html.id);
-    check('snippet row shows as active', row && row.on, '');
-    await get(new URL(row.toggleHref, ADMIN).href); // turn off
+    // ------------------------------------------------------------ 3. toggle
+    log('3. ON / OFF');
+    let r = await row(html.id);
+    check('new snippet shows as ON in the list', r && r.on, '');
+    await get(new URL(r.toggle, ADMIN).href);
     home = await visitor(HOME);
-    check('deactivated snippet disappears', !home.text.includes('HTML-OK-' + TAG), '');
-    row = await listRow(html.id);
-    await get(new URL(row.toggleHref, ADMIN).href); // turn on
+    check('turned OFF: snippet disappears', !home.text.includes('HTML-OK-' + TAG), '');
+    r = await row(html.id);
+    await get(new URL(r.toggle, ADMIN).href);
     home = await visitor(HOME);
-    check('re-activated snippet returns', home.text.includes('HTML-OK-' + TAG), '');
+    check('turned ON again: snippet returns', home.text.includes('HTML-OK-' + TAG), '');
+    const inactive = await save({ name: TAG + ' inactive', code: `<i>INACTIVE-${TAG}</i>`, status: false });
+    home = await visitor(HOME);
+    check('saved as Inactive: not shown', !home.text.includes('INACTIVE-' + TAG), '');
 
-    // ---------------------------------------------------------------- 4. PHP
-    log('4. PHP snippets');
-    const phpOk = await saveSnippet({ title: TAG + ' php ok', type: 'php', location: 'everywhere', code: `add_action('wp_footer', function(){ echo '<!--${TAG}-php-->'; });` });
+    // ------------------------------------------------------------ 4. site display
+    log('4. Site Display options');
+    const pageA = await rest('pages', { title: TAG + ' page A', status: 'publish', content: '<p>A</p>' });
+    const pageB = await rest('pages', { title: TAG + ' page B', status: 'publish', content: '<p>B</p>' });
+    const cat = await rest('categories', { name: TAG + ' cat' });
+    const catPost = await rest('posts', { title: TAG + ' cat post', status: 'publish', content: '<p>C</p>', categories: [cat.id] });
+    const onlyPages = await save({ name: TAG + ' pages', code: `<i>ONLYPAGE-${TAG}</i>`, display: 'pages', targets: { pages: [pageA.id] } });
+    const onlyPosts = await save({ name: TAG + ' posts', code: `<i>ONLYPOST-${TAG}</i>`, display: 'posts', targets: { posts: [post.id] } });
+    const onlyCat = await save({ name: TAG + ' cats', code: `<i>ONLYCAT-${TAG}</i>`, display: 'categories', targets: { categories: [cat.id] } });
+    const onlyType = await save({ name: TAG + ' ptype', code: `<i>ONLYTYPE-${TAG}</i>`, display: 'post_types', targets: { post_types: ['page'] } });
+    const onlyHome = await save({ name: TAG + ' home', code: `<i>ONLYHOME-${TAG}</i>`, display: 'home' });
+    const onlySearch = await save({ name: TAG + ' search', code: `<i>ONLYSEARCH-${TAG}</i>`, display: 'search' });
+    const wide = await save({ name: TAG + ' wide ex', code: `<i>WIDEEX-${TAG}</i>`, display: 'site_wide', targets: { ex_pages: [pageB.id] } });
+    const scOnly = await save({ name: TAG + ' shortcode', code: `<u>SHORTCODE-${TAG}</u>`, display: 'shortcode' });
+    const [vA, vB, vPost, vCatPost, vHome, vSearch] = await Promise.all([visitor(pageA.link), visitor(pageB.link), visitor(post.link), visitor(catPost.link), visitor(HOME), visitor(HOME + '?s=' + TAG)]);
+    const has = (v, t) => v.text.includes(t + '-' + TAG);
+    check('Specific Pages: shows on the chosen page only', has(vA, 'ONLYPAGE') && !has(vB, 'ONLYPAGE') && !has(vHome, 'ONLYPAGE'), '');
+    check('Specific Posts: shows on the chosen post only', has(vPost, 'ONLYPOST') && !has(vCatPost, 'ONLYPOST') && !has(vA, 'ONLYPOST'), '');
+    check('Specific Categories: shows on a post in the category', has(vCatPost, 'ONLYCAT') && !has(vPost, 'ONLYCAT'), '');
+    const catArchive = await visitor(cat.link);
+    check('Specific Categories: shows on the category archive', has(catArchive, 'ONLYCAT'), '');
+    check('Specific Post Types: shows on pages, not posts', has(vA, 'ONLYTYPE') && !has(vPost, 'ONLYTYPE'), '');
+    check('Home Page: shows on the home page only', has(vHome, 'ONLYHOME') && !has(vA, 'ONLYHOME'), '');
+    check('Search Page: shows on search results only', has(vSearch, 'ONLYSEARCH') && !has(vHome, 'ONLYSEARCH'), '');
+    check('Site Wide with Exclude Pages: hidden on the excluded page', !has(vB, 'WIDEEX') && has(vA, 'WIDEEX') && has(vHome, 'WIDEEX'), '');
+    check('Shortcode Only: not shown automatically', !has(vHome, 'SHORTCODE') && !has(vPost, 'SHORTCODE'), '');
+    const scPost = await rest('posts', { title: TAG + ' sc post', status: 'publish', content: `[msst_snippet id="${scOnly.id}"]` });
+    const vSc = await visitor(scPost.link);
+    check('Shortcode renders the snippet', has(vSc, 'SHORTCODE'), '');
+
+    // ------------------------------------------------------------ 5. devices
+    log('5. Device Display');
+    const desk = await save({ name: TAG + ' desk', code: `<i>DESKONLY-${TAG}</i>`, device: 'desktop' });
+    const mob = await save({ name: TAG + ' mob', code: `<i>MOBONLY-${TAG}</i>`, device: 'mobile' });
+    home = await visitor(HOME);
+    check('Only Desktop: shown to a desktop browser', has(home, 'DESKONLY'), '');
+    check('Only Mobile: hidden from a desktop browser', !has(home, 'MOBONLY'), '');
+
+    // ------------------------------------------------------------ 6. PHP
+    log('6. PHP snippets');
+    const phpOk = await save({ name: TAG + ' php ok', type: 'php', location: 'everywhere', code: `add_action('wp_footer', function(){ echo '<!--${TAG}-php-->'; });` });
     check('PHP snippet saved', !!phpOk.id, phpOk.flash);
     home = await visitor(HOME);
-    check('PHP snippet runs on the front end', home.text.includes(`<!--${TAG}-php-->`), '');
-    const phpBad = await saveSnippet({ title: TAG + ' php bad', type: 'php', location: 'everywhere', code: "add_filter('a',;" });
-    check('PHP syntax error is rejected on save', !phpBad.id && phpBad.flash.length > 0, phpBad.flash || phpBad.url);
-    const boom = await saveSnippet({ title: TAG + ' php boom', type: 'php', location: 'everywhere', code: `throw new Exception('boom-${TAG}');` });
+    check('PHP snippet runs on the public site', home.text.includes(`<!--${TAG}-php-->`), '');
+    const phpBad = await save({ name: TAG + ' php bad', type: 'php', location: 'everywhere', code: "add_filter('a',;" });
+    check('PHP syntax error is refused (nothing saved)', !phpBad.id && phpBad.flash.length > 0, phpBad.flash || phpBad.url);
+    const phpSc = await save({ name: TAG + ' php sc', type: 'php', display: 'shortcode', code: 'echo 1;' });
+    check('PHP cannot be Shortcode Only', !phpSc.id && /shortcode/i.test(phpSc.flash), phpSc.flash);
+    const boom = await save({ name: TAG + ' php boom', type: 'php', location: 'everywhere', code: `throw new Exception('boom-${TAG}');` });
     home = await visitor(HOME);
-    check('site still loads when a snippet throws', home.status === 200, 'status ' + home.status);
-    row = await listRow(boom.id);
-    check('throwing snippet auto-disabled with error badge', row && !row.on && /turned off automatically/i.test(row.text), row ? row.text.replace(/\s+/g, ' ').slice(0, 120) : 'row not found');
-    const logs = await get(PAGE + 'logs');
-    check('error recorded in the Error Log tab', logs.text.includes('boom-' + TAG), '');
-    const fileBox = logs.doc.querySelector('#msst-error-file');
-    check('error log FILE section shows the error', !!fileBox && fileBox.textContent.includes('boom-' + TAG), fileBox ? fileBox.textContent.slice(0, 120) : 'section missing');
-    const dl = logs.doc.querySelector('a[href*="action=msst_download_log"]');
-    check('download link for the error log file exists', !!dl, '');
-    if (dl) {
-      const dlRes = await fetch(new URL(dl.getAttribute('href'), ADMIN).href, { credentials: 'same-origin' });
-      const dlText = await dlRes.text();
-      check('error log file downloads as plain text with our error', dlRes.status === 200 && /text\/plain/.test(dlRes.headers.get('content-type') || '') && dlText.includes('boom-' + TAG), 'HTTP ' + dlRes.status);
-      const dlNoNonce = await fetch(new URL(dl.getAttribute('href').replace(/&_wpnonce=[^&]+/, ''), ADMIN).href, { credentials: 'same-origin' });
-      check('log download without nonce is refused', dlNoNonce.status === 403, 'HTTP ' + dlNoNonce.status);
-      const dlAnon = await fetch(new URL(dl.getAttribute('href'), ADMIN).href, { credentials: 'omit' });
-      check('log download for a logged-out visitor is refused', !(await dlAnon.text()).includes('boom-' + TAG), '');
-    }
+    check('site still loads when a snippet throws', home.status === 200, 'HTTP ' + home.status);
+    r = await row(boom.id);
+    check('throwing snippet turned OFF automatically, error shown in the list', r && !r.on && r.text.includes('boom-' + TAG), r ? r.text.slice(0, 160) : 'row missing');
 
-    // ---------------------------------------------------------------- 5. conditions & placement (needs a post)
-    log('5. Conditional logic, paragraph insertion, shortcode');
-    const nonceRes = await fetch(ADMIN + 'admin-ajax.php?action=rest-nonce', { credentials: 'same-origin' });
-    restNonce = (await nonceRes.text()).trim();
-    const post = await restPost('<p>P1</p><p>P2</p><p>P3</p>', TAG + ' post');
-    check('test post created via REST', !!post.id && !!post.link, JSON.stringify(post).slice(0, 120));
-    const front = await saveSnippet({ title: TAG + ' front', type: 'html', location: 'footer', code: `<i>${TAG}-FRONT</i>`, rules: [[{ type: 'page_type', op: 'is', value: 'front_page' }]] });
-    const notFront = await saveSnippet({ title: TAG + ' notfront', type: 'html', location: 'footer', code: `<i>${TAG}-NOTFRONT</i>`, rules: [[{ type: 'page_type', op: 'is_not', value: 'front_page' }]] });
-    const afterP2 = await saveSnippet({ title: TAG + ' p2', type: 'html', location: 'after_paragraph', param: 2, code: `<b>${TAG}-P2</b>` });
-    const sc = await saveSnippet({ title: TAG + ' sc', type: 'html', location: 'shortcode', code: `<u>${TAG}-SC</u>` });
-    const postPage = await visitor(post.link);
-    home = await visitor(HOME);
-    check('rule "is front page": shown on the home page', home.text.includes(`${TAG}-FRONT`) && !home.text.includes(`${TAG}-NOTFRONT`), 'FRONT missing or NOTFRONT present');
-    check('rule "is front page": hidden on a post', !postPage.text.includes(`${TAG}-FRONT`), '');
-    check('rule "is not front page": shown on a post', postPage.text.includes(`${TAG}-NOTFRONT`), '');
-    check('after paragraph 2 inserted in the right place', new RegExp(`P2</p>\\s*<b>${TAG}-P2</b>\\s*<p>P3`).test(postPage.text), '');
-    const scPost = await restPost(`[msst_snippet id="${sc.id}"]`, TAG + ' sc post');
-    const scPage = await visitor(scPost.link);
-    check('shortcode renders the snippet', scPage.text.includes(`${TAG}-SC`), '');
-    const phpSc = await saveSnippet({ title: TAG + ' php sc', type: 'php', location: 'everywhere', code: `add_action('wp_footer', function(){ echo '<!--${TAG}-once-->'; });` });
-    const scPhpPost = await restPost(`[msst_snippet id="${phpSc.id}"]`, TAG + ' sc php post');
-    const scPhpPage = await visitor(scPhpPost.link);
-    check('PHP snippets never run from a shortcode (only once, from normal run)', (scPhpPage.text.match(new RegExp(`<!--${TAG}-once-->`, 'g')) || []).length === 1, '');
-    const bogusRule = await saveSnippet({ title: TAG + ' bogus', type: 'html', location: 'footer', code: `<i>${TAG}-BOGUS</i>`, rules: [[{ type: 'url', op: 'DROP;--', value: 'x' }]] });
-    home = await visitor(HOME);
-    check('invalid rule is dropped (snippet shows as unconditional)', home.text.includes(`${TAG}-BOGUS`), '');
-
-    // ---------------------------------------------------------------- 6. schedule
-    log('6. Scheduling');
-    const expired = await saveSnippet({ title: TAG + ' expired', type: 'html', location: 'footer', code: `<i>${TAG}-EXPIRED</i>`, end: '2000-01-01T00:00' });
-    const future = await saveSnippet({ title: TAG + ' future', type: 'html', location: 'footer', code: `<i>${TAG}-FUTURE</i>`, start: '2099-01-01T00:00' });
-    home = await visitor(HOME);
-    check('expired snippet hidden', !home.text.includes(`${TAG}-EXPIRED`), '');
-    check('future snippet hidden', !home.text.includes(`${TAG}-FUTURE`), '');
-
-    // ---------------------------------------------------------------- 7. global header/footer
-    log('7. Global header/footer + integrations');
-    const hp = await get(PAGE + 'headers');
-    const val = (n) => (hp.doc.querySelector(`[name="${n}"]`) || {}).value || '';
-    originalGlobal = { header: val('msst_header'), body: val('msst_body'), footer: val('msst_footer'), ga4: val('msst_ga4'), gtm: val('msst_gtm'), meta: val('msst_meta'), tiktok: val('msst_tiktok') };
-    const hnonce = formNonce(hp.doc, 'msst_save_headers');
-    const saveGlobal = async (o) => fetch(POST, { method: 'POST', credentials: 'same-origin', body: new URLSearchParams({
-      action: 'msst_save_headers', _wpnonce: hnonce, msst_header: o.header, msst_body: o.body, msst_footer: o.footer,
-      msst_ga4: o.ga4, msst_gtm: o.gtm, msst_meta: o.meta, msst_tiktok: o.tiktok }) });
-    await saveGlobal({ ...originalGlobal, header: originalGlobal.header + `\n<meta name="${TAG}" content="hdr">`, footer: originalGlobal.footer + `\n<!--${TAG}-ftr-->`, ga4: 'G-TEST1234AB' });
-    home = await visitor(HOME);
-    check('global header code printed', home.text.includes(`name="${TAG}" content="hdr"`), '');
-    check('global footer code printed', home.text.includes(`<!--${TAG}-ftr-->`), '');
-    check('GA4 script generated from ID', home.text.includes('G-TEST1234AB'), '');
-    await saveGlobal({ ...originalGlobal, ga4: 'G-1");alert(1);//' });
-    home = await visitor(HOME);
-    check('GA4 injection attempt rejected (nothing printed)', !home.text.includes('alert(1);//'), '');
-
-    // ---------------------------------------------------------------- 8. revisions
-    log('8. Revisions');
-    await saveSnippet({ id: html.id, title: TAG + ' html', type: 'html', location: 'footer', code: `<div id="${TAG}-html">HTML-V2-${TAG}</div>` });
-    const rev = await get(PAGE + 'revisions&snippet=' + html.id);
-    check('editing code stores a revision', /See changes/.test(rev.text) && /Go back to this/.test(rev.text), '');
-    home = await visitor(HOME);
-    check('updated code is live', home.text.includes('HTML-V2-' + TAG), '');
-
-    // ---------------------------------------------------------------- 9. safe mode
-    log('9. Safe mode');
-    const st = await get(PAGE + 'settings');
-    const safeUrl = ((st.doc.querySelector('code.msst-copy') || {}).textContent || '').trim();
-    check('safe-mode URL shown on Settings tab', /msst_safe_mode=/.test(safeUrl), safeUrl);
+    // ------------------------------------------------------------ 7. safe mode
+    log('7. Safe Mode');
+    const safeUrl = ((set.doc.querySelector('code.msst-copy') || {}).textContent || '').trim();
+    check('Safe Mode link is shown on Settings', /msst_safe_mode=/.test(safeUrl), safeUrl);
     const safe = await visitor(safeUrl);
-    check('safe mode with right secret turns snippets off', !safe.text.includes('HTML-V2-' + TAG) && !safe.text.includes(`<!--${TAG}-php-->`), '');
+    check('Safe Mode turns every snippet off', !safe.text.includes('HTML-OK-' + TAG) && !safe.text.includes(`<!--${TAG}-php-->`), '');
     const wrong = await visitor(HOME + '?msst_safe_mode=definitely-wrong');
-    check('safe mode with wrong secret does nothing', wrong.text.includes('HTML-V2-' + TAG), '');
+    check('wrong Safe Mode secret does nothing', wrong.text.includes('HTML-OK-' + TAG), '');
 
-    // ---------------------------------------------------------------- 10. import/export
-    log('10. Export / import');
-    const tp = await get(PAGE + 'tools');
-    const exp = await fetch(POST, { method: 'POST', credentials: 'same-origin', body: new URLSearchParams({ action: 'msst_export', _wpnonce: formNonce(tp.doc, 'msst_export') }) });
+    // ------------------------------------------------------------ 8. tools
+    log('8. Export / Import');
+    const tools = await get(PAGE('scripts-manager-tools'));
+    const expBody = new URLSearchParams({ action: 'msst_export', _wpnonce: nonceOf(tools.doc, 'msst_export') });
+    [html.id, css.id].forEach((i) => expBody.append('ids[]', i));
+    const exp = await fetch(POST, { method: 'POST', credentials: 'same-origin', body: expBody });
     const expText = await exp.text();
     let expJson = null; try { expJson = JSON.parse(expText); } catch (e) { /* ignore */ }
-    check('export returns valid JSON with our snippets', expJson && expJson.plugin === 'scripts-manager-by-mudassar' && expText.includes(TAG), expText.slice(0, 100));
+    check('export gives JSON with only the selected snippets', expJson && expJson.plugin === 'scripts-manager-by-mudassar' && expJson.snippets.length === 2, expText.slice(0, 100));
+    const noSel = await get(POST, { method: 'POST', body: new URLSearchParams({ action: 'msst_export', _wpnonce: nonceOf(tools.doc, 'msst_export') }) });
+    check('export with nothing selected asks you to select', /Select at least one/.test(noSel.text), '');
     const fd = new FormData();
-    fd.append('action', 'msst_import');
-    fd.append('_wpnonce', formNonce(tp.doc, 'msst_import'));
-    fd.append('msst_file', new Blob([JSON.stringify({ plugin: 'scripts-manager-by-mudassar', version: '1.1.0', snippets: [
-      { title: TAG + ' imported', type: 'html', code: `<i>${TAG}-IMPORTED</i>`, location: 'footer', param: 1, priority: 10, conditions: [], start: 0, end: 0 }] })], { type: 'application/json' }), 'import.json');
-    const imp = await fetch(POST, { method: 'POST', credentials: 'same-origin', body: fd });
-    const impDoc = dom(await imp.text());
-    check('import succeeds', /Imported 1/.test((impDoc.querySelector('.msst-note') || {}).textContent || ''), (impDoc.querySelector('.msst-note') || {}).textContent);
+    fd.append('action', 'msst_import'); fd.append('_wpnonce', nonceOf(tools.doc, 'msst_import'));
+    fd.append('msst_file', new Blob([JSON.stringify({ plugin: 'scripts-manager-by-mudassar', snippets: [{ name: TAG + ' imported', type: 'html', code: `<i>IMPORTED-${TAG}</i>`, display_on: 'site_wide', location: 'footer', device: 'all', status: 1 }] })], { type: 'application/json' }), 'import.json');
+    const imp = dom(await (await fetch(POST, { method: 'POST', credentials: 'same-origin', body: fd })).text());
+    check('import succeeds', /Imported 1/.test((imp.querySelector('.msst-note') || {}).textContent || ''), (imp.querySelector('.msst-note') || {}).textContent);
     home = await visitor(HOME);
-    check('imported snippet is INACTIVE until reviewed', !home.text.includes(`${TAG}-IMPORTED`), '');
-    const badFd = new FormData();
-    badFd.append('action', 'msst_import');
-    badFd.append('_wpnonce', formNonce(tp.doc, 'msst_import'));
-    badFd.append('msst_file', new Blob(['{"plugin":"other","snippets":[]}'], { type: 'application/json' }), 'bad.json');
-    const badImp = dom(await (await fetch(POST, { method: 'POST', credentials: 'same-origin', body: badFd })).text());
-    check('wrong-format import rejected', /not a valid/i.test((badImp.querySelector('.msst-note') || {}).textContent || ''), '');
+    check('imported snippet arrives OFF', !has(home, 'IMPORTED'), '');
+    const bad = new FormData();
+    bad.append('action', 'msst_import'); bad.append('_wpnonce', nonceOf(tools.doc, 'msst_import'));
+    bad.append('msst_file', new Blob(['{"plugin":"other","snippets":[]}'], { type: 'application/json' }), 'bad.json');
+    const badRes = dom(await (await fetch(POST, { method: 'POST', credentials: 'same-origin', body: bad })).text());
+    check('wrong-format import is rejected', /not a valid/i.test((badRes.querySelector('.msst-note') || {}).textContent || ''), '');
 
-    // ---------------------------------------------------------------- 11. security
-    log('11. Security');
-    const delHref = (await listRow(html.id)).doc.querySelector(`a[href*="action=msst_delete"][href*="snippet=${html.id}"]`).getAttribute('href');
-    const noNonce = delHref.replace(/&_wpnonce=[^&]+/, '');
-    let r = await fetch(new URL(noNonce, ADMIN).href, { credentials: 'same-origin' });
-    check('delete without nonce refused (CSRF)', r.status === 403, 'HTTP ' + r.status);
-    r = await fetch(new URL(delHref.replace(/_wpnonce=[^&]+/, '_wpnonce=deadbeef12'), ADMIN).href, { credentials: 'same-origin' });
-    check('delete with a wrong nonce refused', r.status === 403, 'HTTP ' + r.status);
-    check('snippet still exists after those attempts', !!(await listRow(html.id)), '');
-    r = await fetch(POST, { method: 'POST', credentials: 'omit', redirect: 'follow', body: new URLSearchParams({ action: 'msst_save_snippet', msst_title: TAG + ' anon', msst_type: 'html', msst_code: 'x' }) });
-    const anonList = await get(PAGE + 'snippets&s=' + encodeURIComponent(TAG + ' anon'));
-    check('logged-out visitor cannot use admin-post save (refused, nothing created)', ([400, 401, 403].includes(r.status) || /wp-login\.php/.test(r.url)) && !anonList.text.includes(TAG + ' anon'), 'HTTP ' + r.status + ' ' + r.url);
-    const anonPage = await fetch(PAGE + 'snippets', { credentials: 'omit' });
-    check('logged-out visitor cannot open the plugin page', /wp-login\.php/.test(anonPage.url), anonPage.url);
-    const xss = await saveSnippet({ title: TAG + ' <img src=x onerror=alert(1)>', type: 'html', location: 'footer', code: '<i>x</i>', active: false });
-    const xssList = await get(PAGE + 'snippets&s=' + encodeURIComponent(TAG));
-    check('snippet title is escaped in the admin list (no XSS)', !/<img[^>]+onerror/i.test(xssList.text), '');
+    // ------------------------------------------------------------ 9. list features and security
+    log('9. List and security');
+    const lp = await get(LIST + '&s=' + encodeURIComponent(TAG));
+    const cols = [...lp.doc.querySelectorAll('.msst-table thead th')].map((x) => x.textContent.replace(/[▲▼]/g, '').trim());
+    check('list has ID, Status, Snippet Name, Display On, Location, Snippet Type, Devices, Shortcode', ['ID', 'Status', 'Snippet Name', 'Display On', 'Location', 'Snippet Type', 'Devices', 'Shortcode'].every((c) => cols.includes(c)), cols.join(', '));
+    const views = [...lp.doc.querySelectorAll('.msst-views a')].map((x) => x.textContent.replace(/\s+/g, ' ').trim());
+    check('list has All / Active / Inactive links with counts', views.length === 3 && /All \(\d+\)/.test(views[0]) && /Active \(\d+\)/.test(views[1]) && /Inactive \(\d+\)/.test(views[2]), views.join(' | '));
+    const inactiveList = await get(LIST + '&status=inactive&s=' + encodeURIComponent(TAG));
+    check('Inactive filter lists only OFF snippets', inactiveList.text.includes(TAG + ' inactive') && !inactiveList.text.includes(TAG + ' css'), '');
+    const sorted = await get(LIST + '&orderby=id&order=desc&s=' + encodeURIComponent(TAG));
+    const ids = [...sorted.doc.querySelectorAll('.msst-table tbody tr td:nth-child(2)')].map((x) => parseInt(x.textContent, 10));
+    check('sorting by ID descending works', ids.length > 2 && ids.every((v, i) => i === 0 || ids[i - 1] > v), ids.join(','));
+    r = await row(css.id);
+    const noNonce = r.del.replace(/&_wpnonce=[^&]+/, '');
+    let res = await fetch(new URL(noNonce, ADMIN).href, { credentials: 'same-origin' });
+    check('delete without a nonce is refused (CSRF)', res.status === 403, 'HTTP ' + res.status);
+    res = await fetch(new URL(r.del.replace(/_wpnonce=[^&]+/, '_wpnonce=deadbeef12'), ADMIN).href, { credentials: 'same-origin' });
+    check('delete with a wrong nonce is refused', res.status === 403, 'HTTP ' + res.status);
+    check('snippet still exists after those attempts', !!(await row(css.id)), '');
+    res = await fetch(POST, { method: 'POST', credentials: 'omit', redirect: 'follow', body: new URLSearchParams({ action: 'msst_save_snippet', msst_name: TAG + ' anon', msst_type: 'html', msst_code: 'x' }) });
+    const anon = await get(LIST + '&s=' + encodeURIComponent(TAG + ' anon'));
+    check('logged-out visitor cannot save a snippet (nothing created)', ([400, 401, 403].includes(res.status) || /wp-login\.php/.test(res.url)) && !anon.text.includes(TAG + ' anon'), 'HTTP ' + res.status);
+    const anonPage = await fetch(LIST, { credentials: 'omit' });
+    check('logged-out visitor cannot open the plugin screen', /wp-login\.php/.test(anonPage.url), anonPage.url);
+    const xss = await save({ name: TAG + ' <img src=x onerror=alert(1)>', code: '<i>x</i>', status: false });
+    const xssList = await get(LIST + '&s=' + encodeURIComponent(TAG));
+    check('snippet names are escaped in the list (no XSS)', !/<img[^>]+onerror/i.test(xssList.text), '');
     const dbg = await visitor(HOME);
-    check('no PHP warnings/notices printed on the front end', !/(Warning|Notice|Deprecated|Fatal error)\s*:.*(scripts-manager-by-mudassar|msst_)/i.test(dbg.text), '');
+    check('no PHP warnings printed on the public site', !/(Warning|Notice|Deprecated|Fatal error)\s*:.*(scripts-manager-by-mudassar|msst_)/i.test(dbg.text), '');
   } catch (e) {
-    check('script finished without a runtime error', false, e && e.stack || e);
+    check('script finished without a runtime error', false, (e && e.stack) || e);
   } finally {
-    // ------------------------------------------------------------------ cleanup
     log('Cleaning up…');
     try {
-      const bulk = await get(PAGE + 'snippets&s=' + encodeURIComponent(TAG));
-      const ids = [...bulk.doc.querySelectorAll('input[name="ids[]"]')].map((i) => i.value);
-      if (ids.length) {
-        const body = new URLSearchParams({ action: 'msst_bulk', _wpnonce: formNonce(bulk.doc, 'msst_bulk'), bulk_action: 'delete' });
+      for (let round = 0; round < 3; round++) {
+        const lp = await get(LIST + '&s=' + encodeURIComponent(TAG));
+        const ids = [...lp.doc.querySelectorAll('input[name="ids[]"]')].map((i) => i.value);
+        if (!ids.length) break;
+        const body = new URLSearchParams({ action: 'msst_bulk', _wpnonce: nonceOf(lp.doc, 'msst_bulk'), bulk_action: 'delete' });
         ids.forEach((i) => body.append('ids[]', i));
         await fetch(POST, { method: 'POST', credentials: 'same-origin', body });
       }
-      for (const id of madePosts) {
-        await fetch(HOME + `wp-json/wp/v2/posts/${id}?force=true`, { method: 'DELETE', credentials: 'same-origin', headers: { 'X-WP-Nonce': restNonce } });
+      for (const [base, id] of posts) {
+        await fetch(HOME + `wp-json/wp/v2/${base}/${id}?force=true`, { method: 'DELETE', credentials: 'same-origin', headers: { 'X-WP-Nonce': restNonce } });
       }
-      if (originalGlobal) {
-        const hp = await get(PAGE + 'headers');
-        await fetch(POST, { method: 'POST', credentials: 'same-origin', body: new URLSearchParams({
-          action: 'msst_save_headers', _wpnonce: formNonce(hp.doc, 'msst_save_headers'),
-          msst_header: originalGlobal.header, msst_body: originalGlobal.body, msst_footer: originalGlobal.footer,
-          msst_ga4: originalGlobal.ga4, msst_gtm: originalGlobal.gtm, msst_meta: originalGlobal.meta, msst_tiktok: originalGlobal.tiktok }) });
-      }
-      const left = await get(PAGE + 'snippets&s=' + encodeURIComponent(TAG));
-      check('cleanup: all test snippets deleted', !left.text.includes(TAG + ' '), '');
+      const left = await get(LIST + '&s=' + encodeURIComponent(TAG));
+      check('cleanup: all test snippets deleted', !left.doc.querySelector('input[name="ids[]"]'), '');
     } catch (e) {
-      console.warn('Cleanup problem – delete "' + TAG + '" snippets manually.', e);
+      console.warn('Cleanup problem – delete "' + TAG + '" items manually.', e);
     }
     const failed = results.filter((x) => x.result === 'FAIL');
     console.log('%c==== ' + (results.length - failed.length) + '/' + results.length + ' checks passed ====', 'font-size:14px;font-weight:bold');

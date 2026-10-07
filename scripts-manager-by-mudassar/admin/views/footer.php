@@ -1,6 +1,6 @@
 <?php
 /**
- * Page footer.
+ * Branding footer.
  *
  * @package ScriptsManagerByMudassar
  */
@@ -19,7 +19,6 @@ defined( 'ABSPATH' ) || exit;
 		?>
 	</span>
 	<span class="msst-right">
-		<?php esc_html_e( 'Need help?', 'scripts-manager-by-mudassar' ); ?>
 		<?php echo MSST_Brand::link( 'contact', 'footer-contact-us', __( 'Contact Us', 'scripts-manager-by-mudassar' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> ·
 		<?php echo MSST_Brand::link( 'website', 'footer-website', 'mudassar.work' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</span>

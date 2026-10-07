@@ -1,6 +1,6 @@
 <?php
 /**
- * JSON import and export.
+ * JSON export and import.
  *
  * @package ScriptsManagerByMudassar
  */
@@ -18,22 +18,25 @@ class MSST_Importer {
 	/**
 	 * Build the export document.
 	 *
+	 * @param int[] $ids Snippet IDs to export (empty = all).
 	 * @return string JSON.
 	 */
-	public static function export() {
+	public static function export( array $ids = array() ) {
+		$all   = MSST_Snippets::query( array( 'per_page' => 200 ) );
 		$items = array();
-		$all   = MSST_Snippets::query( array( 'per_page' => self::MAX_ITEMS ) );
 		foreach ( $all['items'] as $s ) {
+			if ( $ids && ! in_array( $s['id'], $ids, true ) ) {
+				continue;
+			}
 			$items[] = array(
-				'title'      => $s['title'],
+				'name'       => $s['name'],
 				'type'       => $s['type'],
 				'code'       => $s['code'],
+				'display_on' => $s['display_on'],
 				'location'   => $s['location'],
-				'param'      => $s['param'],
-				'priority'   => $s['priority'],
-				'conditions' => $s['conditions'],
-				'start'      => $s['start'],
-				'end'        => $s['end'],
+				'device'     => $s['device'],
+				'targets'    => $s['targets'],
+				'status'     => $s['status'] ? 1 : 0,
 			);
 		}
 		return wp_json_encode(
@@ -57,28 +60,26 @@ class MSST_Importer {
 			return new WP_Error( 'msst_big', __( 'File is too large.', 'scripts-manager-by-mudassar' ) );
 		}
 		$data = json_decode( $json, true, 8 );
-		if ( ! is_array( $data ) || ! isset( $data['plugin'], $data['snippets'] ) || ! in_array( $data['plugin'], array( MSST_SLUG, 'mudassar-snippet-studio' ), true ) || ! is_array( $data['snippets'] ) ) {
+		if ( ! is_array( $data ) || ! isset( $data['plugin'], $data['snippets'] ) || MSST_SLUG !== $data['plugin'] || ! is_array( $data['snippets'] ) ) {
 			return new WP_Error( 'msst_format', __( 'This is not a valid Scripts Manager export file.', 'scripts-manager-by-mudassar' ) );
 		}
 		$imported = 0;
 		$skipped  = 0;
 		foreach ( array_slice( $data['snippets'], 0, self::MAX_ITEMS ) as $row ) {
-			if ( ! is_array( $row ) || ! isset( $row['title'], $row['type'], $row['code'] ) || ! is_string( $row['code'] ) || ! is_string( $row['title'] ) || ! is_string( $row['type'] ) ) {
+			if ( ! is_array( $row ) || ! isset( $row['name'], $row['type'], $row['code'] ) || ! is_string( $row['name'] ) || ! is_string( $row['type'] ) || ! is_string( $row['code'] ) ) {
 				++$skipped;
 				continue;
 			}
 			$result = MSST_Snippets::save(
 				array(
-					'title'      => sanitize_text_field( $row['title'] ),
+					'name'       => $row['name'],
 					'type'       => $row['type'],
 					'code'       => $row['code'],
+					'display_on' => isset( $row['display_on'] ) && is_string( $row['display_on'] ) ? $row['display_on'] : 'site_wide',
 					'location'   => isset( $row['location'] ) && is_string( $row['location'] ) ? $row['location'] : '',
-					'param'      => isset( $row['param'] ) ? (int) $row['param'] : 1,
-					'priority'   => isset( $row['priority'] ) ? (int) $row['priority'] : 10,
-					'active'     => false,
-					'conditions' => isset( $row['conditions'] ) ? $row['conditions'] : array(),
-					'start'      => isset( $row['start'] ) ? absint( $row['start'] ) : 0,
-					'end'        => isset( $row['end'] ) ? absint( $row['end'] ) : 0,
+					'device'     => isset( $row['device'] ) && is_string( $row['device'] ) ? $row['device'] : 'all',
+					'targets'    => isset( $row['targets'] ) ? $row['targets'] : array(),
+					'status'     => 0,
 				),
 				0
 			);
@@ -88,7 +89,6 @@ class MSST_Importer {
 				++$imported;
 			}
 		}
-		MSST_Logger::audit( sprintf( 'Imported %d snippets (%d skipped)', $imported, $skipped ) );
 		return array(
 			'imported' => $imported,
 			'skipped'  => $skipped,

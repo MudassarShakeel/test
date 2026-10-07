@@ -2,9 +2,9 @@
 /**
  * Plugin Name:       Scripts Manager By Mudassar
  * Plugin URI:        https://mudassar.work/
- * Description:       Safely add header/footer scripts and PHP, JavaScript, CSS and HTML snippets to your site – with simple step-by-step screens, conditional logic, history, scheduling and a clear problem log.
- * Version:           1.3.0
- * Requires at least: 6.0
+ * Description:       Add HTML, CSS, JavaScript and PHP snippets to your site with a simple list and form: choose where, which pages, which devices, then turn it ON. Includes export/import and a Safe Mode.
+ * Version:           2.0.0
+ * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Mudassar Shakeel
  * Author URI:        https://mudassar.work/
@@ -28,7 +28,7 @@ if ( defined( 'MSST_VERSION' ) ) {
 	return;
 }
 
-define( 'MSST_VERSION', '1.3.0' );
+define( 'MSST_VERSION', '2.0.0' );
 define( 'MSST_FILE', __FILE__ );
 define( 'MSST_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MSST_URL', plugin_dir_url( __FILE__ ) );

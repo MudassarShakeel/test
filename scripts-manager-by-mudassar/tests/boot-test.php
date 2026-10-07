@@ -1,58 +1,45 @@
 <?php
-/** Loads the real main plugin file in a fake WP, runs activation and fires hooks. php tests/boot-test.php */
-error_reporting( E_ALL );
-ini_set( 'display_errors', '1' );
-define( 'ABSPATH', __DIR__ . '/' );
-$GLOBALS['H'] = array(); $GLOBALS['OPT'] = array(); $GLOBALS['ACT'] = array();
+/** Loads the real main plugin file like WordPress does, runs activation and fires the hooks. */
+define( 'MSST_TEST_NO_CONSTANTS', true );
+require __DIR__ . '/bootstrap.php';
+$GLOBALS['H'] = array();
+$GLOBALS['ACT'] = array();
 function add_action( $h, $cb, $p = 10, $n = 1 ) { $GLOBALS['H'][ $h ][] = $cb; }
 function add_filter( $h, $cb, $p = 10, $n = 1 ) { $GLOBALS['H'][ $h ][] = $cb; }
 function add_shortcode( $t, $cb ) { $GLOBALS['H']['shortcode_' . $t][] = $cb; }
-function plugin_dir_path( $f ) { return dirname( $f ) . '/'; }
-function plugin_dir_url( $f ) { return 'http://x.test/wp-content/plugins/' . basename( dirname( $f ) ) . '/'; }
-function plugin_basename( $f ) { return basename( dirname( $f ) ) . '/' . basename( $f ); }
 function register_activation_hook( $f, $cb ) { $GLOBALS['ACT'][] = $cb; }
-function register_deactivation_hook( $f, $cb ) { $GLOBALS['DEACT'][] = $cb; }
+function register_deactivation_hook( $f, $cb ) {}
 function is_admin() { return true; }
-function get_role() { return new class { function add_cap() { echo "cap added\n"; } }; }
-function get_option( $k, $d = false ) { return array_key_exists( $k, $GLOBALS['OPT'] ) ? $GLOBALS['OPT'][ $k ] : $d; }
-function update_option( $k, $v ) { $GLOBALS['OPT'][ $k ] = $v; return true; }
-function add_option( $k, $v ) { $GLOBALS['OPT'][ $k ] = $v; return true; }
-function wp_generate_password() { return str_repeat( 'a', 32 ); }
-function wp_cache_delete() {}
-function register_post_type() { echo "cpt registered\n"; }
-function __( $s ) { return $s; }
-function add_options_page() { echo "menu added\n"; }
-function add_meta_box() {}
-function get_post_types() { return array( 'post' ); }
-function wp_roles() { return (object) array( 'roles' => array() ); }
-function wp_list_pluck( $l, $f ) { return array_map( function ( $v ) use ( $f ) { return $v[ $f ]; }, $l ); }
-function wp_parse_args( $a, $d = array() ) { return array_merge( $d, (array) $a ); }
-function absint( $n ) { return abs( (int) $n ); }
-function get_post() { return null; }
-function wp_enqueue_style() {} function wp_enqueue_script() {} function wp_localize_script() {} function wp_enqueue_code_editor() { return array(); }
-function sanitize_key( $s ) { return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $s ) ); }
-function wp_unslash( $s ) { return $s; }
-function get_post_type_object() { return null; }
-function is_user_logged_in() { return false; }
-function get_user_meta() { return ''; }
+function get_role() { return new class { function add_cap( $c ) { $GLOBALS['CAP_ADDED'] = $c; } }; }
+function add_menu_page( ...$a ) { $GLOBALS['MENU'][] = $a; return 'toplevel_page_' . $a[3]; }
+function add_submenu_page( ...$a ) { $GLOBALS['MENU'][] = $a; return 'x'; }
 function register_shutdown_function_x() {}
-function wp_cache_get() { return false; }
-function wp_cache_set() {}
-function is_singular() { return false; }
-function in_the_loop() { return false; }
-function is_main_query() { return false; }
-class WP_Query { public $posts = array(); function __construct() {} }
+function shortcode_atts( $d, $a ) { return array_merge( $d, (array) $a ); }
 
 require dirname( __DIR__ ) . '/scripts-manager-by-mudassar.php';
-echo "main file loaded OK. version=" . MSST_VERSION . "\n";
+ok( defined( 'MSST_VERSION' ), 'main file loads' );
 foreach ( $GLOBALS['ACT'] as $cb ) { call_user_func( $cb ); }
-echo "activation OK\n";
-foreach ( array( 'init', 'admin_menu' ) as $hook ) {
+ok( 'msst_manage_snippets' === ( $GLOBALS['CAP_ADDED'] ?? '' ), 'activation grants the capability to administrators' );
+ok( '1' === get_option( 'msst_db_version' ) && false !== strpos( $GLOBALS['DBDELTA'] ?? '', 'CREATE TABLE wp_msst_snippets' ), 'activation creates the snippets table' );
+ok( strlen( (string) get_option( 'msst_safe_secret' ) ) >= 24, 'activation creates the safe-mode secret' );
+foreach ( array( 'plugins_loaded', 'init', 'admin_menu' ) as $hook ) {
 	foreach ( $GLOBALS['H'][ $hook ] ?? array() as $cb ) { call_user_func( $cb ); }
 }
+$GLOBALS['MENU'] = $GLOBALS['MENU'] ?? array();
+$slugs = array_map( function ( $m ) { return $m[ 3 ] ?? ''; }, $GLOBALS['MENU'] );
+ok( in_array( 'scripts-manager', $slugs, true ), 'top-level menu "Scripts Manager" is registered' );
+foreach ( array( 'scripts-manager', 'scripts-manager-add', 'scripts-manager-tools', 'scripts-manager-settings' ) as $s ) {
+	ok( in_array( $s, array_map( function ( $m ) { return $m[ 4 ] ?? $m[ 3 ] ?? ''; }, $GLOBALS['MENU'] ), true ) || in_array( $s, $slugs, true ), "menu page: $s" );
+}
+$missing = array();
 foreach ( $GLOBALS['H'] as $hook => $cbs ) {
 	foreach ( $cbs as $cb ) {
-		if ( is_array( $cb ) && ! is_callable( $cb ) ) { echo "NOT CALLABLE: $hook -> " . ( is_object( $cb[0] ) ? get_class( $cb[0] ) : $cb[0] ) . '::' . $cb[1] . "\n"; $bad = true; }
+		if ( is_array( $cb ) && ! is_callable( $cb ) ) { $missing[] = "$hook -> " . ( is_object( $cb[0] ) ? get_class( $cb[0] ) : $cb[0] ) . '::' . $cb[1]; }
 	}
 }
-echo empty( $bad ) ? "all hook callbacks exist\n" : "MISSING CALLBACKS\n";
+ok( ! $missing, 'every hook callback exists' . ( $missing ? ': ' . implode( ', ', $missing ) : '' ) );
+foreach ( array( 'save_snippet', 'toggle', 'delete', 'duplicate', 'bulk', 'export', 'import', 'save_settings', 'regen_secret', 'test_mode' ) as $h ) {
+	ok( ! empty( $GLOBALS['H'][ 'admin_post_msst_' . $h ] ), "admin-post handler: $h" );
+	ok( empty( $GLOBALS['H'][ 'admin_post_nopriv_msst_' . $h ] ), "no logged-out handler: $h" );
+}
+finish();

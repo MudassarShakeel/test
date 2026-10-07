@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin screen under Settings and all form handlers.
+ * Admin menu, screens and form handlers.
  *
  * @package ScriptsManagerByMudassar
  */
@@ -12,7 +12,10 @@ defined( 'ABSPATH' ) || exit;
  */
 class MSST_Admin {
 
-	const PAGE = 'scripts-manager-by-mudassar';
+	const PAGE_LIST     = 'scripts-manager';
+	const PAGE_ADD      = 'scripts-manager-add';
+	const PAGE_TOOLS    = 'scripts-manager-tools';
+	const PAGE_SETTINGS = 'scripts-manager-settings';
 
 	/**
 	 * Hooks.
@@ -22,116 +25,21 @@ class MSST_Admin {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( MSST_FILE ), array( __CLASS__, 'action_links' ) );
 
-		$handlers = array( 'save_headers', 'save_snippet', 'toggle', 'delete', 'duplicate', 'bulk', 'import', 'export', 'restore', 'save_settings', 'regen_secret', 'clear_log', 'download_log', 'test_mode' );
-		foreach ( $handlers as $handler ) {
+		foreach ( array( 'save_snippet', 'toggle', 'delete', 'duplicate', 'bulk', 'export', 'import', 'save_settings', 'regen_secret', 'test_mode' ) as $handler ) {
 			add_action( 'admin_post_msst_' . $handler, array( __CLASS__, 'handle_' . $handler ) );
 		}
 	}
 
 	/**
-	 * Main tabs.
-	 *
-	 * @return array slug => label
-	 */
-	public static function main_tabs() {
-		return array(
-			'headers'  => __( 'Headers & Footers', 'scripts-manager-by-mudassar' ),
-			'snippets' => __( 'My Snippets', 'scripts-manager-by-mudassar' ),
-			'edit'     => __( 'Add Snippet', 'scripts-manager-by-mudassar' ),
-			'settings' => __( 'Settings', 'scripts-manager-by-mudassar' ),
-		);
-	}
-
-	/**
-	 * All tabs.
-	 *
-	 * @return array slug => label
-	 */
-	public static function tabs() {
-		return self::main_tabs();
-	}
-
-	/**
-	 * Sections inside the Settings tab.
-	 *
-	 * @return array slug => label
-	 */
-	public static function sections() {
-		return array(
-			'general' => __( 'General & Safety', 'scripts-manager-by-mudassar' ),
-			'history' => __( 'History & Schedule', 'scripts-manager-by-mudassar' ),
-			'tools'   => __( 'Import / Export', 'scripts-manager-by-mudassar' ),
-			'logs'    => __( 'Problems & Activity', 'scripts-manager-by-mudassar' ),
-			'support' => __( 'Help & Contact', 'scripts-manager-by-mudassar' ),
-		);
-	}
-
-	/**
-	 * Old tab names that now live inside Settings (old links keep working).
-	 *
-	 * @return array old tab => section
-	 */
-	public static function legacy_tabs() {
-		return array(
-			'revisions' => 'history',
-			'tools'     => 'tools',
-			'logs'      => 'logs',
-			'support'   => 'support',
-		);
-	}
-
-	/**
-	 * Starter code for the "Start from an example" list.
-	 *
-	 * @return array type => [ label => code ]
-	 */
-	public static function examples() {
-		return array(
-			'html'      => array(
-				__( 'Blue banner', 'scripts-manager-by-mudassar' ) => '<div style="padding:12px;background:#0071e3;color:#fff;text-align:center">Hello! This is my banner.</div>',
-				__( 'Small notice box', 'scripts-manager-by-mudassar' ) => '<div style="border:1px solid #d2d2d7;border-radius:10px;padding:12px">Write your message here.</div>',
-			),
-			'css'       => array(
-				__( 'Smooth scrolling', 'scripts-manager-by-mudassar' ) => 'html { scroll-behavior: smooth; }',
-				__( 'Round buttons', 'scripts-manager-by-mudassar' ) => "button,
-.button,
-input[type='submit'] {
-	border-radius: 999px;
-}",
-			),
-			'js'        => array(
-				__( 'Say hello in the console', 'scripts-manager-by-mudassar' ) => "console.log( 'Hello from Scripts Manager!' );",
-				__( 'Run code when the page is ready', 'scripts-manager-by-mudassar' ) => "document.addEventListener( 'DOMContentLoaded', function () {
-	console.log( 'Page is ready' );
-} );",
-			),
-			'php'       => array(
-				__( 'Hide admin bar for non-admins', 'scripts-manager-by-mudassar' ) => "add_filter( 'show_admin_bar', function ( \$show ) {
-	return current_user_can( 'manage_options' ) ? \$show : false;
-} );",
-				__( 'Disable emoji scripts', 'scripts-manager-by-mudassar' ) => "remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-remove_action( 'wp_print_styles', 'print_emoji_styles' );",
-			),
-			'text'      => array(
-				__( 'Simple message', 'scripts-manager-by-mudassar' ) => "Thank you for visiting!\nCome back soon.",
-			),
-			'universal' => array(
-				__( 'Message with a shortcode', 'scripts-manager-by-mudassar' ) => '<p>Welcome!</p>[your_shortcode]',
-			),
-		);
-	}
-
-	/**
-	 * Add Settings > Scripts Manager.
+	 * Left menu: Scripts Manager > All Snippets, Add New, Tools, Settings.
 	 */
 	public static function menu() {
-		add_options_page(
-			__( 'Scripts Manager By Mudassar', 'scripts-manager-by-mudassar' ),
-			__( 'Scripts Manager', 'scripts-manager-by-mudassar' ),
-			MSST_Security::CAP,
-			self::PAGE,
-			array( __CLASS__, 'render_page' )
-		);
+		$cap = MSST_Security::CAP;
+		add_menu_page( __( 'Scripts Manager By Mudassar', 'scripts-manager-by-mudassar' ), __( 'Scripts Manager', 'scripts-manager-by-mudassar' ), $cap, self::PAGE_LIST, array( __CLASS__, 'page_list' ), 'dashicons-editor-code', 80 );
+		add_submenu_page( self::PAGE_LIST, __( 'All Snippets', 'scripts-manager-by-mudassar' ), __( 'All Snippets', 'scripts-manager-by-mudassar' ), $cap, self::PAGE_LIST, array( __CLASS__, 'page_list' ) );
+		add_submenu_page( self::PAGE_LIST, __( 'Add New', 'scripts-manager-by-mudassar' ), __( 'Add New', 'scripts-manager-by-mudassar' ), $cap, self::PAGE_ADD, array( __CLASS__, 'page_form' ) );
+		add_submenu_page( self::PAGE_LIST, __( 'Tools', 'scripts-manager-by-mudassar' ), __( 'Tools', 'scripts-manager-by-mudassar' ), $cap, self::PAGE_TOOLS, array( __CLASS__, 'page_tools' ) );
+		add_submenu_page( self::PAGE_LIST, __( 'Settings', 'scripts-manager-by-mudassar' ), __( 'Settings', 'scripts-manager-by-mudassar' ), $cap, self::PAGE_SETTINGS, array( __CLASS__, 'page_settings' ) );
 	}
 
 	/**
@@ -141,33 +49,19 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	 * @return array
 	 */
 	public static function action_links( $links ) {
-		array_unshift( $links, '<a href="' . esc_url( self::url( 'snippets' ) ) . '">' . esc_html__( 'Open', 'scripts-manager-by-mudassar' ) . '</a>' );
+		array_unshift( $links, '<a href="' . esc_url( self::url( self::PAGE_LIST ) ) . '">' . esc_html__( 'All Snippets', 'scripts-manager-by-mudassar' ) . '</a>' );
 		return $links;
 	}
 
 	/**
-	 * Admin URL for a tab.
+	 * Admin URL for one of our pages.
 	 *
-	 * @param string $tab  Tab slug.
+	 * @param string $page Page slug.
 	 * @param array  $args Extra query args.
 	 * @return string
 	 */
-	public static function url( $tab = 'headers', array $args = array() ) {
-		$legacy = self::legacy_tabs();
-		if ( isset( $legacy[ $tab ] ) ) {
-			$args['section'] = $legacy[ $tab ];
-			$tab             = 'settings';
-		}
-		return add_query_arg(
-			array_merge(
-				array(
-					'page' => self::PAGE,
-					'tab'  => $tab,
-				),
-				$args
-			),
-			admin_url( 'options-general.php' )
-		);
+	public static function url( $page = self::PAGE_LIST, array $args = array() ) {
+		return add_query_arg( array_merge( array( 'page' => $page ), $args ), admin_url( 'admin.php' ) );
 	}
 
 	/**
@@ -185,124 +79,80 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	}
 
 	/**
-	 * Load assets only on our screen.
-	 *
-	 * @param string $hook Hook suffix.
-	 */
-	public static function assets( $hook ) {
-		if ( 'settings_page_' . self::PAGE !== $hook ) {
-			return;
-		}
-		wp_enqueue_style( 'msst-admin', MSST_URL . 'assets/admin.css', array(), MSST_VERSION );
-		wp_enqueue_script( 'msst-admin', MSST_URL . 'assets/admin.js', array(), MSST_VERSION, true );
-
-		$script_data           = self::script_data();
-		$script_data['editor'] = 'edit' === self::current_tab() ? wp_enqueue_code_editor( array( 'type' => 'application/x-httpd-php' ) ) : false;
-		wp_localize_script( 'msst-admin', 'msstData', $script_data );
-		if ( 'edit' === self::current_tab() ) {
-			wp_enqueue_style( 'wp-codemirror' );
-		}
-	}
-
-	/**
 	 * Data handed to admin.js (also used by the render test).
 	 *
 	 * @return array
 	 */
 	public static function script_data() {
-		$catalogue = array();
-		foreach ( MSST_Conditions::catalogue() as $key => $def ) {
-			$catalogue[ $key ] = array(
-				'label'  => $def['label'],
-				'group'  => $def['group'],
-				'ops'    => $def['ops'],
-				'values' => $def['values'],
-			);
-		}
-		$locations = array();
-		foreach ( array_keys( MSST_Snippets::types() ) as $type ) {
-			$locations[ $type ] = MSST_Snippets::locations( $type );
-		}
-		$editing = self::current_snippet();
 		return array(
-			'catalogue' => $catalogue,
-			'locations' => $locations,
-			'rules'     => $editing ? $editing['conditions'] : array(),
+			'locations' => array(
+				'php'  => MSST_Snippets::locations( 'php' ),
+				'html' => MSST_Snippets::locations( 'html' ),
+			),
 			'modes'     => array(
-				'php'       => 'application/x-httpd-php',
-				'js'        => 'text/javascript',
-				'css'       => 'text/css',
-				'html'      => 'text/html',
-				'text'      => 'text/html',
-				'universal' => 'text/html',
+				'php'  => 'application/x-httpd-php',
+				'js'   => 'text/javascript',
+				'css'  => 'text/css',
+				'html' => 'text/html',
+			),
+			'rows'      => array(
+				'site_wide'  => array( 'ex_pages', 'ex_posts' ),
+				'pages'      => array( 'pages' ),
+				'posts'      => array( 'posts' ),
+				'categories' => array( 'categories' ),
+				'post_types' => array( 'post_types' ),
+				'tags'       => array( 'tags' ),
 			),
 			'editor'    => false,
-			'examples'  => self::examples(),
 			'i18n'      => array(
-				'showWhen'   => __( 'Show when', 'scripts-manager-by-mudassar' ),
-				'exampleAsk' => __( 'Replace what you wrote with this example?', 'scripts-manager-by-mudassar' ),
-				'addRule'    => __( '+ Add rule', 'scripts-manager-by-mudassar' ),
-				'addGroup'   => __( '+ Add OR group', 'scripts-manager-by-mudassar' ),
-				'remove'     => __( 'Remove', 'scripts-manager-by-mudassar' ),
-				'orLabel'    => __( 'OR', 'scripts-manager-by-mudassar' ),
-				'confirm'    => __( 'Are you sure?', 'scripts-manager-by-mudassar' ),
-				'copied'     => __( 'Copied', 'scripts-manager-by-mudassar' ),
+				'confirm'  => __( 'Are you sure?', 'scripts-manager-by-mudassar' ),
+				'selected' => __( 'selected', 'scripts-manager-by-mudassar' ),
+				'copied'   => __( 'Copied', 'scripts-manager-by-mudassar' ),
 			),
 		);
 	}
 
 	/**
-	 * Active tab slug from the query string (whitelisted). Old tab names map to Settings.
+	 * Load assets only on our screens.
 	 *
-	 * @return string
+	 * @param string $hook Hook suffix.
 	 */
-	public static function current_tab() {
-		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'headers'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
-		if ( isset( self::legacy_tabs()[ $tab ] ) || 'settings' === $tab ) {
-			return 'settings';
+	public static function assets( $hook ) {
+		if ( false === strpos( (string) $hook, 'scripts-manager' ) ) {
+			return;
 		}
-		return isset( self::main_tabs()[ $tab ] ) ? $tab : 'headers';
-	}
-
-	/**
-	 * Active section inside Settings (whitelisted).
-	 *
-	 * @return string
-	 */
-	public static function current_section() {
-		$tab     = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
-		$section = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$legacy  = self::legacy_tabs();
-		if ( '' === $section && isset( $legacy[ $tab ] ) ) {
-			$section = $legacy[ $tab ];
+		wp_enqueue_style( 'msst-admin', MSST_URL . 'assets/admin.css', array(), MSST_VERSION );
+		wp_enqueue_script( 'msst-admin', MSST_URL . 'assets/admin.js', array(), MSST_VERSION, true );
+		$data = self::script_data();
+		if ( false !== strpos( (string) $hook, self::PAGE_ADD ) ) {
+			$data['editor'] = wp_enqueue_code_editor( array( 'type' => 'text/html' ) );
+			wp_enqueue_style( 'wp-codemirror' );
 		}
-		return isset( self::sections()[ $section ] ) ? $section : 'general';
+		wp_localize_script( 'msst-admin', 'msstData', $data );
 	}
 
+	/* ---------------------------------------------------------------- helpers */
+
 	/**
-	 * Snippet being edited, if any.
+	 * Print the common wrapper start (branding) and flash message.
 	 *
-	 * @return array|null
+	 * @param string $title Page heading.
+	 * @param string $extra Extra HTML after the heading (already escaped).
 	 */
-	public static function current_snippet() {
-		$id = isset( $_GET['snippet'] ) ? absint( $_GET['snippet'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return $id ? MSST_Snippets::get( $id ) : null;
-	}
-
-	/**
-	 * Render the whole settings page.
-	 */
-	public static function render_page() {
+	private static function open( $title, $extra = '' ) {
 		if ( ! MSST_Security::can_manage() ) {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'scripts-manager-by-mudassar' ), 403 );
 		}
-		$tab = self::current_tab();
-		echo '<div class="wrap msst"><h1 class="screen-reader-text">' . esc_html__( 'Scripts Manager By Mudassar', 'scripts-manager-by-mudassar' ) . '</h1>';
+		echo '<div class="wrap msst"><h1 class="screen-reader-text">' . esc_html( $title ) . '</h1>';
 		include MSST_DIR . 'admin/views/header.php';
+		echo '<div class="msst-heading"><h2 class="msst-h1">' . esc_html( $title ) . '</h2>' . $extra . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $extra is escaped by the caller.
 		self::render_flash();
-		echo '<div class="msst-view msst-view-' . esc_attr( $tab ) . '">';
-		include MSST_DIR . 'admin/views/' . $tab . '.php';
-		echo '</div>';
+	}
+
+	/**
+	 * Print the common wrapper end.
+	 */
+	private static function close() {
 		include MSST_DIR . 'admin/views/footer.php';
 		echo '</div>';
 	}
@@ -338,18 +188,18 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	}
 
 	/**
-	 * Redirect back to a tab.
+	 * Redirect to one of our pages.
 	 *
-	 * @param string $tab  Tab.
+	 * @param string $page Page slug.
 	 * @param array  $args Args.
 	 */
-	private static function back( $tab, array $args = array() ) {
-		wp_safe_redirect( self::url( $tab, $args ) );
+	private static function back( $page, array $args = array() ) {
+		wp_safe_redirect( self::url( $page, $args ) );
 		exit;
 	}
 
 	/**
-	 * Fetch a posted string without sanitising (callers decide).
+	 * Posted raw string.
 	 *
 	 * @param string $key Key.
 	 * @return string
@@ -360,92 +210,193 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	}
 
 	/**
-	 * Fetch a posted text field.
+	 * Posted list (cleaned later by MSST_Snippets::clean_targets()).
 	 *
 	 * @param string $key Key.
-	 * @return string
+	 * @return array
 	 */
-	private static function post_text( $key ) {
-		return sanitize_text_field( self::post_raw( $key ) );
+	private static function post_list( $key ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verified by caller; cleaned by clean_targets().
+		return isset( $_POST[ $key ] ) && is_array( $_POST[ $key ] ) ? wp_unslash( $_POST[ $key ] ) : array();
 	}
 
 	/**
-	 * Convert a datetime-local value in site time to a UTC timestamp.
+	 * Posted integer IDs (checkboxes).
 	 *
-	 * @param string $value Value like 2026-11-25T00:00.
-	 * @return int 0 when empty/invalid.
+	 * @return int[]
 	 */
-	private static function parse_datetime( $value ) {
-		$value = str_replace( 'T', ' ', trim( $value ) );
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $value ) ) {
-			return 0;
-		}
-		$gmt = get_gmt_from_date( $value . ':00' );
-		return $gmt ? (int) strtotime( $gmt . ' UTC' ) : 0;
+	private static function post_ids() {
+		return array_slice( array_values( array_filter( array_map( 'absint', array_filter( self::post_list( 'ids' ), 'is_scalar' ) ) ) ), 0, 200 );
 	}
 
 	/**
-	 * Collect posted snippet fields.
+	 * Collect the snippet form.
 	 *
 	 * @return array
 	 */
-	private static function collect_snippet_input() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce checked by caller; sanitised by MSST_Conditions::clean().
-		$rules = isset( $_POST['msst_rules'] ) && is_array( $_POST['msst_rules'] ) ? wp_unslash( $_POST['msst_rules'] ) : array();
+	private static function collect_input() {
 		return array(
-			'title'      => self::post_text( 'msst_title' ) ? self::post_text( 'msst_title' ) : __( 'Untitled snippet', 'scripts-manager-by-mudassar' ),
+			'name'       => sanitize_text_field( self::post_raw( 'msst_name' ) ),
 			'type'       => sanitize_key( self::post_raw( 'msst_type' ) ),
 			'code'       => self::post_raw( 'msst_code' ), // Raw by design; capability checked in MSST_Snippets::save().
+			'display_on' => sanitize_key( self::post_raw( 'msst_display_on' ) ),
 			'location'   => sanitize_key( self::post_raw( 'msst_location' ) ),
-			'param'      => absint( self::post_raw( 'msst_param' ) ),
-			'priority'   => absint( self::post_raw( 'msst_priority' ) ),
-			'active'     => '1' === self::post_raw( 'msst_active' ),
-			'conditions' => 'every' === self::post_raw( 'msst_pages' ) ? array() : MSST_Conditions::clean( self::normalise_rules( $rules ) ),
-			'headers'    => self::parse_datetime( self::post_raw( 'msst_start' ) ),
-			'end'        => self::parse_datetime( self::post_raw( 'msst_end' ) ),
+			'device'     => sanitize_key( self::post_raw( 'msst_device' ) ),
+			'status'     => '1' === self::post_raw( 'msst_status' ),
+			'targets'    => array(
+				'pages'      => self::post_list( 'msst_pages' ),
+				'posts'      => self::post_list( 'msst_posts' ),
+				'categories' => self::post_list( 'msst_categories' ),
+				'post_types' => self::post_list( 'msst_post_types' ),
+				'tags'       => self::post_list( 'msst_tags' ),
+				'ex_pages'   => self::post_list( 'msst_ex_pages' ),
+				'ex_posts'   => self::post_list( 'msst_ex_posts' ),
+			),
 		);
 	}
 
 	/**
-	 * Re-index posted rules.
+	 * Choices for the page/post/category/tag/post-type pickers.
 	 *
-	 * @param array $rules Posted rules.
-	 * @return array
+	 * @return array kind => [ id => label ]
 	 */
-	private static function normalise_rules( array $rules ) {
-		$out = array();
-		foreach ( $rules as $group ) {
-			if ( is_array( $group ) ) {
-				$out[] = array_values( array_filter( $group, 'is_array' ) );
+	public static function picker_choices() {
+		$choices = array(
+			'pages'      => array(),
+			'posts'      => array(),
+			'categories' => array(),
+			'tags'       => array(),
+			'post_types' => array(),
+		);
+		$status  = array( 'publish', 'private', 'draft', 'future', 'pending' );
+		$base    = array(
+			'post_status'      => $status,
+			'numberposts'      => 1000, // phpcs:ignore WordPress.WP.PostsPerPage.posts_per_page_numberposts -- Admin-only picker, ids only.
+			'orderby'          => 'title',
+			'order'            => 'ASC',
+			'fields'           => 'ids',
+			'no_found_rows'    => true,
+			'suppress_filters' => true,
+		);
+		foreach ( get_posts( array_merge( $base, array( 'post_type' => 'page' ) ) ) as $id ) {
+			$choices['pages'][ $id ] = get_the_title( $id ) ? get_the_title( $id ) : '#' . $id;
+		}
+		$types = array_diff( array_keys( get_post_types( array( 'public' => true ) ) ), array( 'page', 'attachment' ) );
+		foreach ( get_posts( array_merge( $base, array( 'post_type' => array_values( $types ) ) ) ) as $id ) {
+			$choices['posts'][ $id ] = get_the_title( $id ) ? get_the_title( $id ) : '#' . $id;
+		}
+		foreach ( (array) get_terms(
+			array(
+				'taxonomy'   => 'category',
+				'hide_empty' => false,
+				'number'     => 1000,
+			)
+		) as $term ) {
+			if ( is_object( $term ) ) {
+				$choices['categories'][ $term->term_id ] = $term->name;
 			}
 		}
-		return $out;
+		foreach ( (array) get_terms(
+			array(
+				'taxonomy'   => 'post_tag',
+				'hide_empty' => false,
+				'number'     => 1000,
+			)
+		) as $term ) {
+			if ( is_object( $term ) ) {
+				$choices['tags'][ $term->term_id ] = $term->name;
+			}
+		}
+		foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $slug => $object ) {
+			if ( 'attachment' !== $slug ) {
+				$choices['post_types'][ $slug ] = $object->labels->singular_name;
+			}
+		}
+		return $choices;
 	}
 
-	/* ------------------------------------------------------------------ */
-	/* Handlers                                                           */
-	/* ------------------------------------------------------------------ */
+	/* ------------------------------------------------------------------ pages */
 
 	/**
-	 * Save global header/body/footer and integration IDs.
+	 * All Snippets.
 	 */
-	public static function handle_save_headers() {
-		MSST_Security::guard( 'save_headers' );
-		if ( ! MSST_Security::can_edit_raw() ) {
-			wp_die( esc_html__( 'You are not allowed to save raw code.', 'scripts-manager-by-mudassar' ), 403 );
-		}
-		$data = array();
-		foreach ( array( 'header', 'body', 'footer' ) as $slot ) {
-			$data[ $slot ] = substr( self::post_raw( 'msst_' . $slot ), 0, 200000 );
-		}
-		foreach ( array( 'ga4', 'gtm', 'meta', 'tiktok' ) as $kind ) {
-			$data[ $kind ] = MSST_Settings::clean_integration_id( $kind, self::post_text( 'msst_' . $kind ) );
-		}
-		MSST_Settings::save_global( $data );
-		MSST_Logger::audit( 'Saved global header/footer code' );
-		self::flash( 'success', __( 'Header and footer settings saved.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'headers' );
+	public static function page_list() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list filters.
+		$msst_search  = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+		$msst_status  = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : 'all';
+		$msst_type    = isset( $_GET['type'] ) ? sanitize_key( wp_unslash( $_GET['type'] ) ) : '';
+		$msst_orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'id';
+		$msst_order   = isset( $_GET['order'] ) && 'desc' === sanitize_key( wp_unslash( $_GET['order'] ) ) ? 'desc' : 'asc';
+		$msst_paged   = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
+		// phpcs:enable
+		$msst_status = in_array( $msst_status, array( 'active', 'inactive' ), true ) ? $msst_status : 'all';
+		$msst_counts = MSST_Snippets::counts();
+		$msst_list   = MSST_Snippets::query(
+			array(
+				'search'  => $msst_search,
+				'status'  => $msst_status,
+				'type'    => $msst_type,
+				'orderby' => $msst_orderby,
+				'order'   => $msst_order,
+				'paged'   => $msst_paged,
+			)
+		);
+		self::open( __( 'Snippets', 'scripts-manager-by-mudassar' ), '<a class="msst-btn msst-btn-outline msst-btn-sm" href="' . esc_url( self::url( self::PAGE_ADD ) ) . '">' . esc_html__( 'Add New Snippet', 'scripts-manager-by-mudassar' ) . '</a>' );
+		include MSST_DIR . 'admin/views/list.php';
+		self::close();
 	}
+
+	/**
+	 * Add New / Edit.
+	 */
+	public static function page_form() {
+		$msst_id      = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only.
+		$msst_snippet = $msst_id ? MSST_Snippets::get( $msst_id ) : null;
+		if ( $msst_id && ! $msst_snippet ) {
+			self::flash( 'error', __( 'Snippet not found.', 'scripts-manager-by-mudassar' ) );
+			self::back( self::PAGE_LIST );
+		}
+		if ( ! $msst_snippet ) {
+			$msst_snippet = array(
+				'id'         => 0,
+				'name'       => '',
+				'type'       => 'html',
+				'code'       => '',
+				'display_on' => 'site_wide',
+				'location'   => 'header',
+				'device'     => 'all',
+				'targets'    => MSST_Snippets::empty_targets(),
+				'status'     => true,
+				'error'      => '',
+				'sig'        => '',
+			);
+		}
+		$msst_choices = self::picker_choices();
+		self::open( $msst_id ? __( 'Edit Snippet', 'scripts-manager-by-mudassar' ) : __( 'Add New Snippet', 'scripts-manager-by-mudassar' ) );
+		include MSST_DIR . 'admin/views/form.php';
+		self::close();
+	}
+
+	/**
+	 * Tools: export and import.
+	 */
+	public static function page_tools() {
+		$msst_all = MSST_Snippets::query( array( 'per_page' => 200 ) );
+		self::open( __( 'Tools', 'scripts-manager-by-mudassar' ) );
+		include MSST_DIR . 'admin/views/tools.php';
+		self::close();
+	}
+
+	/**
+	 * Settings, safety and help.
+	 */
+	public static function page_settings() {
+		self::open( __( 'Settings', 'scripts-manager-by-mudassar' ) );
+		include MSST_DIR . 'admin/views/settings.php';
+		self::close();
+	}
+
+	/* --------------------------------------------------------------- handlers */
 
 	/**
 	 * Create or update a snippet.
@@ -453,81 +404,93 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	public static function handle_save_snippet() {
 		MSST_Security::guard( 'save_snippet' );
 		$id     = absint( self::post_raw( 'msst_id' ) );
-		$result = MSST_Snippets::save( self::collect_snippet_input(), $id );
+		$result = MSST_Snippets::save( self::collect_input(), $id );
 		if ( is_wp_error( $result ) ) {
 			self::flash( 'error', $result->get_error_message() );
-			self::back( 'edit', $id ? array( 'snippet' => $id ) : array() );
+			self::back( self::PAGE_ADD, $id ? array( 'id' => $id ) : array() );
 		}
 		self::flash( 'success', __( 'Snippet saved.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'edit', array( 'snippet' => $result ) );
+		self::back( self::PAGE_ADD, array( 'id' => $result ) );
 	}
 
 	/**
-	 * Activate/deactivate.
+	 * Turn ON/OFF.
 	 */
 	public static function handle_toggle() {
 		MSST_Security::guard( 'toggle' );
-		$id = isset( $_GET['snippet'] ) ? absint( $_GET['snippet'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
-		$to = isset( $_GET['to'] ) && '1' === $_GET['to']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( MSST_Snippets::set_active( $id, $to ) ) {
-			self::flash( 'success', $to ? __( 'Snippet activated.', 'scripts-manager-by-mudassar' ) : __( 'Snippet deactivated.', 'scripts-manager-by-mudassar' ) );
+		$id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
+		$on = isset( $_GET['to'] ) && '1' === $_GET['to']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( MSST_Snippets::set_status( $id, $on ) ) {
+			self::flash( 'success', $on ? __( 'Snippet turned ON.', 'scripts-manager-by-mudassar' ) : __( 'Snippet turned OFF.', 'scripts-manager-by-mudassar' ) );
 		} else {
 			self::flash( 'error', __( 'Could not change the snippet. Check PHP permissions and syntax.', 'scripts-manager-by-mudassar' ) );
 		}
-		self::back( 'snippets' );
+		self::back( self::PAGE_LIST );
 	}
 
 	/**
-	 * Delete a snippet.
+	 * Delete.
 	 */
 	public static function handle_delete() {
 		MSST_Security::guard( 'delete' );
-		$id = isset( $_GET['snippet'] ) ? absint( $_GET['snippet'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
-		if ( MSST_Snippets::delete( $id ) ) {
-			self::flash( 'success', __( 'Snippet deleted.', 'scripts-manager-by-mudassar' ) );
-		} else {
-			self::flash( 'error', __( 'Could not delete the snippet.', 'scripts-manager-by-mudassar' ) );
-		}
-		self::back( 'snippets' );
+		$id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
+		$ok = MSST_Snippets::delete( $id );
+		self::flash( $ok ? 'success' : 'error', $ok ? __( 'Snippet deleted.', 'scripts-manager-by-mudassar' ) : __( 'Could not delete the snippet.', 'scripts-manager-by-mudassar' ) );
+		self::back( self::PAGE_LIST );
 	}
 
 	/**
-	 * Duplicate a snippet.
+	 * Duplicate.
 	 */
 	public static function handle_duplicate() {
 		MSST_Security::guard( 'duplicate' );
-		$id     = isset( $_GET['snippet'] ) ? absint( $_GET['snippet'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
+		$id     = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
 		$result = MSST_Snippets::duplicate( $id );
 		if ( is_wp_error( $result ) ) {
 			self::flash( 'error', $result->get_error_message() );
-			self::back( 'snippets' );
+			self::back( self::PAGE_LIST );
 		}
-		self::flash( 'success', __( 'Snippet duplicated (inactive).', 'scripts-manager-by-mudassar' ) );
-		self::back( 'edit', array( 'snippet' => $result ) );
+		self::flash( 'success', __( 'Snippet duplicated (OFF).', 'scripts-manager-by-mudassar' ) );
+		self::back( self::PAGE_ADD, array( 'id' => $result ) );
 	}
 
 	/**
-	 * Bulk actions on the list.
+	 * Bulk actions.
 	 */
 	public static function handle_bulk() {
 		MSST_Security::guard( 'bulk' );
 		$action = sanitize_key( self::post_raw( 'bulk_action' ) );
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verified in guard(); mapped through absint().
-		$ids  = isset( $_POST['ids'] ) && is_array( $_POST['ids'] ) ? array_map( 'absint', wp_unslash( $_POST['ids'] ) ) : array();
-		$ids  = array_slice( array_filter( $ids ), 0, 200 );
-		$done = 0;
-		foreach ( $ids as $id ) {
+		$done   = 0;
+		foreach ( self::post_ids() as $id ) {
 			if ( 'activate' === $action ) {
-				$done += MSST_Snippets::set_active( $id, true ) ? 1 : 0;
+				$done += MSST_Snippets::set_status( $id, true ) ? 1 : 0;
 			} elseif ( 'deactivate' === $action ) {
-				$done += MSST_Snippets::set_active( $id, false ) ? 1 : 0;
+				$done += MSST_Snippets::set_status( $id, false ) ? 1 : 0;
 			} elseif ( 'delete' === $action ) {
 				$done += MSST_Snippets::delete( $id ) ? 1 : 0;
 			}
 		}
 		/* translators: %d: number of snippets */
 		self::flash( 'success', sprintf( _n( '%d snippet updated.', '%d snippets updated.', $done, 'scripts-manager-by-mudassar' ), $done ) );
-		self::back( 'snippets' );
+		self::back( self::PAGE_LIST );
+	}
+
+	/**
+	 * Export selected snippets.
+	 */
+	public static function handle_export() {
+		MSST_Security::guard( 'export' );
+		$ids = self::post_ids();
+		if ( ! $ids ) {
+			self::flash( 'warning', __( 'Select at least one snippet to export.', 'scripts-manager-by-mudassar' ) );
+			self::back( self::PAGE_TOOLS );
+		}
+		nocache_headers();
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="scripts-manager-' . gmdate( 'Y-m-d' ) . '.json"' );
+		header( 'X-Content-Type-Options: nosniff' );
+		echo MSST_Importer::export( $ids ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON download.
+		exit;
 	}
 
 	/**
@@ -535,16 +498,16 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 	 */
 	public static function handle_import() {
 		MSST_Security::guard( 'import' );
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified in guard().
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verified in guard(); file is validated below.
 		$file = isset( $_FILES['msst_file'] ) && is_array( $_FILES['msst_file'] ) ? $_FILES['msst_file'] : array();
 		if ( empty( $file['tmp_name'] ) || ! is_string( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) || ! empty( $file['error'] ) ) {
 			self::flash( 'error', __( 'Please choose a JSON file.', 'scripts-manager-by-mudassar' ) );
-			self::back( 'tools' );
+			self::back( self::PAGE_TOOLS );
 		}
 		$name = isset( $file['name'] ) ? sanitize_file_name( wp_unslash( $file['name'] ) ) : '';
 		if ( 'json' !== strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) || (int) $file['size'] > MSST_Importer::MAX_BYTES ) {
 			self::flash( 'error', __( 'Only .json files up to 2 MB are accepted.', 'scripts-manager-by-mudassar' ) );
-			self::back( 'tools' );
+			self::back( self::PAGE_TOOLS );
 		}
 		$json   = (string) file_get_contents( $file['tmp_name'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local uploaded temp file.
 		$result = MSST_Importer::import( $json );
@@ -555,56 +518,17 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 				'success',
 				sprintf(
 					/* translators: 1: imported count, 2: skipped count */
-					__( 'Imported %1$d snippets as inactive. Skipped %2$d. Review each one before activating.', 'scripts-manager-by-mudassar' ),
+					__( 'Imported %1$d snippets as OFF. Skipped %2$d. Check each one, then turn it ON.', 'scripts-manager-by-mudassar' ),
 					$result['imported'],
 					$result['skipped']
 				)
 			);
 		}
-		self::back( 'tools' );
+		self::back( self::PAGE_TOOLS );
 	}
 
 	/**
-	 * Download all snippets as JSON.
-	 */
-	public static function handle_export() {
-		MSST_Security::guard( 'export' );
-		MSST_Logger::audit( 'Exported snippets' );
-		nocache_headers();
-		header( 'Content-Type: application/json; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename="scripts-manager-' . gmdate( 'Y-m-d' ) . '.json"' );
-		header( 'X-Content-Type-Options: nosniff' );
-		echo MSST_Importer::export(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON download.
-		exit;
-	}
-
-	/**
-	 * Restore a revision as a new (inactive) version of the code.
-	 */
-	public static function handle_restore() {
-		MSST_Security::guard( 'restore' );
-		$id        = isset( $_GET['snippet'] ) ? absint( $_GET['snippet'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
-		$rev       = isset( $_GET['rev'] ) ? absint( $_GET['rev'] ) : -1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$snippet   = MSST_Snippets::get( $id );
-		$revisions = MSST_Snippets::revisions( $id );
-		if ( ! $snippet || ! isset( $revisions[ $rev ] ) ) {
-			self::flash( 'error', __( 'Revision not found.', 'scripts-manager-by-mudassar' ) );
-			self::back( 'revisions' );
-		}
-		$snippet['code']   = $revisions[ $rev ]['code'];
-		$snippet['type']   = $revisions[ $rev ]['type'];
-		$snippet['active'] = false;
-		$result            = MSST_Snippets::save( $snippet, $id );
-		if ( is_wp_error( $result ) ) {
-			self::flash( 'error', $result->get_error_message() );
-		} else {
-			self::flash( 'success', __( 'Revision restored. The snippet is inactive until you activate it.', 'scripts-manager-by-mudassar' ) );
-		}
-		self::back( 'revisions', array( 'snippet' => $id ) );
-	}
-
-	/**
-	 * Save plugin settings.
+	 * Save settings.
 	 */
 	public static function handle_save_settings() {
 		MSST_Security::guard( 'save_settings' );
@@ -613,66 +537,29 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );",
 			$values[ $key ] = '1' === self::post_raw( 'msst_' . $key );
 		}
 		MSST_Settings::save( $values );
-		MSST_Logger::audit( 'Saved settings' );
 		self::flash( 'success', __( 'Settings saved.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'settings' );
+		self::back( self::PAGE_SETTINGS );
 	}
 
 	/**
-	 * Regenerate the safe-mode secret.
+	 * New safe-mode link.
 	 */
 	public static function handle_regen_secret() {
 		MSST_Security::guard( 'regen_secret' );
 		delete_option( 'msst_safe_secret' );
 		MSST_Security::ensure_secret();
-		MSST_Logger::audit( 'Regenerated safe-mode secret' );
-		self::flash( 'success', __( 'New safe-mode URL created.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'settings' );
+		self::flash( 'success', __( 'New Safe Mode link created.', 'scripts-manager-by-mudassar' ) );
+		self::back( self::PAGE_SETTINGS );
 	}
 
 	/**
-	 * Toggle personal test mode.
+	 * Personal test mode.
 	 */
 	public static function handle_test_mode() {
 		MSST_Security::guard( 'test_mode' );
 		$on = isset( $_GET['to'] ) && '1' === $_GET['to']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
 		update_user_meta( get_current_user_id(), 'msst_test_mode', $on ? 1 : 0 );
-		self::flash( 'success', $on ? __( 'Test mode on: no snippets run for you.', 'scripts-manager-by-mudassar' ) : __( 'Test mode off.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'settings' );
-	}
-
-	/**
-	 * Clear a log (problem list, activity list or the log file).
-	 */
-	public static function handle_clear_log() {
-		MSST_Security::guard( 'clear_log' );
-		$which = isset( $_GET['log'] ) ? sanitize_key( wp_unslash( $_GET['log'] ) ) : 'errors'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified in guard().
-		if ( 'file' === $which ) {
-			MSST_Logger::clear_file();
-			MSST_Logger::audit( 'Cleared the error log file' );
-		} else {
-			MSST_Logger::clear( 'audit' === $which ? 'audit' : 'errors' );
-		}
-		self::flash( 'success', __( 'Log cleared.', 'scripts-manager-by-mudassar' ) );
-		self::back( 'logs' );
-	}
-
-	/**
-	 * Download the error log file.
-	 */
-	public static function handle_download_log() {
-		MSST_Security::guard( 'download_log' );
-		$path = MSST_Logger::log_path();
-		if ( ! file_exists( $path ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions
-			self::flash( 'warning', __( 'There is no log file yet. That is good news!', 'scripts-manager-by-mudassar' ) );
-			self::back( 'logs' );
-		}
-		MSST_Logger::audit( 'Downloaded the error log file' );
-		nocache_headers();
-		header( 'Content-Type: text/plain; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename="scripts-manager-error-log-' . gmdate( 'Y-m-d' ) . '.txt"' );
-		header( 'X-Content-Type-Options: nosniff' );
-		readfile( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Our own protected log file.
-		exit;
+		self::flash( 'success', $on ? __( 'Test view on: no snippets run for you.', 'scripts-manager-by-mudassar' ) : __( 'Test view off.', 'scripts-manager-by-mudassar' ) );
+		self::back( self::PAGE_SETTINGS );
 	}
 }
