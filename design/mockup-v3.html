@@ -1,0 +1,139 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Snippet Studio – Simple UI (v3)</title>
+<style>
+:root{--blue:#0071e3;--ink:#1d1d1f;--mut:#6e6e73;--line:#d2d2d7;--bg:#f5f5f7;--fill:#F7F7F5;--ok:#248a3d;--warn:#b25000;--err:#d70015}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.bar{height:32px;background:#fff;border-bottom:1px solid var(--line);color:var(--mut);display:flex;align-items:center;padding:0 16px;gap:18px;font-size:12px}.bar .r{margin-left:auto}
+.wrap{display:flex;min-height:calc(100vh - 32px)}
+.side{width:160px;background:#fff;border-right:1px solid var(--line);color:var(--mut);padding-top:8px;flex:none;font-size:13px}
+.side div{padding:7px 14px}.side .on{color:var(--blue);font-weight:600}.side .sub div{padding:4px 14px 4px 26px}.side .sub .cur{color:var(--ink);font-weight:600}
+.main{flex:1;padding:28px 32px;max-width:1200px;min-width:0}
+.hero{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 24px;display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.logo{width:48px;height:48px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font:600 18px ui-monospace,Menlo,monospace;flex:none}
+.hero h1{margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em}.hero p{margin:2px 0 0;color:var(--mut)}
+.by{margin-left:auto;display:flex;align-items:center;gap:14px;color:var(--mut);font-size:13px}.by b{color:var(--ink)}.by a{color:var(--blue)}
+.btn{display:inline-block;border-radius:980px;padding:9px 20px;border:1px solid var(--blue);background:var(--blue);color:#fff;font-size:14px;font-weight:600}
+.btn.s{background:#fff;color:var(--blue);border-color:var(--line)}.btn.sm{padding:5px 14px;font-size:13px;font-weight:500}.btn.big{padding:12px 28px;font-size:16px}.btn.d{background:#fff;color:var(--err);border-color:var(--line)}
+.tabs{display:flex;gap:4px;background:var(--fill);border:1px solid var(--line);padding:4px;border-radius:14px;margin-bottom:8px}
+.tabs span{padding:9px 18px;border-radius:10px;font-weight:600;font-size:14px;color:var(--ink);border:1px solid transparent}
+.tabs .t{background:#fff;border-color:var(--line)}
+.more{display:flex;gap:18px;font-size:13px;color:var(--mut);margin:0 6px 18px;align-items:center}.more b{color:var(--ink);font-weight:600}.more .t{color:var(--blue);font-weight:600}
+.intro{display:flex;gap:14px;align-items:flex-start;background:var(--fill);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:16px}
+.intro .i{width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-weight:700;color:var(--blue);flex:none}
+.intro b{display:block}.intro span{color:var(--mut)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px;min-width:0}
+.card h2{margin:0 0 4px;font-size:18px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.step{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:inline-grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+.d{color:var(--mut);margin:0 0 14px}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.main2{grid-template-columns:2fr 1fr;align-items:start}.grid>*{min-width:0}
+input.i,select.i{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15px;height:42px;color:var(--ink)}
+label.l{display:block;font-weight:600;margin:0 0 5px}.hint{color:var(--mut);font-size:13px;margin-top:4px}
+.code{width:100%;font:13px/1.65 ui-monospace,Menlo,monospace;background:var(--fill);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:130px;white-space:pre;overflow:hidden}
+.k{color:#ad3da4}.s2{color:#d12f1b}.c{color:var(--mut)}
+.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kind{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}.kind b{display:block}.kind span{color:var(--mut);font-size:13px}
+.kind.sel{border-color:var(--blue);background:#f2f8ff;outline:1px solid var(--blue)}.kind em{font-style:normal;font-size:11px;color:var(--ok);font-weight:700;text-transform:uppercase}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--fill)}.seg span{padding:7px 16px;border-radius:9px;font-weight:600}.seg .t{background:#fff;border:1px solid var(--line);margin:-1px}
+.sentence{background:#f2f8ff;border:1px solid #b9d9ff;border-radius:12px;padding:12px 14px}
+.note{border:1px solid var(--line);background:var(--fill);padding:11px 14px;border-radius:12px;margin-bottom:10px}.note.ok{border-color:#b7e4c4;background:#f3fbf6}.note.w{border-color:#ffd9a8;background:#fffaf2}.note.e{border-color:#ffb3ba;background:#fff5f6}
+.rule{display:flex;gap:8px;align-items:center;margin-bottom:8px}.rule .i{flex:1}.rule .w{color:var(--mut);font-weight:600}
+table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--fill);vertical-align:middle}th{background:var(--fill);font-weight:600;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em}tr:last-child td{border:0}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--line);color:var(--mut)}
+.on-t{display:inline-flex;align-items:center;gap:8px;font-weight:600}.tg{width:44px;height:26px;border-radius:99px;background:var(--fill);border:1px solid var(--line);position:relative;display:inline-block}.tg:after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid var(--line)}.tg.on{background:#34c759;border-color:#34c759}.tg.on:after{left:20px;border-color:#fff}
+.chips{display:flex;gap:8px;margin-bottom:12px}.chips span{padding:6px 14px;border:1px solid var(--line);border-radius:99px;background:#fff;font-weight:500}.chips .t{background:var(--ink);color:#fff;border-color:var(--ink)}
+.stat{text-align:center}.stat b{display:block;font-size:30px;font-weight:600}.stat span{color:var(--mut)}
+.big-card{padding:26px}.big-card .ic{width:44px;height:44px;border-radius:12px;background:var(--fill);border:1px solid var(--line);display:grid;place-items:center;font-size:20px;margin-bottom:12px}
+.wire{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}.wire div{padding:10px 14px;border-bottom:1px solid var(--line);color:var(--mut);font-size:13px}.wire div:last-child{border:0}.wire .hl{background:#f2f8ff;color:var(--blue);font-weight:700;border-left:4px solid var(--blue)}
+details{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:8px;background:#fff}summary{font-weight:600}
+.foot{margin-top:20px;padding:14px 20px;background:#fff;border:1px solid var(--line);border-radius:14px;display:flex;gap:12px;color:var(--mut);font-size:13px}.foot b{color:var(--ink)}.foot a{color:var(--blue)}.foot .r{margin-left:auto}
+.sw2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chk{display:flex;gap:10px;align-items:center;margin-bottom:8px}.chk i{width:22px;height:22px;border-radius:50%;background:#34c759;color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px}.chk i.o{background:#fff;border:1px solid var(--line);color:transparent}
+code{font-family:ui-monospace,Menlo,monospace;background:var(--fill);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:13px}
+.adv{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;color:var(--blue);font-weight:600}
+</style></head><body>
+<div class="bar"><b style="color:#1d1d1f">⌂ Client Site</b><span>+ New</span><span class="r">Howdy, Admin</span></div>
+<div class="wrap"><div class="side"><div>Dashboard</div><div>Posts</div><div>Pages</div><div>Appearance</div><div>Plugins</div><div>Users</div><div>Tools</div><div class="on">Settings</div><div class="sub"><div>General</div><div>Writing</div><div class="cur">Snippet Studio</div></div></div>
+<div class="main" id="app"></div></div>
+<script>
+const MAIN=[["start","Start Here"],["snippets","My Snippets"],["edit","Add Snippet"],["headers","Headers & Footers"],["library","Ready-made"]];
+const MORE=[["conditions","Rules guide"],["revisions","History & Schedule"],["tools","Import / Export"],["logs","Problems & Activity"],["settings","Settings & Safety"],["support","Help & Contact"]];
+const intro=(t,s)=>`<div class="intro"><div class="i">i</div><div><b>${t}</b><span>${s}</span></div></div>`;
+const P={
+start:()=>intro('Welcome! Pick what you want to do.','You do not need to know code. Each card below takes you to a simple step-by-step page.')+`
+<div class="grid g3">
+<div class="card big-card"><div class="ic">📈</div><h2>Add Google Analytics or a pixel</h2><p class="d">Paste your ID (like G-ABC123) and we do the rest. No code needed.</p><span class="btn">Set it up</span></div>
+<div class="card big-card"><div class="ic">✍️</div><h2>Add my own code</h2><p class="d">A guided 4-step page: name it, paste the code, choose where, turn it on.</p><span class="btn">Add a snippet</span></div>
+<div class="card big-card"><div class="ic">📦</div><h2>Use a ready-made snippet</h2><p class="d">Common fixes like hiding the admin bar or smooth scrolling. One click.</p><span class="btn">Browse list</span></div></div>
+<div class="grid g2"><div class="card"><h2>How it works</h2><div class="chk"><i>1</i> Choose what to add</div><div class="chk"><i>2</i> Choose where it appears on your site</div><div class="chk"><i>3</i> Turn it <b>ON</b> and look at your site</div></div>
+<div class="card"><h2>Something went wrong?</h2><p class="d">Do not panic. Your site can be put back in seconds.</p><div class="note w">Emergency button: opens your site with <b>all</b> snippets switched off, so you can fix things.</div><span class="btn s">Open Safe Mode link</span></div></div>`,
+snippets:()=>intro('Your snippets','Every box of code you added is listed here. Use the switch to turn each one ON or OFF.')+`
+<div class="grid g4" style="margin-bottom:16px"><div class="card stat" style="margin:0"><b>24</b><span>Snippets</span></div><div class="card stat" style="margin:0"><b style="color:var(--ok)">19</b><span>Turned ON</span></div><div class="card stat" style="margin:0"><b style="color:var(--warn)">3</b><span>Scheduled</span></div><div class="card stat" style="margin:0"><b style="color:var(--err)">1</b><span>Need attention</span></div></div>
+<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><span class="btn">+ Add Snippet</span><div class="chips" style="margin:0 0 0 8px"><span class="t">All</span><span>ON</span><span>OFF</span><span>Needs attention</span></div><input class="i" style="width:240px;margin-left:auto" placeholder="🔍 Search by name…"></div>
+<table><tr><th>Name</th><th>What it is</th><th>Where it shows</th><th>On which pages</th><th>Status</th><th></th></tr>
+<tr><td><b>Facebook Pixel</b></td><td><span class="pill">JavaScript</span></td><td>Bottom of every page</td><td>All pages</td><td><span class="on-t"><span class="tg on"></span>ON</span></td><td><span class="btn s sm">Edit</span> <span class="btn s sm">More ▾</span></td></tr>
+<tr><td><b>Free shipping banner</b></td><td><span class="pill">HTML</span></td><td>Above the post text</td><td>Only some pages</td><td><span class="on-t"><span class="tg on"></span>ON</span></td><td><span class="btn s sm">Edit</span> <span class="btn s sm">More ▾</span></td></tr>
+<tr><td><b>Custom button styles</b></td><td><span class="pill">CSS</span></td><td>Top of every page</td><td>All pages</td><td><span class="on-t"><span class="tg on"></span>ON</span></td><td><span class="btn s sm">Edit</span> <span class="btn s sm">More ▾</span></td></tr>
+<tr><td><b>Black Friday banner</b> <span class="pill" style="color:var(--warn);border-color:var(--warn)">Scheduled</span></td><td><span class="pill">HTML</span></td><td>After paragraph 2</td><td>Only some pages</td><td><span class="on-t"><span class="tg"></span>OFF</span></td><td><span class="btn s sm">Edit</span> <span class="btn s sm">More ▾</span></td></tr>
+<tr><td><b>Legacy redirect</b><br><small style="color:var(--err)">⚠ Turned off automatically – it had an error. Click Edit to see why.</small></td><td><span class="pill">PHP</span></td><td>Whole site</td><td>All pages</td><td><span class="on-t"><span class="tg"></span>OFF</span></td><td><span class="btn sm">Fix it</span> <span class="btn s sm">More ▾</span></td></tr></table>`,
+edit:()=>intro('Add a snippet in 4 easy steps','Go from top to bottom. A sentence at the right always tells you, in plain words, what will happen.')+`
+<div class="grid main2"><div>
+<div class="card"><h2><span class="step">1</span> Give it a name</h2><p class="d">Only you will see this. Example: “Facebook Pixel”.</p><input class="i" value="Hide admin bar for clients"></div>
+<div class="card"><h2><span class="step">2</span> What kind of code is it?</h2><p class="d">Not sure? Choose <b>HTML</b>. It is the safest.</p>
+<div class="kinds"><div class="kind"><b>HTML</b><span>Boxes, banners, text, embeds</span><br><em>Easiest</em></div><div class="kind"><b>CSS</b><span>Change colours, sizes, looks</span></div><div class="kind"><b>JavaScript</b><span>Pixels, chat widgets, popups</span></div><div class="kind sel"><b>PHP</b><span>Add features to WordPress</span><br><em style="color:var(--warn)">Advanced</em></div><div class="kind"><b>Text</b><span>Plain message with line breaks</span></div><div class="kind"><b>Universal</b><span>HTML that also allows shortcodes</span></div></div>
+<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px"><label class="l" style="margin:0">Start from an example:</label><select class="i" style="width:260px"><option>Choose an example…</option></select></div>
+<div class="code"><span class="k">add_filter</span>( <span class="s2">'show_admin_bar'</span>, <span class="k">function</span>( $show ) {
+    <span class="k">return</span> current_user_can( <span class="s2">'manage_options'</span> );
+} );</div><div class="note ok" style="margin-top:10px">✔ Code looks good – no mistakes found.</div></div>
+<div class="card"><h2><span class="step">3</span> Where and when should it show?</h2>
+<label class="l">Where on the page?</label><select class="i"><option>Whole site (runs in the background)</option></select><div class="hint">PHP runs quietly in the background. It does not appear as a box on the page.</div><br>
+<label class="l">On which pages?</label><div class="seg"><span class="t">Every page</span><span>Only some pages</span></div>
+<div class="note" style="margin-top:12px">Choose <b>Only some pages</b> to pick rules like “only the home page” or “only for logged-in people”.</div></div>
+<div class="card"><h2><span class="step">4</span> Turn it on</h2><p class="d">You can save it OFF first and turn it on later.</p>
+<div class="sw2"><span class="btn big">Save and turn ON</span><span class="btn big s">Save as OFF</span><span class="btn s">Cancel</span></div>
+<div class="adv">▸ More options (priority, start and end dates)</div></div></div>
+<div><div class="card" style="border-color:#b9d9ff"><h2>What will happen</h2><div class="sentence">This <b>PHP</b> code will run quietly in the <b>background of your whole site</b>, on <b>every page</b>. It is currently <b>OFF</b>.</div></div>
+<div class="card"><h2>Checklist</h2><div class="chk"><i>✓</i> Name added</div><div class="chk"><i>✓</i> Code added</div><div class="chk"><i>✓</i> Location chosen</div><div class="chk"><i class="o">·</i> Turned on</div></div>
+<div class="card"><h2>Need help?</h2><p class="d">We answer quickly.</p><span class="btn s">Contact Us</span></div></div></div>`,
+headers:()=>intro('Code for your whole website','Use this for tracking tools (Google Analytics, Facebook Pixel). Paste an ID, or paste code into the boxes below.')+`
+<div class="grid main2"><div>
+<div class="card"><h2><span class="step">1</span> Easiest way: paste an ID</h2><p class="d">We make safe code for you. Leave blank what you do not use.</p>
+<div class="grid g2"><div><label class="l">Google Analytics ID</label><input class="i" placeholder="G-XXXXXXXXXX"><div class="hint">Looks like G-ABC123XYZ</div></div><div><label class="l">Google Tag Manager ID</label><input class="i" placeholder="GTM-XXXXXXX"></div><div><label class="l">Facebook (Meta) Pixel ID</label><input class="i" placeholder="1234567890"><div class="hint">Numbers only</div></div><div><label class="l">TikTok Pixel ID</label><input class="i" placeholder="ABCDEF1234"></div></div></div>
+<div class="card"><h2><span class="step">2</span> Or paste your own code</h2><p class="d">Paste exactly what the service gave you.</p>
+<label class="l">Header box</label><div class="code" style="min-height:80px"><span class="c">&lt;!-- paste header code here --&gt;</span></div><br>
+<label class="l">Body box</label><div class="code" style="min-height:60px"><span class="c">&lt;!-- optional --&gt;</span></div><br>
+<label class="l">Footer box</label><div class="code" style="min-height:80px"><span class="c">&lt;!-- paste footer code here --&gt;</span></div></div>
+<span class="btn big">Save changes</span></div>
+<div><div class="card"><h2>Where does it go?</h2><p class="d">The three boxes match parts of your page:</p><div class="wire"><div class="hl">Header – very top (most tracking codes)</div><div class="hl" style="opacity:.7">Body – right after the page opens</div><div>Your page content…</div><div class="hl">Footer – very bottom (chat widgets)</div></div></div>
+<div class="card"><h2>Tip</h2><p class="d" style="margin:0">After saving, open your site in a private window and refresh. Then check your tool (like Google Analytics Realtime).</p></div></div></div>`,
+library:()=>intro('Ready-made snippets','Click “Add” and the snippet is copied to My Snippets, switched OFF. Read it, then turn it ON.')+`
+<div class="grid g2"><div class="card"><h2>Pick one</h2><table><tr><td><b>Hide admin bar for non-admins</b><br><span class="d" style="margin:0">Visitors who log in will not see the black bar.</span></td><td style="text-align:right"><span class="btn sm">Add</span></td></tr><tr><td><b>Smooth scrolling</b><br><span class="d" style="margin:0">Pages glide instead of jumping.</span></td><td style="text-align:right"><span class="btn sm">Add</span></td></tr><tr><td><b>Disable XML-RPC</b><br><span class="d" style="margin:0">Blocks a common hacker door.</span></td><td style="text-align:right"><span class="btn sm">Add</span></td></tr><tr><td><b>Simple cookie notice</b><br><span class="d" style="margin:0">A small bar at the bottom.</span></td><td style="text-align:right"><span class="btn sm">Add</span></td></tr></table></div>
+<div class="card"><h2>Make a snippet from a form</h2><p class="d">Fill in two boxes. We write the code.</p><label class="l">What do you want to make?</label><select class="i"><option>A new content type (like “Portfolio”)</option></select><br><br><label class="l">Name</label><input class="i" value="Portfolio"><br><br><label class="l">Short name (lowercase)</label><input class="i" value="portfolio"><br><br><span class="btn">Create snippet</span></div></div>`,
+conditions:()=>intro('Rules guide','Rules decide on which pages a snippet shows. You build them inside “Add Snippet” → step 3.')+`
+<div class="grid g2"><div class="card"><h2>Examples in plain words</h2><div class="note">“Show only on the <b>home page</b>”</div><div class="note">“Hide when the person is <b>logged in</b>”</div><div class="note">“Show only on <b>phones</b>”</div><div class="note">“Show only if the <b>cart is over $50</b>”</div><span class="btn">Try it in Add Snippet</span></div>
+<div class="card"><h2>How a rule looks</h2><div class="rule"><span class="w">Show when</span><select class="i"><option>Page type</option></select><select class="i"><option>is</option></select><select class="i"><option>Home page</option></select></div><div class="hint">Add more rules with <b>AND</b> (both must be true) or a new group with <b>OR</b> (either is enough).</div></div></div>`,
+revisions:()=>intro('History & schedule','Every time you change code, the old version is saved. You can go back any time.')+`
+<div class="card" style="padding:14px"><label class="l">Choose a snippet</label><select class="i" style="width:320px"><option>Hide admin bar for clients</option></select></div>
+<div class="grid g2"><div class="card"><h2>Older versions</h2><table><tr><td>Oct 7, 10:42</td><td>Mudassar</td><td style="text-align:right"><span class="btn s sm">See changes</span> <span class="btn sm">Go back to this</span></td></tr><tr><td>Oct 5, 16:10</td><td>Mudassar</td><td style="text-align:right"><span class="btn s sm">See changes</span> <span class="btn sm">Go back to this</span></td></tr></table></div>
+<div class="card"><h2>What changed</h2><div class="code" style="min-height:0"><div style="background:#fdecee;color:#a1121f">- return true;</div><div style="background:#e9f8ee;color:#1a6b30">+ return current_user_can( 'manage_options' );</div></div></div></div>
+<div class="card"><h2>Schedule</h2><p class="d">Show a snippet only between two dates (great for sales banners). Set dates in Add Snippet → More options.</p><div class="note ok">Runs from Nov 25 until Dec 1.</div></div>`,
+tools:()=>intro('Move snippets between sites','Download a backup file, or load one from another site. Imported snippets arrive OFF so nothing runs by surprise.')+`
+<div class="grid g2"><div class="card"><h2>Download a backup</h2><p class="d">Saves all your snippets in one file.</p><span class="btn">Download file</span></div><div class="card"><h2>Load a backup</h2><p class="d">Choose a file you downloaded before (max 2 MB).</p><div style="border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--mut)">Click to choose a .json file</div><br><span class="btn">Load file</span></div></div>`,
+logs:()=>intro('Problems & activity','If a snippet breaks, it is switched OFF for you and shown here. Below is a list of who changed what.')+`
+<div class="grid g2"><div class="card"><h2>Problems</h2><div class="note e"><b>Legacy redirect</b> was turned OFF because of an error:<br>“unexpected '}' on line 4”<br><small>Today, 09:12</small> · <b style="color:var(--blue)">Fix it</b></div><div class="note ok">Everything else is working ✓</div></div>
+<div class="card"><h2>Who changed what</h2><table><tr><td>Today 10:42</td><td>Mudassar</td><td>edited “Hide admin bar”</td></tr><tr><td>Today 09:10</td><td>Mudassar</td><td>turned ON “Legacy redirect”</td></tr><tr><td>Yesterday</td><td>Admin</td><td>loaded 6 snippets</td></tr></table></div></div>`,
+settings:()=>intro('Settings & safety','Simple switches, plus your emergency button.')+`
+<div class="grid g2"><div class="card"><h2>Switches</h2><div class="sw2" style="margin-bottom:14px"><span class="tg on"></span><b>Allow PHP snippets</b></div><div class="sw2" style="margin-bottom:14px"><span class="tg on"></span><b>Turn a snippet OFF if it breaks the site</b></div><div class="sw2" style="margin-bottom:14px"><span class="tg"></span><b>Delete everything if I delete the plugin</b></div><span class="btn">Save settings</span>
+<div class="adv" style="color:var(--ink)">Try without snippets (only you)</div><p class="d">Turn all snippets off for your own account to see how the site looks without them. Visitors are not affected.</p><span class="btn s">Turn on test view</span></div>
+<div class="card"><h2>Emergency button</h2><div class="note w"><b>Safe Mode link</b> – opens your site with every snippet OFF. Save it somewhere private.<br><code>/?msst_safe_mode=••••••••</code></div><span class="btn s">Make a new link</span><br><br>
+<h2>Protection</h2><div class="chk"><i>✓</i> Only administrators can use this plugin</div><div class="chk"><i>✓</i> Code changed from outside is blocked</div><div class="chk"><i>✓</i> Every button is protected against fake clicks</div></div></div>`,
+support:()=>intro('Help & contact','Stuck? Read the quick answers, or tell us what happened.')+`
+<div class="grid g2"><div class="card"><h2>Quick answers</h2><details open><summary>My site looks broken. What now?</summary><p class="d" style="margin:8px 0 0">Open your Safe Mode link (Settings & Safety). Then turn OFF the last snippet you added.</p></details><details><summary>I do not see my snippet on the site</summary></details><details><summary>Which type should I pick?</summary></details><details><summary>Where do I find my Analytics ID?</summary></details></div>
+<div class="card" style="text-align:center"><div class="logo" style="margin:0 auto 10px">&lt;/&gt;</div><h2 style="justify-content:center">Mudassar Snippet Studio</h2><p class="d">Version 1.0.0 · Built by <b>Mudassar Shakeel</b></p><span class="btn">Contact Support</span> <span class="btn s">Visit mudassar.work</span><br><br><p class="d" style="margin:0;text-align:left">Copy this into your message so we can help faster:</p><div class="code" style="min-height:0;text-align:left;margin-top:6px">Plugin 1.0.0 · WordPress 6.8 · PHP 8.2</div></div></div>`
+};
+const cur=new URLSearchParams(location.search).get('tab')||'start';
+const nav=MAIN.map(([k,n])=>`<span class="${k==cur?'t':''}">${n}</span>`).join('');
+const more=MORE.map(([k,n])=>`<span class="${k==cur?'t':''}">${n}</span>`).join('');
+document.getElementById('app').innerHTML=`<div class="hero"><div class="logo">&lt;/&gt;</div><div><h1>Mudassar Snippet Studio</h1><p>Add code to your website safely – no experience needed.</p></div><div class="by"><span>by <b>Mudassar Shakeel</b> · <a>mudassar.work</a></span><span class="btn s sm" style="color:var(--blue);border-color:var(--blue)">Contact Us</span></div></div>
+<div class="tabs">${nav}</div><div class="more"><b>More:</b>${more}</div>${P[cur]()}
+<div class="foot"><span>Mudassar Snippet Studio v1.0.0 · Made by <b>Mudassar Shakeel</b></span><span class="r">Need help? <a>Contact Us</a> · <a>mudassar.work</a></span></div>`;
+</script></body></html>
