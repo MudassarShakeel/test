@@ -13,7 +13,7 @@
  * If the site has page caching, disable it first (visitor checks add a cache-buster).
  */
 (async () => {
-  const ADMIN = (typeof ajaxurl !== 'undefined') ? ajaxurl.replace(/admin-ajax\.php.*$/, '') : location.origin + '/wp-admin/';
+  const ADMIN = new URL(typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php', location.href).href.replace(/admin-ajax\.php.*$/, '');
   const HOME = ADMIN.replace(/wp-admin\/$/, '');
   const PAGE = ADMIN + 'options-general.php?page=mudassar-snippet-studio&tab=';
   const POST = ADMIN + 'admin-post.php';
