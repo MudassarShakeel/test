@@ -1,5 +1,5 @@
 /*
- * Mudassar Snippet Studio – browser console test
+ * Scripts Manager By Mudassar – browser console test
  *
  * HOW TO RUN
  *  1. Log in as an ADMINISTRATOR on your TEST site and open any wp-admin page.
@@ -15,7 +15,7 @@
 (async () => {
   const ADMIN = new URL(typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php', location.href).href.replace(/admin-ajax\.php.*$/, '');
   const HOME = ADMIN.replace(/wp-admin\/$/, '');
-  const PAGE = ADMIN + 'options-general.php?page=mudassar-snippet-studio&tab=';
+  const PAGE = ADMIN + 'options-general.php?page=scripts-manager-by-mudassar&tab=';
   const POST = ADMIN + 'admin-post.php';
   const TAG = 'MSST-TEST-' + Date.now().toString(36);
   const results = [];
@@ -56,6 +56,7 @@
       msst_type: f.type, msst_code: f.code, msst_location: f.location,
       msst_param: String(f.param || 1), msst_priority: String(f.priority || 10),
       msst_start: f.start || '', msst_end: f.end || '',
+      msst_pages: (f.rules && f.rules.length) ? 'some' : 'every',
     });
     if (f.active !== false) body.set('msst_active', '1');
     (f.rules || []).forEach((group, gi) => group.forEach((r, ri) => {
@@ -92,11 +93,11 @@
   }
 
   try {
-    log('== Mudassar Snippet Studio browser test ==  tag:', TAG);
+    log('== Scripts Manager By Mudassar – browser console test ==  tag:', TAG);
 
     // ---------------------------------------------------------------- 1. admin UI
     log('1. Admin tabs');
-    const tabs = ['headers', 'snippets', 'edit', 'conditions', 'library', 'revisions', 'tools', 'logs', 'settings', 'support'];
+    const tabs = ['start', 'headers', 'snippets', 'edit', 'conditions', 'library', 'revisions', 'tools', 'logs', 'settings', 'support'];
     for (const t of tabs) {
       const p = await get(PAGE + t);
       check(`tab "${t}" loads with branding`, p.status === 200 && p.text.includes('Mudassar Shakeel') && p.text.includes('Contact Us'), 'HTTP ' + p.status);
@@ -104,7 +105,7 @@
     const sup = await get(PAGE + 'support');
     const links = [...sup.doc.querySelectorAll('a[href*="mudassar.work"]')].map((a) => a.getAttribute('href'));
     check('Contact Us / website links all have UTM tags',
-      links.length >= 4 && links.every((h) => h.includes('utm_source=mudassar-snippet-studio') && h.includes('utm_medium=wordpress-plugin') && h.includes('utm_content=')), links.join(' | '));
+      links.length >= 4 && links.every((h) => h.includes('utm_source=scripts-manager-by-mudassar') && h.includes('utm_medium=wordpress-plugin') && h.includes('utm_content=')), links.join(' | '));
     check('contact links point to /contact/', links.some((h) => h.includes('mudassar.work/contact/')), links.join(' | '));
     check('external links have rel=noopener', [...sup.doc.querySelectorAll('a[href*="mudassar.work"]')].every((a) => /noopener/.test(a.rel)), '');
 
@@ -143,9 +144,22 @@
     home = await visitor(HOME);
     check('site still loads when a snippet throws', home.status === 200, 'status ' + home.status);
     row = await listRow(boom.id);
-    check('throwing snippet auto-disabled with error badge', row && !row.on && /auto-disabled/i.test(row.text), row ? row.text.replace(/\s+/g, ' ').slice(0, 120) : 'row not found');
+    check('throwing snippet auto-disabled with error badge', row && !row.on && /turned off automatically/i.test(row.text), row ? row.text.replace(/\s+/g, ' ').slice(0, 120) : 'row not found');
     const logs = await get(PAGE + 'logs');
     check('error recorded in the Error Log tab', logs.text.includes('boom-' + TAG), '');
+    const fileBox = logs.doc.querySelector('#msst-error-file');
+    check('error log FILE section shows the error', !!fileBox && fileBox.textContent.includes('boom-' + TAG), fileBox ? fileBox.textContent.slice(0, 120) : 'section missing');
+    const dl = logs.doc.querySelector('a[href*="action=msst_download_log"]');
+    check('download link for the error log file exists', !!dl, '');
+    if (dl) {
+      const dlRes = await fetch(new URL(dl.getAttribute('href'), ADMIN).href, { credentials: 'same-origin' });
+      const dlText = await dlRes.text();
+      check('error log file downloads as plain text with our error', dlRes.status === 200 && /text\/plain/.test(dlRes.headers.get('content-type') || '') && dlText.includes('boom-' + TAG), 'HTTP ' + dlRes.status);
+      const dlNoNonce = await fetch(new URL(dl.getAttribute('href').replace(/&_wpnonce=[^&]+/, ''), ADMIN).href, { credentials: 'same-origin' });
+      check('log download without nonce is refused', dlNoNonce.status === 403, 'HTTP ' + dlNoNonce.status);
+      const dlAnon = await fetch(new URL(dl.getAttribute('href'), ADMIN).href, { credentials: 'omit' });
+      check('log download for a logged-out visitor is refused', !(await dlAnon.text()).includes('boom-' + TAG), '');
+    }
 
     // ---------------------------------------------------------------- 5. conditions & placement (needs a post)
     log('5. Conditional logic, paragraph insertion, shortcode');
@@ -224,11 +238,11 @@
     const exp = await fetch(POST, { method: 'POST', credentials: 'same-origin', body: new URLSearchParams({ action: 'msst_export', _wpnonce: formNonce(tp.doc, 'msst_export') }) });
     const expText = await exp.text();
     let expJson = null; try { expJson = JSON.parse(expText); } catch (e) { /* ignore */ }
-    check('export returns valid JSON with our snippets', expJson && expJson.plugin === 'mudassar-snippet-studio' && expText.includes(TAG), expText.slice(0, 100));
+    check('export returns valid JSON with our snippets', expJson && expJson.plugin === 'scripts-manager-by-mudassar' && expText.includes(TAG), expText.slice(0, 100));
     const fd = new FormData();
     fd.append('action', 'msst_import');
     fd.append('_wpnonce', formNonce(tp.doc, 'msst_import'));
-    fd.append('msst_file', new Blob([JSON.stringify({ plugin: 'mudassar-snippet-studio', version: '1.0.0', snippets: [
+    fd.append('msst_file', new Blob([JSON.stringify({ plugin: 'scripts-manager-by-mudassar', version: '1.1.0', snippets: [
       { title: TAG + ' imported', type: 'html', code: `<i>${TAG}-IMPORTED</i>`, location: 'footer', param: 1, priority: 10, conditions: [], start: 0, end: 0 }] })], { type: 'application/json' }), 'import.json');
     const imp = await fetch(POST, { method: 'POST', credentials: 'same-origin', body: fd });
     const impDoc = dom(await imp.text());
@@ -259,7 +273,7 @@
     const xssList = await get(PAGE + 'snippets&s=' + encodeURIComponent(TAG));
     check('snippet title is escaped in the admin list (no XSS)', !/<img[^>]+onerror/i.test(xssList.text), '');
     const dbg = await visitor(HOME);
-    check('no PHP warnings/notices printed on the front end', !/(Warning|Notice|Deprecated|Fatal error)\s*:.*(mudassar-snippet-studio|msst_)/i.test(dbg.text), '');
+    check('no PHP warnings/notices printed on the front end', !/(Warning|Notice|Deprecated|Fatal error)\s*:.*(scripts-manager-by-mudassar|msst_)/i.test(dbg.text), '');
   } catch (e) {
     check('script finished without a runtime error', false, e && e.stack || e);
   } finally {
