@@ -3,7 +3,7 @@
  * Plugin Name:       Scripts Manager By Mudassar
  * Plugin URI:        https://mudassar.work/
  * Description:       Safely add header/footer scripts and PHP, JavaScript, CSS and HTML snippets to your site – with simple step-by-step screens, conditional logic, history, scheduling and a clear problem log.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Mudassar Shakeel
@@ -28,27 +28,24 @@ if ( defined( 'MSST_VERSION' ) ) {
 	return;
 }
 
-define( 'MSST_VERSION', '1.1.0' );
+define( 'MSST_VERSION', '1.1.1' );
 define( 'MSST_FILE', __FILE__ );
 define( 'MSST_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MSST_URL', plugin_dir_url( __FILE__ ) );
 define( 'MSST_SLUG', 'scripts-manager-by-mudassar' );
 
-/**
- * Maps MSST_Foo_Bar to includes/class-msst-foo-bar.php.
- *
- * @param string $class_name Class name.
- */
-function msst_autoload( $class_name ) {
-	if ( 0 !== strpos( $class_name, 'MSST_' ) ) {
-		return;
+// Maps MSST_Foo_Bar to includes/class-msst-foo-bar.php. A closure (not a named function) so it can never clash with another copy of the plugin.
+spl_autoload_register(
+	static function ( $class_name ) {
+		if ( 0 !== strpos( $class_name, 'MSST_' ) ) {
+			return;
+		}
+		$file = MSST_DIR . 'includes/class-' . strtolower( str_replace( '_', '-', $class_name ) ) . '.php';
+		if ( is_readable( $file ) ) {
+			require_once $file;
+		}
 	}
-	$file = MSST_DIR . 'includes/class-' . strtolower( str_replace( '_', '-', $class_name ) ) . '.php';
-	if ( is_readable( $file ) ) {
-		require_once $file;
-	}
-}
-spl_autoload_register( 'msst_autoload' );
+);
 
 register_activation_hook( __FILE__, array( 'MSST_Plugin', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'MSST_Plugin', 'deactivate' ) );
