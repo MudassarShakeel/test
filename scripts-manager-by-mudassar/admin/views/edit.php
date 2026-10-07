@@ -81,7 +81,7 @@ MSST_Admin::intro( $msst_new ? __( 'Add a snippet in 4 easy steps', 'scripts-man
 			<?php if ( ! $msst_locked ) : ?>
 				<p class="msst-inline">
 					<label class="msst-label" for="msst-example"><?php esc_html_e( 'Start from an example:', 'scripts-manager-by-mudassar' ); ?></label>
-					<select class="msst-input msst-w-280" id="msst-example"><option value=""><?php esc_html_e( 'Choose an example…', 'scripts-manager-by-mudassar' ); ?></option></select>
+					<select class="msst-input msst-input-sm msst-w-280" id="msst-example"><option value=""><?php esc_html_e( 'Choose an example…', 'scripts-manager-by-mudassar' ); ?></option></select>
 				</p>
 			<?php endif; ?>
 			<textarea class="msst-code" id="msst_code" name="msst_code" rows="12" spellcheck="false" aria-label="<?php esc_attr_e( 'Your code', 'scripts-manager-by-mudassar' ); ?>" <?php echo $msst_locked ? 'readonly' : ''; ?>><?php echo esc_textarea( $msst_snippet['code'] ); ?></textarea>

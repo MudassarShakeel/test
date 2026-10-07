@@ -4,7 +4,7 @@ Tags: snippets, header, footer, code, conditional logic
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,9 @@ Scripts Manager By Mudassar lives under Settings > Scripts Manager.
 * Add `define( 'MSST_DISABLE_SNIPPETS', true );` to wp-config.php to turn every snippet off.
 
 == Changelog ==
+
+= 1.1.2 =
+* Smaller dropdown and search boxes in the Add Snippet and My Snippets screens.
 
 = 1.1.1 =
 * Fixed a fatal error when activating while the older "Mudassar Snippet Studio" copy was still active. A notice now explains what to do.

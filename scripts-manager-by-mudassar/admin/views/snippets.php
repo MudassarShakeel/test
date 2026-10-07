@@ -64,7 +64,7 @@ MSST_Admin::intro( __( 'Your snippets', 'scripts-manager-by-mudassar' ), __( 'Ev
 		<?php endforeach; ?>
 	</span>
 	<span class="msst-spacer"></span>
-	<input class="msst-input msst-w-240" type="search" name="s" value="<?php echo esc_attr( $msst_search ); ?>" placeholder="<?php esc_attr_e( 'Search by name…', 'scripts-manager-by-mudassar' ); ?>">
+	<input class="msst-input msst-input-sm msst-w-240" type="search" name="s" value="<?php echo esc_attr( $msst_search ); ?>" placeholder="<?php esc_attr_e( 'Search by name…', 'scripts-manager-by-mudassar' ); ?>">
 	<?php if ( $msst_status ) : ?>
 		<input type="hidden" name="status" value="<?php echo esc_attr( $msst_status ); ?>">
 	<?php endif; ?>
@@ -84,7 +84,7 @@ MSST_Admin::intro( __( 'Your snippets', 'scripts-manager-by-mudassar' ), __( 'Ev
 	<?php wp_nonce_field( 'msst_bulk' ); ?>
 	<div class="msst-toolbar">
 		<label class="msst-small"><?php esc_html_e( 'With selected:', 'scripts-manager-by-mudassar' ); ?></label>
-		<select class="msst-input msst-w-140" name="bulk_action">
+		<select class="msst-input msst-input-sm msst-w-140" name="bulk_action">
 			<option value=""><?php esc_html_e( 'Choose…', 'scripts-manager-by-mudassar' ); ?></option>
 			<option value="activate"><?php esc_html_e( 'Turn ON', 'scripts-manager-by-mudassar' ); ?></option>
 			<option value="deactivate"><?php esc_html_e( 'Turn OFF', 'scripts-manager-by-mudassar' ); ?></option>

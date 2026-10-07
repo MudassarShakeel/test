@@ -218,7 +218,7 @@
     log('8. Revisions');
     await saveSnippet({ id: html.id, title: TAG + ' html', type: 'html', location: 'footer', code: `<div id="${TAG}-html">HTML-V2-${TAG}</div>` });
     const rev = await get(PAGE + 'revisions&snippet=' + html.id);
-    check('editing code stores a revision', /Compare/.test(rev.text) && /Restore/.test(rev.text), '');
+    check('editing code stores a revision', /See changes/.test(rev.text) && /Go back to this/.test(rev.text), '');
     home = await visitor(HOME);
     check('updated code is live', home.text.includes('HTML-V2-' + TAG), '');
 
@@ -266,7 +266,8 @@
     check('delete with a wrong nonce refused', r.status === 403, 'HTTP ' + r.status);
     check('snippet still exists after those attempts', !!(await listRow(html.id)), '');
     r = await fetch(POST, { method: 'POST', credentials: 'omit', redirect: 'follow', body: new URLSearchParams({ action: 'msst_save_snippet', msst_title: TAG + ' anon', msst_type: 'html', msst_code: 'x' }) });
-    check('logged-out visitor cannot use admin-post save (sent to login)', /wp-login\.php/.test(r.url), r.url);
+    const anonList = await get(PAGE + 'snippets&s=' + encodeURIComponent(TAG + ' anon'));
+    check('logged-out visitor cannot use admin-post save (refused, nothing created)', ([400, 401, 403].includes(r.status) || /wp-login\.php/.test(r.url)) && !anonList.text.includes(TAG + ' anon'), 'HTTP ' + r.status + ' ' + r.url);
     const anonPage = await fetch(PAGE + 'snippets', { credentials: 'omit' });
     check('logged-out visitor cannot open the plugin page', /wp-login\.php/.test(anonPage.url), anonPage.url);
     const xss = await saveSnippet({ title: TAG + ' <img src=x onerror=alert(1)>', type: 'html', location: 'footer', code: '<i>x</i>', active: false });

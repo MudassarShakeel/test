@@ -49,6 +49,7 @@
 .msst-center{text-align:center}
 .msst .msst-input{width:100%;max-width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15px;min-height:42px;color:var(--ink);box-shadow:none}
 .msst .msst-input:focus,.msst .msst-code:focus{border-color:var(--blue);outline:0;box-shadow:none}
+.msst .msst-input-sm{min-height:34px;padding:4px 10px;font-size:14px;border-radius:8px}
 .msst-w-140{width:140px!important}.msst-w-240{width:240px!important}.msst-w-280{width:280px!important}.msst-w-320{width:320px!important}.msst-w-30{width:30px}
 .msst-label{display:block;font-weight:600;margin:0 0 5px;font-size:14px}
 .msst-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.msst-inline .msst-label{margin:0}
