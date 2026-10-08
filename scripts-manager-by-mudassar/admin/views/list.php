@@ -31,26 +31,26 @@ $msst_sort  = static function ( $column, $label ) use ( $msst_orderby, $msst_ord
 	) . '">' . esc_html( $label . $mark ) . '</a>';
 };
 ?>
-<form method="get" class="msst-toolbar">
-	<input type="hidden" name="page" value="<?php echo esc_attr( MSST_Admin::PAGE_LIST ); ?>">
+<div class="msst-toolbar">
+	<select form="msst-bulk" class="msst-input msst-input-sm msst-w-160" name="bulk_action" aria-label="<?php esc_attr_e( 'Bulk actions', 'scripts-manager-by-mudassar' ); ?>">
+		<option value=""><?php esc_html_e( 'Bulk actions', 'scripts-manager-by-mudassar' ); ?></option>
+		<option value="activate"><?php esc_html_e( 'Activate', 'scripts-manager-by-mudassar' ); ?></option>
+		<option value="deactivate"><?php esc_html_e( 'Deactivate', 'scripts-manager-by-mudassar' ); ?></option>
+		<option value="delete"><?php esc_html_e( 'Delete', 'scripts-manager-by-mudassar' ); ?></option>
+	</select>
+	<button form="msst-bulk" type="submit" class="msst-btn msst-btn-outline msst-btn-sm" data-confirm="1"><?php esc_html_e( 'Apply', 'scripts-manager-by-mudassar' ); ?></button>
 	<span class="msst-spacer"></span>
-	<input class="msst-input msst-input-sm msst-w-240" type="search" name="s" value="<?php echo esc_attr( $msst_search ); ?>" aria-label="<?php esc_attr_e( 'Search snippets', 'scripts-manager-by-mudassar' ); ?>">
-	<button type="submit" class="msst-btn msst-btn-outline msst-btn-sm"><?php esc_html_e( 'Search Snippets', 'scripts-manager-by-mudassar' ); ?></button>
+	<form method="get" class="msst-search">
+		<input type="hidden" name="page" value="<?php echo esc_attr( MSST_Admin::PAGE_LIST ); ?>">
+		<input class="msst-input msst-input-sm msst-w-240" type="search" name="s" value="<?php echo esc_attr( $msst_search ); ?>" aria-label="<?php esc_attr_e( 'Search snippets', 'scripts-manager-by-mudassar' ); ?>">
+		<button type="submit" class="msst-btn msst-btn-outline msst-btn-sm"><?php esc_html_e( 'Search Snippets', 'scripts-manager-by-mudassar' ); ?></button>
+	</form>
 	<span class="msst-small"><?php echo esc_html( sprintf( /* translators: %d: number of snippets */ _n( '%d item', '%d items', $msst_list['total'], 'scripts-manager-by-mudassar' ), $msst_list['total'] ) ); ?></span>
-</form>
+</div>
 
-<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+<form id="msst-bulk" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 	<input type="hidden" name="action" value="msst_bulk">
 	<?php wp_nonce_field( 'msst_bulk' ); ?>
-	<div class="msst-toolbar">
-		<select class="msst-input msst-input-sm msst-w-160" name="bulk_action" aria-label="<?php esc_attr_e( 'Bulk actions', 'scripts-manager-by-mudassar' ); ?>">
-			<option value=""><?php esc_html_e( 'Bulk actions', 'scripts-manager-by-mudassar' ); ?></option>
-			<option value="activate"><?php esc_html_e( 'Activate', 'scripts-manager-by-mudassar' ); ?></option>
-			<option value="deactivate"><?php esc_html_e( 'Deactivate', 'scripts-manager-by-mudassar' ); ?></option>
-			<option value="delete"><?php esc_html_e( 'Delete', 'scripts-manager-by-mudassar' ); ?></option>
-		</select>
-		<button type="submit" class="msst-btn msst-btn-outline msst-btn-sm" data-confirm="1"><?php esc_html_e( 'Apply', 'scripts-manager-by-mudassar' ); ?></button>
-	</div>
 	<table class="msst-table">
 		<thead>
 			<tr>

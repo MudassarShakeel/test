@@ -16,7 +16,7 @@ if ( ! defined( 'MSST_TEST_NO_CONSTANTS' ) ) {
 	define( 'MSST_FILE', MSST_DIR . 'scripts-manager-by-mudassar.php' );
 	define( 'MSST_URL', 'http://x.test/wp-content/plugins/scripts-manager-by-mudassar/' );
 	define( 'MSST_SLUG', 'scripts-manager-by-mudassar' );
-	define( 'MSST_VERSION', '2.0.1' );
+	define( 'MSST_VERSION', '2.0.2' );
 }
 define( 'ARRAY_A', 'ARRAY_A' );
 register_shutdown_function(

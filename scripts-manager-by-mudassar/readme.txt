@@ -4,7 +4,7 @@ Tags: snippets, header, footer, code, scripts
 Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,14 +29,17 @@ Scripts Manager By Mudassar adds HTML, CSS, JavaScript and PHP snippets to your 
 
 == Changelog ==
 
-= 2.0.1 =
+= 2.0.2 =
+* Snippet list: bulk actions and search are now one tidy row, all controls the same height.
+
+= 2.0.2 =
 * Removed the All / Active / Inactive links and the type filter from the snippet list.
 * The code box is now tall by default (480 px), resizable, with a full-height line gutter.
 
-= 2.0.1 =
+= 2.0.2 =
 * Rebuilt around a simple All Snippets / Add New / Tools / Settings workflow with its own top-level menu. Starts fresh (snippets from 1.x are not converted).
 
-= 2.0.1 =
+= 2.0.2 =
 * New main tab: Settings. General & Safety, History & Schedule, Import / Export, Problems & Activity and Help & Contact now live inside it. The "More" row is gone; old links still work.
 
 = 1.2.0 =

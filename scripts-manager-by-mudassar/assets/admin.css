@@ -169,3 +169,11 @@
 .msst .msst-row-code .CodeMirror-scroll{min-height:100%}
 .msst .msst-row-code textarea.msst-code{min-height:480px;resize:vertical}
 .msst .msst-row-code .CodeMirror,.msst .msst-row-code textarea.msst-code{margin-bottom:10px}
+
+/* ---- list toolbar: one row, every control the same height ---- */
+.msst .msst-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.msst .msst-search{display:flex;gap:10px;align-items:center;margin:0}
+.msst .msst-toolbar select.msst-input-sm,.msst .msst-toolbar input.msst-input-sm{height:36px;min-height:36px;margin:0;padding:0 12px;line-height:1.2;font-size:14px;border:1px solid var(--line);border-radius:10px;background-color:#fff;color:var(--ink);box-shadow:none}
+.msst .msst-toolbar select.msst-input-sm{padding-right:30px}
+.msst .msst-toolbar select.msst-input-sm:focus,.msst .msst-toolbar input.msst-input-sm:focus{border-color:var(--blue);box-shadow:none;outline:0}
+.msst .msst-toolbar .msst-btn-sm{height:36px;display:inline-flex;align-items:center;padding:0 16px;margin:0;box-sizing:border-box}
