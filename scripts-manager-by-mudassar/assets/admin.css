@@ -162,3 +162,10 @@
 .msst-picklist label{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:8px;cursor:pointer}
 .msst-picklist label:hover{background:var(--fill)}
 .msst-picklist label[hidden]{display:none}
+
+/* ---- code box: big by default, full-height gutter, resizable ---- */
+.msst .msst-row-code .CodeMirror{height:480px;min-height:300px;resize:vertical;overflow:hidden;background:var(--fill)}
+.msst .msst-row-code .CodeMirror-gutters{background:var(--fill);border-right:1px solid var(--line)}
+.msst .msst-row-code .CodeMirror-scroll{min-height:100%}
+.msst .msst-row-code textarea.msst-code{min-height:480px;resize:vertical}
+.msst .msst-row-code .CodeMirror,.msst .msst-row-code textarea.msst-code{margin-bottom:10px}

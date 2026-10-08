@@ -97,6 +97,8 @@
 
 	if ( textarea && ! textarea.readOnly && data.editor && window.wp && window.wp.codeEditor ) {
 		editor = window.wp.codeEditor.initialize( textarea, data.editor );
+		editor.codemirror.setOption( 'mode', data.modes[ typeSelect.value ] || 'text/html' );
+		editor.codemirror.refresh();
 	}
 
 	typeSelect.addEventListener( 'change', function () {

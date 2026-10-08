@@ -4,10 +4,7 @@
  *
  * @package ScriptsManagerByMudassar
  * @var array  $msst_list    Query result.
- * @var array  $msst_counts  Counts.
  * @var string $msst_search  Search text.
- * @var string $msst_status  all|active|inactive.
- * @var string $msst_type    Type filter.
  * @var string $msst_orderby Sort column.
  * @var string $msst_order   asc|desc.
  * @var int    $msst_paged   Page number.
@@ -16,18 +13,7 @@
 defined( 'ABSPATH' ) || exit;
 
 $msst_types = MSST_Snippets::types();
-$msst_views = array(
-	'all'      => array( __( 'All', 'scripts-manager-by-mudassar' ), $msst_counts['all'] ),
-	'active'   => array( __( 'Active', 'scripts-manager-by-mudassar' ), $msst_counts['active'] ),
-	'inactive' => array( __( 'Inactive', 'scripts-manager-by-mudassar' ), $msst_counts['inactive'] ),
-);
-$msst_keep  = array_filter(
-	array(
-		'status' => 'all' === $msst_status ? '' : $msst_status,
-		'type'   => $msst_type,
-		's'      => $msst_search,
-	)
-);
+$msst_keep  = array_filter( array( 's' => $msst_search ) );
 $msst_sort  = static function ( $column, $label ) use ( $msst_orderby, $msst_order, $msst_keep ) {
 	$next = ( $msst_orderby === $column && 'asc' === $msst_order ) ? 'desc' : 'asc';
 	$mark = $msst_orderby === $column ? ( 'asc' === $msst_order ? ' ▲' : ' ▼' ) : '';
@@ -45,24 +31,8 @@ $msst_sort  = static function ( $column, $label ) use ( $msst_orderby, $msst_ord
 	) . '">' . esc_html( $label . $mark ) . '</a>';
 };
 ?>
-<ul class="msst-views">
-	<?php foreach ( $msst_views as $msst_key => $msst_view ) : ?>
-		<li><a class="<?php echo $msst_key === $msst_status ? 'is-active' : ''; ?>" href="<?php echo esc_url( MSST_Admin::url( MSST_Admin::PAGE_LIST, array_filter( array( 'status' => 'all' === $msst_key ? '' : $msst_key ) ) ) ); ?>"><?php echo esc_html( $msst_view[0] ); ?> <span>(<?php echo esc_html( (string) $msst_view[1] ); ?>)</span></a></li>
-	<?php endforeach; ?>
-</ul>
-
 <form method="get" class="msst-toolbar">
 	<input type="hidden" name="page" value="<?php echo esc_attr( MSST_Admin::PAGE_LIST ); ?>">
-	<?php if ( 'all' !== $msst_status ) : ?>
-		<input type="hidden" name="status" value="<?php echo esc_attr( $msst_status ); ?>">
-	<?php endif; ?>
-	<select class="msst-input msst-input-sm msst-w-200" name="type" aria-label="<?php esc_attr_e( 'Snippet type', 'scripts-manager-by-mudassar' ); ?>">
-		<option value=""><?php esc_html_e( 'All Snippet Types', 'scripts-manager-by-mudassar' ); ?></option>
-		<?php foreach ( $msst_types as $msst_slug => $msst_label ) : ?>
-			<option value="<?php echo esc_attr( $msst_slug ); ?>" <?php selected( $msst_type, $msst_slug ); ?>><?php echo esc_html( $msst_label ); ?></option>
-		<?php endforeach; ?>
-	</select>
-	<button type="submit" class="msst-btn msst-btn-outline msst-btn-sm"><?php esc_html_e( 'Filter', 'scripts-manager-by-mudassar' ); ?></button>
 	<span class="msst-spacer"></span>
 	<input class="msst-input msst-input-sm msst-w-240" type="search" name="s" value="<?php echo esc_attr( $msst_search ); ?>" aria-label="<?php esc_attr_e( 'Search snippets', 'scripts-manager-by-mudassar' ); ?>">
 	<button type="submit" class="msst-btn msst-btn-outline msst-btn-sm"><?php esc_html_e( 'Search Snippets', 'scripts-manager-by-mudassar' ); ?></button>

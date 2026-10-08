@@ -40,7 +40,7 @@ foreach ( $pages as $name => $def ) {
 }
 
 $l = $html['list'];
-ok( false !== strpos( $l, 'All <span>(4)</span>' ) && false !== strpos( $l, 'Active <span>(' ) && false !== strpos( $l, 'Inactive <span>(' ), 'list: All / Active / Inactive counts' );
+ok( false === strpos( $l, 'msst-views' ) && false === strpos( $l, 'All Snippet Types' ) && false === strpos( $l, '>Filter<' ), 'list: no status links and no type filter' );
 foreach ( array( 'Status', 'Snippet Name', 'Display On', 'Location', 'Snippet Type', 'Devices', 'Shortcode', 'ID' ) as $col ) {
 	ok( false !== strpos( $l, $col ), "list column: $col" );
 }
@@ -51,7 +51,7 @@ ok( false !== strpos( $l, 'Turned off automatically: Call to undefined function 
 ok( false !== strpos( $l, 'action=msst_toggle' ) && false !== strpos( $l, 'action=msst_delete' ) && false !== strpos( $l, 'action=msst_duplicate' ), 'list: row actions carry nonces' );
 ok( false !== strpos( $l, 'Specific Pages' ) && false !== strpos( $l, 'Site Wide' ) && false !== strpos( $l, 'Shortcode Only' ), 'list: Display On labels' );
 ok( false !== strpos( $l, 'Only Mobile' ) && false !== strpos( $l, 'Show on All Devices' ), 'list: Devices labels' );
-ok( false !== strpos( $l, 'Bulk actions' ) && false !== strpos( $l, 'All Snippet Types' ), 'list: bulk actions and type filter' );
+ok( false !== strpos( $l, 'Bulk actions' ) && false !== strpos( $l, 'Search Snippets' ), 'list: bulk actions and search' );
 
 $f = $html['add'];
 foreach ( array( 'Snippet Name', 'Snippet Type', 'Site Display', 'Page List', 'Post List', 'Category List', 'Post Types', 'Tag List', 'Exclude Pages', 'Exclude Posts', 'Location', 'Device Display', 'Status', 'Snippet / Code' ) as $label ) {

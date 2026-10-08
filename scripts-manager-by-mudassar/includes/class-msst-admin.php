@@ -323,19 +323,13 @@ class MSST_Admin {
 	public static function page_list() {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list filters.
 		$msst_search  = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
-		$msst_status  = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : 'all';
-		$msst_type    = isset( $_GET['type'] ) ? sanitize_key( wp_unslash( $_GET['type'] ) ) : '';
 		$msst_orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'id';
 		$msst_order   = isset( $_GET['order'] ) && 'desc' === sanitize_key( wp_unslash( $_GET['order'] ) ) ? 'desc' : 'asc';
 		$msst_paged   = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
 		// phpcs:enable
-		$msst_status = in_array( $msst_status, array( 'active', 'inactive' ), true ) ? $msst_status : 'all';
-		$msst_counts = MSST_Snippets::counts();
-		$msst_list   = MSST_Snippets::query(
+		$msst_list = MSST_Snippets::query(
 			array(
 				'search'  => $msst_search,
-				'status'  => $msst_status,
-				'type'    => $msst_type,
 				'orderby' => $msst_orderby,
 				'order'   => $msst_order,
 				'paged'   => $msst_paged,

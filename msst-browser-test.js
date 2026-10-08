@@ -227,10 +227,7 @@
     const lp = await get(LIST + '&s=' + encodeURIComponent(TAG));
     const cols = [...lp.doc.querySelectorAll('.msst-table thead th')].map((x) => x.textContent.replace(/[▲▼]/g, '').trim());
     check('list has ID, Status, Snippet Name, Display On, Location, Snippet Type, Devices, Shortcode', ['ID', 'Status', 'Snippet Name', 'Display On', 'Location', 'Snippet Type', 'Devices', 'Shortcode'].every((c) => cols.includes(c)), cols.join(', '));
-    const views = [...lp.doc.querySelectorAll('.msst-views a')].map((x) => x.textContent.replace(/\s+/g, ' ').trim());
-    check('list has All / Active / Inactive links with counts', views.length === 3 && /All \(\d+\)/.test(views[0]) && /Active \(\d+\)/.test(views[1]) && /Inactive \(\d+\)/.test(views[2]), views.join(' | '));
-    const inactiveList = await get(LIST + '&status=inactive&s=' + encodeURIComponent(TAG));
-    check('Inactive filter lists only OFF snippets', inactiveList.text.includes(TAG + ' inactive') && !inactiveList.text.includes(TAG + ' css'), '');
+    check('list has no status links or type filter', !lp.doc.querySelector('.msst-views') && !lp.doc.querySelector('select[name="type"]'), '');
     const sorted = await get(LIST + '&orderby=id&order=desc&s=' + encodeURIComponent(TAG));
     const ids = [...sorted.doc.querySelectorAll('.msst-table tbody tr td:nth-child(2)')].map((x) => parseInt(x.textContent, 10));
     check('sorting by ID descending works', ids.length > 2 && ids.every((v, i) => i === 0 || ids[i - 1] > v), ids.join(','));
