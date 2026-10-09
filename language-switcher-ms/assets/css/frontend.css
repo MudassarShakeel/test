@@ -1,0 +1,16 @@
+.mcs-lang{position:relative;display:inline-block;font-family:var(--mcs-font,inherit);width:var(--mcs-width,auto)}
+.mcs-lang *{box-sizing:border-box}
+.mcs-lang .mcs-lang-btn{display:inline-flex;align-items:center;justify-content:space-between;gap:7px;width:var(--mcs-width,auto);height:var(--mcs-height,auto);background:var(--mcs-bg,#fff);color:var(--mcs-text,#1d1d1f);font-family:var(--mcs-font,inherit);font-size:var(--mcs-font-size,13px);font-weight:700;line-height:1;border:1px solid var(--mcs-border,#ececec);border-radius:9px;padding:5px 12px;cursor:pointer;outline-offset:2px;box-shadow:none;text-decoration:none;text-transform:none}
+.mcs-lang .mcs-lang-btn:hover,.mcs-lang.open .mcs-lang-btn{border-color:var(--mcs-border,#ececec);background:var(--mcs-bg,#fff);color:var(--mcs-text,#1d1d1f)}
+.mcs-caret{width:10px;height:10px;transition:transform .15s ease;stroke:var(--mcs-text,#1d1d1f)}
+.mcs-lang.open .mcs-caret{transform:rotate(180deg)}
+.mcs-flag{width:20px;height:14px;object-fit:cover;border-radius:2px;display:block;flex-shrink:0}
+.mcs-lang-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);min-width:var(--mcs-menu-width,170px);background:var(--mcs-bg,#fff);border:1px solid var(--mcs-border,#ececec);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.14);padding:6px;z-index:999999}
+.mcs-lang.open .mcs-lang-menu{display:block}
+.mcs-lang .mcs-lang-menu .mcs-menu-item{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:8px;padding:10px;cursor:pointer;font-family:var(--mcs-font,inherit);font-size:var(--mcs-font-size,13px);color:var(--mcs-text,#1d1d1f);text-align:left;outline-offset:-2px;box-shadow:none;text-transform:none}
+.mcs-lang .mcs-lang-menu .mcs-menu-item:hover,.mcs-lang .mcs-lang-menu .mcs-menu-item:focus-visible{background:var(--mcs-hover,#f5f5f5);color:var(--mcs-text,#1d1d1f)}
+.mcs-lang .mcs-lang-menu .mcs-menu-item.active{background:var(--mcs-hover,#f5f5f5);font-weight:700}
+.mcs-lang-menu b{width:22px;flex-shrink:0;color:var(--mcs-text,#1d1d1f)}
+.goog-te-banner-frame,.skiptranslate>iframe,#goog-gt-tt,.goog-te-balloon-frame{display:none!important}
+body{top:0!important}
+.goog-text-highlight{background:none!important;box-shadow:none!important}
