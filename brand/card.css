@@ -1,0 +1,4 @@
+@font-face{font-family:Mona;src:url(fonts/MonaSans-latin-variable.woff2) format("woff2");font-weight:200 900;font-stretch:75% 125%}
+:root{--ink:#141414;--paper:#e6e7e8;--white:#fff;--grey:#6b6d70}
+*{box-sizing:border-box}
+body{margin:0;font-family:Mona,sans-serif;color:var(--ink)}

@@ -1,0 +1,95 @@
+<!doctype html><meta charset=utf-8><title>mudassar.work — brand style guide</title>
+<link rel=stylesheet href=card.css>
+<style>
+@page{size:297mm 210mm;margin:0}
+.p{width:297mm;height:210mm;position:relative;overflow:hidden;page-break-after:always;break-after:page;padding:16mm 18mm;background:var(--white)}
+.p:last-child{page-break-after:auto;break-after:auto}
+.dark{background:var(--ink);color:#fff}.paper{background:var(--paper)}
+.hd{position:absolute;left:18mm;right:18mm;top:11mm;display:flex;justify-content:space-between;font-size:8pt;font-weight:500;letter-spacing:1.2pt;color:var(--grey)}
+.dark .hd{color:#9a9c9f}
+h1{font-weight:800;font-stretch:115%;font-size:54pt;letter-spacing:-1.5pt;line-height:.95;margin:0}
+h2{font-weight:800;font-stretch:115%;font-size:30pt;letter-spacing:-.8pt;margin:14mm 0 0;line-height:1}
+.num{font-weight:300;font-size:10pt;letter-spacing:1.5pt;margin-top:10mm;color:var(--grey)}
+.lead{font-weight:300;font-size:12pt;line-height:1.5;max-width:110mm;margin:6mm 0 0}
+.grid{display:grid;gap:8mm}
+.box{border-radius:5mm;display:flex;align-items:center;justify-content:center;position:relative}
+.cap{font-size:8.5pt;line-height:1.45;margin-top:3mm;color:var(--grey)} .cap b{color:var(--ink);font-weight:700} .dark .cap b{color:#fff}
+.sw{height:62mm;border-radius:5mm;padding:6mm;display:flex;flex-direction:column;justify-content:flex-end;font-size:8.5pt;line-height:1.5}
+.sw b{font-size:13pt;font-weight:800;display:block;margin-bottom:1mm}
+.row{display:flex;align-items:baseline;gap:8mm;border-bottom:.5pt solid #cfd0d2;padding:3.2mm 0}
+.row .l{width:34mm;font-size:8pt;letter-spacing:1pt;color:var(--grey)}
+</style>
+
+<section class="p dark">
+ <div class=hd><span>BRAND STYLE GUIDE</span><span>V1.0 · 2026</span></div>
+ <img src="assets/logo-full-light.svg" style="position:absolute;left:18mm;top:50mm;height:92mm">
+ <div style="position:absolute;left:150mm;top:62mm;right:18mm"><h1>brand<br>style guide</h1><p class=lead style="color:#c9cacc">The visual identity of mudassar.work — web development, AI automation and SEO, handled end to end.</p></div>
+</section>
+
+<section class=p>
+ <div class=hd><span>01 · LOGO</span><span>mudassar.work</span></div>
+ <h2 style="margin-top:8mm">the logo</h2>
+ <p class=lead>A split circle holding a bold lowercase <b>ms</b>. Half solid, half open: the work and the space around it. The wordmark pairs a light <b>mudassar</b> with a bold <b>.work</b>.</p>
+ <div class=grid style="grid-template-columns:1.4fr 1fr 1fr;margin-top:10mm">
+  <div><div class="box paper" style="height:78mm"><img src="assets/logo-full-dark.svg" style="height:62mm"></div><p class=cap><b>Primary logo.</b> Use on light backgrounds.</p></div>
+  <div><div class="box" style="height:78mm;background:var(--ink)"><img src="assets/logo-full-light.svg" style="height:56mm"></div><p class=cap><b>Reversed.</b> White version for dark backgrounds.</p></div>
+  <div><div class="box" style="height:78mm;border:.5pt solid #cfd0d2"><img src="assets/logo-mark-dark.svg" style="height:50mm"></div><p class=cap><b>Badge only.</b> Avatars, favicon, stamps.</p></div>
+ </div>
+</section>
+
+<section class=p>
+ <div class=hd><span>02 · USAGE</span><span>mudassar.work</span></div>
+ <h2 style="margin-top:8mm">space &amp; size</h2>
+ <div class=grid style="grid-template-columns:1fr 1fr;margin-top:10mm;gap:14mm">
+  <div>
+   <div class="box paper" style="height:84mm"><div style="position:relative;padding:15mm;border:.6pt dashed #6b6d70;background:#fff"><img src="assets/logo-mark-dark.svg" style="height:46mm;display:block"><span style="position:absolute;left:3mm;top:3mm;font-size:7pt;color:var(--grey)">x</span><span style="position:absolute;left:3mm;bottom:3mm;font-size:7pt;color:var(--grey)">x</span></div></div>
+   <p class=cap><b>Clear space.</b> Keep a margin of <b>x</b> around the logo, where x is half the badge's radius. Nothing enters this area.</p>
+  </div>
+  <div>
+   <div class="box paper" style="height:84mm;gap:16mm;align-items:flex-end;padding-bottom:14mm"><div style="text-align:center"><img src="assets/logo-mark-dark.svg" style="height:6mm"><div style="font-size:7pt;margin-top:2mm">mark · 16 px / 6 mm</div></div><div style="text-align:center"><img src="assets/logo-full-dark.svg" style="height:26mm"><div style="font-size:7pt;margin-top:2mm">full · 120 px / 30 mm wide</div></div></div>
+   <p class=cap><b>Minimum size.</b> Below these sizes switch to the badge on its own and keep it on a plain background.</p>
+  </div>
+ </div>
+ <div class=grid style="grid-template-columns:repeat(4,1fr);margin-top:9mm;gap:6mm">
+  <p class=cap style="margin:0"><b>Do</b> use black or white only.</p><p class=cap style="margin:0"><b>Do</b> place on plain, high-contrast backgrounds.</p><p class=cap style="margin:0"><b>Don't</b> stretch, rotate, outline or add shadows.</p><p class=cap style="margin:0"><b>Don't</b> recolor, or place on busy photos.</p>
+ </div>
+</section>
+
+<section class="p">
+ <div class=hd><span>03 · COLOR</span><span>mudassar.work</span></div>
+ <h2 style="margin-top:8mm">color</h2>
+ <p class=lead>Strictly black and white. Contrast does the work, so colour never competes with the content.</p>
+ <div class=grid style="grid-template-columns:repeat(4,1fr);margin-top:10mm;gap:6mm">
+  <div class=sw style="background:#141414;color:#fff"><b>ink</b>#141414<br>RGB 20 20 20<br>CMYK 0 0 0 95</div>
+  <div class=sw style="background:#e6e7e8"><b>paper</b>#E6E7E8<br>RGB 230 231 232<br>CMYK 0 0 0 10</div>
+  <div class=sw style="background:#fff;border:.5pt solid #cfd0d2"><b>white</b>#FFFFFF<br>RGB 255 255 255<br>CMYK 0 0 0 0</div>
+  <div class=sw style="background:#6b6d70;color:#fff"><b>slate</b>#6B6D70<br>RGB 107 109 112<br>For secondary text only</div>
+ </div>
+ <p class=cap style="margin-top:8mm"><b>Proportion.</b> Roughly 60% paper/white, 30% ink, 10% slate. Reverse the ratio on dark layouts.</p>
+</section>
+
+<section class="p paper">
+ <div class=hd><span>04 · TYPOGRAPHY</span><span>mudassar.work</span></div>
+ <h2 style="margin-top:8mm">typography</h2>
+ <div style="display:grid;grid-template-columns:90mm 1fr;gap:14mm;margin-top:8mm">
+  <div><div style="font-weight:800;font-stretch:115%;font-size:96pt;letter-spacing:-3pt;line-height:1">Aa</div><p class=lead style="font-size:11pt;margin-top:4mm"><b>Mona Sans</b> — variable, open source (SIL OFL). All text is lowercase for display, sentence case for body copy.</p></div>
+  <div>
+   <div class=row><span class=l>DISPLAY · 800 EXPANDED</span><span style="font-weight:800;font-stretch:115%;font-size:26pt;letter-spacing:-.6pt">losing clients? fix your site</span></div>
+   <div class=row><span class=l>HEADING · 700</span><span style="font-weight:700;font-size:20pt">web development &amp; automation</span></div>
+   <div class=row><span class=l>WORDMARK · 300 + 800</span><span style="font-size:20pt;letter-spacing:1pt"><span style="font-weight:300">mudassar</span><b style="font-weight:800">.work</b></span></div>
+   <div class=row><span class=l>BODY · 400</span><span style="font-size:11pt;line-height:1.5;max-width:105mm">You don't have time to fix it. I do — website development, AI automation and SEO, handled end to end.</span></div>
+   <div class=row><span class=l>LABEL · 500 CAPS</span><span style="font-size:8.5pt;font-weight:500;letter-spacing:1.6pt">AVAILABLE FOR NEW PROJECT</span></div>
+  </div>
+ </div>
+</section>
+
+<section class="p">
+ <div class=hd><span>05 · STATIONERY</span><span>mudassar.work</span></div>
+ <h2 style="margin-top:8mm">business card</h2>
+ <p class=lead>3.5 × 2 in (88.9 × 50.8 mm) with 0.125 in bleed. Front: reversed logo on ink. Back: details on paper with the badge as a sign-off.</p>
+ <div class=grid style="grid-template-columns:1fr 1fr;margin-top:9mm;gap:10mm">
+  <img src="business-card-front.png" style="width:100%;border-radius:2mm;box-shadow:0 2mm 6mm rgba(0,0,0,.18)">
+  <img src="business-card-back.png" style="width:100%;border-radius:2mm;box-shadow:0 2mm 6mm rgba(0,0,0,.18)">
+ </div>
+ <p class=cap style="margin-top:6mm"><b>Print.</b> 350 gsm uncoated or soft-touch stock. Send <b>business-card-print.pdf</b> to your printer.</p>
+</section>

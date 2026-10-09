@@ -1,0 +1,36 @@
+<!doctype html><meta charset=utf-8><title>mudassar.work business card</title>
+<link rel=stylesheet href=card.css>
+<style>
+/* 3.5x2in trim @300dpi = 1050x600 ; +0.125in bleed each side = 1125x675 */
+@page{size:3.75in 2.25in;margin:0}
+body{background:#999}
+.card{width:3.75in;height:2.25in;position:relative;overflow:hidden;page-break-after:always;break-after:page}
+.card:last-child{page-break-after:auto;break-after:auto}
+.front{background:var(--ink);display:flex;align-items:center;justify-content:center}
+.front img{width:1.9in;display:block}
+.back{background:var(--paper)}
+.safe{position:absolute;left:.125in;top:.125in;right:.125in;bottom:.125in;padding:.2in .25in}
+.name{font-weight:800;font-stretch:115%;font-size:17pt;letter-spacing:-.4pt;line-height:1;margin:0}
+.role{font-weight:300;font-size:6.6pt;letter-spacing:.9pt;margin:.07in 0 0;color:var(--grey)}
+.mark{position:absolute;right:.25in;bottom:.2in;width:.92in}
+.rule{position:absolute;left:.25in;right:.25in;top:.8in;height:0;border-top:.6pt solid var(--ink)}
+.list{position:absolute;left:.25in;bottom:.2in;margin:0;padding:0;list-style:none}
+.list li{display:flex;align-items:center;gap:.08in;font-size:7.4pt;font-weight:500;line-height:1;margin-top:.062in;letter-spacing:.1pt}
+.list svg{width:.115in;height:.115in;fill:none;stroke:var(--ink);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.list small{font-weight:300;color:var(--grey);font-size:6pt;margin-left:.02in}
+.split{position:absolute;right:.25in;bottom:.2in;font-size:6pt;font-weight:300;letter-spacing:.9pt;color:var(--grey)}
+</style>
+<div class="card front"><img src="assets/logo-full-light.svg" alt="ms mudassar.work"></div>
+<div class="card back"><div class=safe>
+ <p class=name>mudassar shakeel</p>
+ <p class=role>web development · ai automation · seo</p>
+ <img class=mark src="assets/logo-mark-dark.svg" alt="">
+ <div class=rule></div>
+ <ul class=list>
+  <li><svg viewBox="0 0 24 24"><rect x=3 y=5 width=18 height=14 rx=2 /><path d="M3 7l9 6 9-6"/></svg>hello@mudassar.work</li>
+  <li><svg viewBox="0 0 24 24"><rect x=3 y=5 width=18 height=14 rx=2 /><path d="M3 7l9 6 9-6"/></svg>mudassarshakeel063@gmail.com</li>
+  <li><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>+92 328 949 3642 <small>whatsapp</small></li>
+  <li><svg viewBox="0 0 24 24"><rect x=3 y=3 width=18 height=18 rx=3 /><path d="M8 10v7M8 7v.01M12 17v-7M12 13a3 3 0 016 0v4"/></svg>linkedin.com/in/chmudassarshakeel</li>
+  <li><svg viewBox="0 0 24 24"><circle cx=12 cy=12 r=9 /><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>mudassar.work</li>
+ </ul>
+</div></div>
