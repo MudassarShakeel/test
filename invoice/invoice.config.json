@@ -1,0 +1,13 @@
+{
+  "prefix": "MMDS",
+  "due_days": 14,
+  "from": {
+    "name": "Mudassar Shakeel",
+    "lines": ["Lahore, Pakistan", "mudassar.work", "hello@mudassar.work"]
+  },
+  "currency": "EUR",
+  "payment_note": "Please check your email for the Payoneer payment request.",
+  "contact_email": "hello@mudassar.work",
+  "contact_phone": "+923289493642",
+  "disclaimer": "This is a computer-generated invoice. No signature required. Client is responsible for all provided content, including legality and accuracy. Freelancer is not liable for any legal, financial, or third-party issues arising from use of the website, emails, or posts. Thanks"
+}
