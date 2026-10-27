@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MinEditor — Design Preview</title>
+<meta name="description" content="Design preview of MinEditor, a member-only HTML live editor by Mc Starters.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Design-preview switcher (not part of the product UI) -->
+<nav class="screens" aria-label="Design preview screens">
+  <span class="screens-label">Design preview</span>
+  <button data-screen="landing" class="is-active">1 · Landing</button>
+  <button data-screen="dashboard">2 · Dashboard</button>
+  <button data-screen="editor">3 · Editor</button>
+  <button data-screen="admin">4 · Admin settings</button>
+  <button data-open-login>Open login popup</button>
+</nav>
+
+<!-- ============ SCREEN 1: LANDING ============ -->
+<section class="screen is-active" id="screen-landing">
+  <header class="topbar">
+    <a class="brand" href="#"><img src="assets/logo.png" alt="Mc Starters logo"><span>Min<b>Editor</b></span></a>
+    <nav class="topnav">
+      <a href="#features">Features</a>
+      <a href="#limits">Free plan</a>
+      <button class="btn btn-ghost" data-open-login>Log in</button>
+      <button class="btn btn-primary" data-open-login>Start editing</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="pill">Members only · No password</span>
+        <h1>Write HTML. <em>See it live.</em> Edit it by clicking.</h1>
+        <p>MinEditor is a tiny browser editor with an instant preview. Sign in with an email code and start building pages in seconds.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-lg" data-open-login>Sign in with email</button>
+          <span class="muted">50 MB free · files auto-delete after 10 idle days</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="mock">
+          <div class="mock-bar"><i></i><i></i><i></i><span>index.html</span></div>
+          <div class="mock-body">
+            <pre><code><span class="t">&lt;h1&gt;</span>Hello, world<span class="t">&lt;/h1&gt;</span>
+<span class="t">&lt;p</span> <span class="a">class</span>=<span class="s">"lead"</span><span class="t">&gt;</span>
+  Built with MinEditor
+<span class="t">&lt;/p&gt;</span>
+<span class="t">&lt;button&gt;</span>Get started<span class="t">&lt;/button&gt;</span></code></pre>
+            <div class="mock-prev">
+              <h4>Hello, world</h4>
+              <p>Built with MinEditor</p>
+              <span class="mock-btn">Get started</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <h2>Everything you need, nothing you don't</h2>
+      <div class="grid">
+        <article><div class="ico">⚡</div><h3>Live preview</h3><p>The page updates as you type, with mobile, tablet and desktop widths.</p></article>
+        <article><div class="ico">🖱️</div><h3>Visual editing</h3><p>Click any element in the preview to change its text, colour and size.</p></article>
+        <article><div class="ico">✉️</div><h3>Passwordless login</h3><p>Enter your email, type the 6-digit code we send you. That's it.</p></article>
+        <article><div class="ico">📁</div><h3>Projects &amp; files</h3><p>File tree, tabs, auto-save, ZIP import and export.</p></article>
+        <article><div class="ico">🔒</div><h3>Private by default</h3><p>Only you can see your projects. Previews run in a sandbox.</p></article>
+        <article><div class="ico">🧹</div><h3>Stays tidy</h3><p>Inactive accounts are cleaned up after 10 days.</p></article>
+      </div>
+    </section>
+
+    <section class="limits" id="limits">
+      <div class="limit"><strong>50 MB</strong><span>storage per member</span></div>
+      <div class="limit"><strong>10 days</strong><span>of inactivity before deletion</span></div>
+      <div class="limit"><strong>0</strong><span>passwords to remember</span></div>
+    </section>
+  </main>
+  <footer class="foot">© Mc Starters · MinEditor design preview</footer>
+</section>
+
+<!-- ============ SCREEN 2: DASHBOARD ============ -->
+<section class="screen" id="screen-dashboard">
+  <header class="topbar">
+    <a class="brand" href="#"><img src="assets/logo.png" alt="Mc Starters logo"><span>Min<b>Editor</b></span></a>
+    <div class="topnav">
+      <span class="user"><i class="avatar">JD</i> jane@example.com</span>
+      <button class="btn btn-ghost" data-screen-go="landing">Log out</button>
+    </div>
+  </header>
+  <main class="dash">
+    <div class="dash-head">
+      <div>
+        <h2>Your projects</h2>
+        <p class="muted">Signed in with an email code. Welcome back.</p>
+      </div>
+      <button class="btn btn-primary">+ New project</button>
+    </div>
+
+    <div class="notice" role="status">
+      <strong>Heads up:</strong> you've been inactive for <b>7 days</b>. Your files will be deleted in <b>3 days</b> unless you open a project.
+    </div>
+
+    <div class="storage">
+      <div class="storage-row"><span>Storage</span><b id="storageText">37.4 MB of 50 MB</b></div>
+      <div class="meter"><i id="storageBar" style="width:74.8%"></i></div>
+    </div>
+
+    <div class="cards">
+      <article class="card card-new"><span>+</span>Blank page</article>
+      <article class="card" data-screen-go="editor"><div class="thumb t1"></div><h3>Portfolio</h3><p class="muted">Edited 2 hours ago · 4 files</p></article>
+      <article class="card" data-screen-go="editor"><div class="thumb t2"></div><h3>Landing page</h3><p class="muted">Edited yesterday · 6 files</p></article>
+      <article class="card" data-screen-go="editor"><div class="thumb t3"></div><h3>CSS playground</h3><p class="muted">Edited 5 days ago · 2 files</p></article>
+    </div>
+  </main>
+</section>
+
+<!-- ============ SCREEN 3: EDITOR ============ -->
+<section class="screen" id="screen-editor">
+  <header class="ed-top">
+    <a class="brand" href="#" data-screen-go="dashboard"><img src="assets/logo.png" alt="Mc Starters logo"><span>Min<b>Editor</b></span></a>
+    <span class="proj">Portfolio <small id="saveState">Saved</small></span>
+    <div class="devices" role="group" aria-label="Preview width">
+      <button data-w="100%" class="is-active" title="Desktop">🖥</button>
+      <button data-w="768px" title="Tablet">▭</button>
+      <button data-w="390px" title="Mobile">📱</button>
+    </div>
+    <div class="ed-actions">
+      <span class="chip">37.4 / 50 MB</span>
+      <button class="btn btn-ghost btn-sm" data-screen-go="dashboard">Projects</button>
+      <button class="btn btn-primary btn-sm">Export ZIP</button>
+    </div>
+  </header>
+
+  <div class="ed-main">
+    <aside class="tree" aria-label="Files">
+      <div class="tree-h">FILES <button title="New file">+</button></div>
+      <ul>
+        <li class="is-active">📄 index.html</li>
+        <li>🎨 style.css</li>
+        <li>⚙️ script.js</li>
+        <li>📁 images
+          <ul><li>🖼 hero.jpg</li><li>🖼 logo.svg</li></ul>
+        </li>
+      </ul>
+    </aside>
+
+    <section class="code">
+      <div class="tabs"><span class="tab is-active">index.html</span><span class="tab">style.css</span></div>
+      <div class="code-wrap">
+        <div class="gutter" id="gutter"></div>
+        <textarea id="source" spellcheck="false" aria-label="HTML source"></textarea>
+      </div>
+    </section>
+
+    <section class="preview">
+      <div class="pv-bar">
+        <span>Live preview</span>
+        <span class="chip chip-hint">Click an element to edit it</span>
+      </div>
+      <div class="pv-stage"><iframe id="frame" title="Live preview" sandbox="allow-scripts"></iframe></div>
+      <div class="console" id="console"><b>Console</b><span>No errors</span></div>
+    </section>
+
+    <aside class="inspector" id="inspector">
+      <div class="ins-h">Visual editor</div>
+      <p class="muted ins-empty" id="insEmpty">Select an element in the preview to change its text and style.</p>
+      <div id="insForm" hidden>
+        <div class="crumb" id="crumb">h1</div>
+        <label>Text<input id="fText" type="text"></label>
+        <label>Colour<input id="fColor" type="color" value="#111111"></label>
+        <label>Size <output id="fSizeOut">32px</output><input id="fSize" type="range" min="12" max="72" value="32"></label>
+        <label>Weight
+          <select id="fWeight"><option>400</option><option>600</option><option selected>800</option></select>
+        </label>
+        <div class="swatches" id="swatches">
+          <button style="background:#FE4C1C" data-c="#FE4C1C" title="Orange"></button>
+          <button style="background:#000000" data-c="#000000" title="Black"></button>
+          <button style="background:#FFFFFF" data-c="#FFFFFF" title="White"></button>
+          <button style="background:#8A8A8E" data-c="#8A8A8E" title="Grey"></button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ SCREEN 4: ADMIN ============ -->
+<section class="screen" id="screen-admin">
+  <header class="topbar">
+    <a class="brand" href="#"><img src="assets/logo.png" alt="Mc Starters logo"><span>Min<b>Editor</b> <small class="muted">· WordPress admin</small></span></a>
+    <div class="topnav"><span class="user"><i class="avatar">AD</i> admin</span></div>
+  </header>
+  <main class="dash">
+    <h2>MinEditor settings</h2>
+    <div class="admin-grid">
+      <div class="panel">
+        <h3>Limits</h3>
+        <label class="row">Storage per member <span><input type="number" value="50" min="1"> MB</span></label>
+        <label class="row">Delete files after inactivity <span><input type="number" value="10" min="1"> days</span></label>
+        <label class="row">Max file size <span><input type="number" value="5" min="1"> MB</span></label>
+        <label class="row">Login code expires after <span><input type="number" value="10" min="1"> min</span></label>
+        <label class="row">Max code requests per hour <span><input type="number" value="5" min="1"></span></label>
+      </div>
+      <div class="panel">
+        <h3>Allowed files</h3>
+        <p class="tags"><span>.html</span><span>.css</span><span>.js</span><span>.json</span><span>.svg</span><span>.png</span><span>.jpg</span><span>.webp</span><span>.woff2</span></p>
+        <p class="muted">PHP and other executable types are always blocked.</p>
+        <h3>Login</h3>
+        <label class="row">Email code login <span class="toggle on"></span></label>
+        <label class="row">Require login to edit <span class="toggle on"></span></label>
+        <label class="row">Public preview links <span class="toggle"></span></label>
+      </div>
+      <div class="panel wide">
+        <h3>Members</h3>
+        <table>
+          <thead><tr><th>Email</th><th>Storage</th><th>Last active</th><th>Deletes in</th></tr></thead>
+          <tbody>
+            <tr><td>jane@example.com</td><td>37.4 MB</td><td>7 days ago</td><td><span class="badge warn">3 days</span></td></tr>
+            <tr><td>sam@example.com</td><td>12.1 MB</td><td>Today</td><td><span class="badge">10 days</span></td></tr>
+            <tr><td>lee@example.com</td><td>49.8 MB</td><td>2 days ago</td><td><span class="badge">8 days</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ============ LOGIN POPUP ============ -->
+<div class="overlay" id="login" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <button class="x" data-close aria-label="Close">×</button>
+    <img class="modal-logo" src="assets/logo.png" alt="">
+    <!-- step 1 -->
+    <form id="stepEmail" class="step is-active" novalidate>
+      <h2 id="loginTitle">Log in or sign up</h2>
+      <p class="muted">Enter your email. We'll send you a 6-digit code. No password needed.</p>
+      <label>Email address
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+      </label>
+      <p class="err" id="emailErr" hidden>Please enter a valid email.</p>
+      <button class="btn btn-primary btn-block" type="submit">Send code</button>
+    </form>
+    <!-- step 2 -->
+    <form id="stepCode" class="step" novalidate>
+      <h2>Check your email</h2>
+      <p class="muted">We sent a 6-digit code to <b id="sentTo"></b>.</p>
+      <div class="otp" id="otp">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 1">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 5">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 6">
+      </div>
+      <p class="err" id="codeErr" hidden>That code isn't right. Try again.</p>
+      <button class="btn btn-primary btn-block" type="submit">Verify &amp; continue</button>
+      <p class="small"><button type="button" class="link" id="resend">Resend code</button> · <button type="button" class="link" id="changeEmail">Change email</button></p>
+      <p class="small muted">Design preview: any 6 digits will work.</p>
+    </form>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
