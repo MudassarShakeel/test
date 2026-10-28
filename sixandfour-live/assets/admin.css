@@ -1,4 +1,4 @@
-/* Six & Four Live admin. Everything is scoped under .sf-wrap so it never touches other screens. */
+/* Cricket Sport Live admin. Everything is scoped under .sf-wrap so it never touches other screens. */
 .sf-wrap {
 	--sf-bg: #f5f5f7;
 	--sf-surface: #fff;
@@ -7,7 +7,7 @@
 	--sf-muted: #6e6e73;
 	--sf-line: rgba(0, 0, 0, .08);
 	--sf-navy: #0a1b44;
-	--sf-mint: #25f4b4;
+	--sf-mint: #00e5ff;
 	max-width: 1040px;
 	color: var(--sf-fg);
 	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
@@ -68,7 +68,7 @@ form.sf-inline { display: inline-flex; }
 .sf-btn.sf-primary { background: var(--sf-navy); color: #fff; }
 .sf-btn.sf-primary:hover { background: #12306f; color: #fff; }
 .sf-btn.sf-sm { padding: 5px 13px; font-size: 13px; }
-.sf-btn:focus-visible { outline: 3px solid rgba(37, 244, 180, .8); outline-offset: 2px; box-shadow: none; }
+.sf-btn:focus-visible { outline: 3px solid rgba(0, 229, 255, .8); outline-offset: 2px; box-shadow: none; }
 .sf-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; align-items: center; }
 
 .sf-field { width: 100%; max-width: 320px; background: var(--sf-fill); border: 1px solid transparent; border-radius: 12px; padding: 8px 12px; min-height: 38px; box-shadow: none; }

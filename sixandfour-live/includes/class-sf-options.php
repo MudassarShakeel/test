@@ -18,7 +18,7 @@ class SF_Options {
 			'mode'              => 'auto', // auto or approve.
 			'fb_page_id'        => '',
 			'fb_token'          => '',
-			'fb_handle'         => 'facebook.com/sixandfourlive',
+			'fb_handle'         => 'facebook.com/cricketsportinfo',
 			'api_key'           => '',
 			'api_key2'          => '', // Backup keys. Used in turn when the one before is used up.
 			'api_key3'          => '',

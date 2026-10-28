@@ -33,7 +33,7 @@ SF_Admin::form_open( 'manual_post', 'enctype="multipart/form-data"' );
 		<textarea class="sf-field" id="sf-caption" name="caption" rows="6"></textarea>
 	</div>
 	<?php SF_Admin::switch_row( 'add_question', 0, 'Add a question for fans', 'Adds one from your list on the Engage screen' ); ?>
-	<?php SF_Admin::switch_row( 'watermark', 1, 'Add the Six & Four mark to the picture', 'A small mark in a corner of your picture' ); ?>
+	<?php SF_Admin::switch_row( 'watermark', 1, 'Add the Cricket Sport mark to the picture', 'A small mark in a corner of your picture' ); ?>
 	<div class="sf-row">
 		<label class="sf-l" for="wm_pos"><b>Mark position</b></label>
 		<select class="sf-field sf-narrow" id="wm_pos" name="wm_pos">

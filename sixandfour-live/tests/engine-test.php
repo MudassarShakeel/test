@@ -48,7 +48,7 @@ $GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$world ) {
 	}
 	if ( false !== strpos( $url, 'graph.facebook.com' ) ) {
 		if ( 'GET' === $method ) {
-			return sf_json( array( 'name' => 'Six & Four Live', 'username' => 'sixandfourlive', 'fan_count' => 9800 ) );
+			return sf_json( array( 'name' => 'Cricket Sport', 'username' => 'cricketsportinfo', 'fan_count' => 9800 ) );
 		}
 		if ( preg_match( '#/photos$#', $url ) ) {
 			$world['fb_posts'][] = array( 'photo', strlen( $args['body'] ) );
@@ -67,7 +67,7 @@ $GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$world ) {
 SF_Options::update( array(
 	'api_key' => 'k', 'fb_page_id' => '123', 'fb_token' => 'tok', 'mode' => 'auto',
 	'quiet_start' => '00:00', 'quiet_end' => '00:00', 'max_posts_day' => 50, 'per_match_hour' => 5, 'live_cards' => 2,
-	'followed' => array( 's1' => 'Harbour Cup 2026' ), 'fb_handle' => 'facebook.com/sixandfourlive',
+	'followed' => array( 's1' => 'Harbour Cup 2026' ), 'fb_handle' => 'facebook.com/cricketsportinfo',
 ) );
 function posts( $type = null ) {
 	global $wpdb;
@@ -88,7 +88,7 @@ function tick() {
 
 echo "1. Facebook and API checks\n";
 $fb = SF_Facebook::verify();
-ok( ! is_wp_error( $fb ) && 'Six & Four Live' === $fb['name'], 'verify() reads the Page name' );
+ok( ! is_wp_error( $fb ) && 'Cricket Sport' === $fb['name'], 'verify() reads the Page name' );
 ok( SF_Options::ready(), 'plugin is ready with keys' );
 
 echo "2. Upcoming match: toss post and Pick a side post\n";

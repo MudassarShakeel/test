@@ -52,7 +52,7 @@ class SF_Plugin {
 	}
 
 	public static function cron_schedules( $s ) {
-		$s['sf_five_minutes'] = array( 'interval' => 300, 'display' => 'Every 5 minutes (Six & Four Live)' );
+		$s['sf_five_minutes'] = array( 'interval' => 300, 'display' => 'Every 5 minutes (Cricket Sport Live)' );
 		return $s;
 	}
 

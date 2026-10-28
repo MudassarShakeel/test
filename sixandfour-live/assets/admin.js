@@ -1,4 +1,4 @@
-/* Six & Four Live admin: Media Library pickers. */
+/* Cricket Sport Live admin: Media Library pickers. */
 ( function ( $ ) {
 	'use strict';
 

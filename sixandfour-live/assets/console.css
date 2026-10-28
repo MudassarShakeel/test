@@ -1,8 +1,8 @@
-/* Six & Four mobile console. Phone first, with safe-area padding and 44px+ tap targets. */
+/* Cricket Sport mobile console. Phone first, with safe-area padding and 44px+ tap targets. */
 .sfc, .sfc * { box-sizing: border-box; }
 .sfc {
 	--bg: #f5f5f7; --surface: #fff; --fill: #f2f2f5; --fg: #1d1d1f; --muted: #6e6e73; --line: rgba(0, 0, 0, .08);
-	--navy: #0a1b44; --mint: #25f4b4; --ok: #0b7a5a; --ok-bg: #ddf8ee; --warn: #8a4b00; --warn-bg: #fff0d9; --bad: #b3213a; --bad-bg: #fde3e7;
+	--navy: #0a1b44; --mint: #00e5ff; --ok: #0b7a5a; --ok-bg: #ddf8ee; --warn: #8a4b00; --warn-bg: #fff0d9; --bad: #b3213a; --bad-bg: #fde3e7;
 	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif; font-size: 16px; line-height: 1.45; color: var(--fg);
 	-webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; letter-spacing: -.01em;
 }
@@ -43,7 +43,7 @@ body.sfc-page { overflow: hidden; }
 .sfc-btn[disabled] { opacity: .5; cursor: default; }
 .sfc-btn svg { width: 22px; height: 22px; flex: none; }
 .sfc-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-:focus-visible { outline: 3px solid rgba(37, 244, 180, .85); outline-offset: 2px; }
+:focus-visible { outline: 3px solid rgba(0, 229, 255, .85); outline-offset: 2px; }
 
 .sfc-list { background: var(--surface); border-radius: 20px; overflow: hidden; box-shadow: 0 1px 2px rgba(10, 27, 68, .05), 0 6px 20px rgba(10, 27, 68, .06); }
 .sfc-li { position: relative; display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-height: 56px; }

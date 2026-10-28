@@ -36,7 +36,7 @@ class SF_Samples {
 		$bd = function ( $name, $ini, $score = '', $ov = '' ) {
 			return array( 'name' => $name, 'kind' => 'badge', 'path' => null, 'initials' => $ini, 'score' => $score, 'ov' => $ov );
 		};
-		$ft = array( 'foot_left' => 'facebook.com/sixandfourlive', 'foot_right' => 'Sample data' );
+		$ft = array( 'foot_left' => 'facebook.com/cricketsportinfo', 'foot_right' => 'Sample data' );
 		$T   = 'Harbour Cup 2026';
 		$eng = $fl( 'England', 'eng' );
 		$aus = $fl( 'Australia', 'aus' );

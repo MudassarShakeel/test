@@ -31,7 +31,7 @@ set_error_handler( function ( $no, $str, $file, $line ) {
 } );
 
 SF_Options::update( array( 'api_key' => 'k', 'fb_page_id' => '1', 'fb_token' => 't', 'followed' => array( 's1' => 'Harbour Cup 2026' ) ) );
-update_option( 'sf_fb_status', array( 'ok' => true, 'name' => 'Six & Four Live', 'fans' => 9800, 'message' => 'Connected' ) );
+update_option( 'sf_fb_status', array( 'ok' => true, 'name' => 'Cricket Sport', 'fans' => 9800, 'message' => 'Connected' ) );
 SF_DB::add_post( array( 'type' => 'toss', 'dedupe' => 'a', 'status' => 'pending', 'caption' => "TOSS | x\n#tag", 'image' => '' ) );
 SF_DB::add_post( array( 'type' => 'result', 'dedupe' => 'b', 'status' => 'failed', 'caption' => 'RESULT | y', 'error' => 'Token expired' ) );
 SF_DB::add_post( array( 'type' => 'manual', 'dedupe' => 'c', 'status' => 'approved', 'caption' => 'Later', 'scheduled_at' => gmdate( 'Y-m-d H:i:s', time() + 3600 ) ) );
@@ -46,7 +46,7 @@ foreach ( array_keys( SF_Admin::tabs() ) as $tab ) {
 	try {
 		SF_Admin::render();
 		$out = ob_get_clean();
-		$ok  = strlen( $out ) > 500 && false !== strpos( $out, 'Six &amp; Four Live' );
+		$ok  = strlen( $out ) > 500 && false !== strpos( $out, 'Cricket Sport Live' );
 		echo ( $ok ? '  PASS  ' : '  FAIL  ' ) . $tab . ' (' . strlen( $out ) . " bytes)\n";
 		$fail += $ok ? 0 : 1;
 	} catch ( Throwable $e ) {

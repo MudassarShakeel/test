@@ -89,7 +89,7 @@ async function login(page, user, pass) {
   ok(sr.status() === 403 || !(await sp.content()).includes('sf-wrap'), 'the plugin screen is closed to a subscriber (status ' + sr.status() + ')');
   const spost = await sp.request.post(BASE + '/wp-admin/admin-post.php', { form: { action: 'sf_manual_post', caption: 'hello' } });
   ok(spost.status() === 403, 'a subscriber cannot post through the handler (status ' + spost.status() + ')');
-  ok(!(await sp.content()).includes('Six &amp; Four'), 'no plugin menu leaks into the subscriber page');
+  ok(!(await sp.content()).includes('Cricket Sport Live'), 'no plugin menu leaks into the subscriber page');
 
   console.log('7. Setup and secrets');
   await page.goto(BASE + '/wp-admin/admin.php?page=sixandfour-live&tab=setup');
@@ -101,7 +101,7 @@ async function login(page, user, pass) {
   await page.fill('#quiet_start', '00:00'); await page.fill('#quiet_end', '00:00');
   await Promise.all([page.waitForNavigation(), page.click('button.sf-primary')]);
   const notice = await page.locator('.sf-notice').first().innerText();
-  ok(/Settings saved/.test(notice) && /Connected to Six & Four Live/.test(notice), 'settings saved and the Page was verified: "' + notice.replace(/\s+/g, ' ') + '"');
+  ok(/Settings saved/.test(notice) && /Connected to Cricket Sport/.test(notice), 'settings saved and the Page was verified: "' + notice.replace(/\s+/g, ' ') + '"');
   const raw = php('raw-option');
   ok(!raw.includes('SECRETTOKEN') && !raw.includes('mock-cricket-key') && !raw.includes('mock-backup-key') && raw.includes('sf1:'), 'the saved option holds only encrypted secrets');
   const setupHtml = await page.content();

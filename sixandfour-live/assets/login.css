@@ -5,7 +5,7 @@
 .sf-pl-btn:hover { background: #e2e2e8; }
 .sf-pl-main { background: #0a1b44; color: #fff; }
 .sf-pl-main:hover { background: #12306f; }
-.sf-pl-btn:focus-visible { outline: 3px solid rgba(37, 244, 180, .8); outline-offset: 2px; }
+.sf-pl-btn:focus-visible { outline: 3px solid rgba(0, 229, 255, .8); outline-offset: 2px; }
 .sf-pl-btn[disabled] { opacity: .55; cursor: default; }
 .sf-pl-ml label { display: block; margin: 8px 0 6px; font-weight: 600; }
 .sf-pl-ml input { width: 100%; min-height: 46px; margin: 0 0 10px; font-size: 16px; }

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class SF_Cards {
 
 	const NAVY  = '0A1B44';
-	const MINT  = '25F4B4';
+	const MINT  = '00E5FF';
 	const INK   = '1D1D1F';
 	const MUTED = '6E6E73';
 	const FILL  = 'F5F5F7';
@@ -341,8 +341,8 @@ class SF_Cards {
 	/* ------------------------------------------------------------------ */
 
 	private function head( $pill, $live = false ) {
-		$this->paste( $this->assets . 'img/logo-navy.png', 4, 3.4, 5.4, 5.4 );
-		$this->text( 'Six & Four', 10.9, $this->cb( 6.1, 2.5 ), 2.5, 800, self::NAVY );
+		$this->paste( $this->assets . 'img/logo-navy.png', 3.4, 2.9, 6.6, 6.6 );
+		$this->text( 'Cricket Sport', 11.4, $this->cb( 6.1, 2.5 ), 2.5, 800, self::NAVY );
 		$pw = $this->tw( $pill, 1.8, 800 ) + 3.8 + ( $live ? 2.0 : 0 );
 		$px = 96 - $pw;
 		$this->rrect( $px, 4.3, $pw, 3.6, 1.8, self::MINT );
@@ -714,7 +714,7 @@ class SF_Cards {
 	}
 
 	/**
-	 * Re-draw an uploaded picture into a new file, optionally with the Six & Four mark.
+	 * Re-draw an uploaded picture into a new file, optionally with the Cricket Sport mark.
 	 * Re-drawing strips anything hidden inside the file, such as scripts or metadata.
 	 * JPEG stays JPEG. Everything else becomes PNG.
 	 *

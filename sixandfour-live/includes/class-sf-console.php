@@ -51,7 +51,7 @@ class SF_Console {
 		echo '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' . "\n";
 		echo '<meta name="theme-color" content="#0a1b44">' . "\n";
 		echo '<meta name="apple-mobile-web-app-capable" content="yes">' . "\n";
-		echo '<meta name="apple-mobile-web-app-title" content="Six &amp; Four">' . "\n";
+		echo '<meta name="apple-mobile-web-app-title" content="Cricket Sport">' . "\n";
 		echo '<meta name="mobile-web-app-capable" content="yes">' . "\n";
 	}
 

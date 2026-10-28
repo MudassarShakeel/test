@@ -1,10 +1,10 @@
-=== Six & Four Live ===
+=== Cricket Sport Live ===
 Contributors: mudassar
 Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,13 +12,13 @@ Posts cricket scores, toss, results, match summaries, milestones, polls and rank
 
 == Description ==
 
-Six & Four Live reads match data from CricketData.org and posts finished score-card pictures to your Facebook Page.
+Cricket Sport Live reads match data from CricketData.org and posts finished score-card pictures to your Facebook Page.
 
 * Today's matches, toss, live updates, results and a full match summary with the top scorer and top wicket taker.
 * Milestone alerts for centuries and five-wicket hauls, with tournament records.
 * "Pick a side" posts before a match, weekly points tables, a monthly team ranking, and a pinned "Today's matches" post that the plugin keeps up to date.
 * A shared scoreboard card for busy days, so ten matches in one day do not mean ten separate streams of posts.
-* Manual posts: add your own picture and words, with an optional Six & Four mark, and post now or schedule.
+* Manual posts: add your own picture and words, with an optional Cricket Sport mark, and post now or schedule.
 * Auto-post, or Ask me first so every post waits for your approval.
 
 Cards are drawn with PHP GD using the Inter font. National teams show a country flag. You can upload your own picture for any team.
@@ -41,7 +41,7 @@ Official cricket board and league logos are not included. Flags come from the fl
 
 1. Upload the sixandfour-live folder to /wp-content/plugins/, or upload the zip under Plugins, Add New.
 2. Activate the plugin.
-3. Open Six & Four, then Setup. Add the Page ID, the Page access token and the CricketData.org key, then press Test connection.
+3. Open Cricket Sport, then Setup. Add the Page ID, the Page access token and the CricketData.org key, then press Test connection.
 4. Under Tournaments, follow the tournaments you want.
 5. For steady posting, add a real cron job. The Setup screen shows the exact command.
 
@@ -50,7 +50,7 @@ Official cricket board and league logos are not included. Flags come from the fl
 1. Go to developers.facebook.com, create an app of the Business type, and add the Facebook Login product.
 2. In the Graph API Explorer, pick your app, choose "Get User Access Token", and tick pages_show_list, pages_manage_posts and pages_read_engagement. Make sure you are an admin of the Page.
 3. Exchange that token for a long-lived user token, then call /me/accounts. The access_token returned for your Page is a Page token that does not expire.
-4. Paste the Page ID and that Page token into Six & Four, then Setup.
+4. Paste the Page ID and that Page token into Cricket Sport, then Setup.
 
 While your Meta app is in Development mode you can post to a Page you admin without App Review.
 
@@ -69,6 +69,10 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.3.0 =
+* New: the brand is now Cricket Sport (facebook.com/cricketsportinfo). New logo, cyan accent colour, card header and watermark.
+* The plugin folder and settings keep their old names, so updating loses nothing.
 
 = 1.2.0 =
 * New: only men's matches between the top 20 teams are covered by default. Women's matches are skipped. Tournaments you follow are always covered. The team list is editable in Setup.

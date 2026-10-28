@@ -42,8 +42,8 @@ class SF_Admin {
 	}
 
 	public static function menu() {
-		$icon = 'data:image/svg+xml;base64,' . base64_encode( '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><g transform="rotate(25 120 120)"><path d="M115 12H125L126 16V74L140 92V214L134 222H106L100 214V92L114 74V16Z" fill="#a7aaad"/></g><path d="M8 190C70 166 170 98 234 18C174 124 76 198 8 190Z" fill="#a7aaad"/></svg>' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
-		add_menu_page( 'Six & Four Live', 'Six & Four', self::cap(), self::PAGE, array( __CLASS__, 'render' ), $icon, 58 );
+		$icon = 'data:image/svg+xml;base64,' . base64_encode( '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs>  <linearGradient id="arcg" x1="40" y1="440" x2="450" y2="140" gradientUnits="userSpaceOnUse">    <stop offset="0" stop-color="#a7aaad"/><stop offset=".62" stop-color="#a7aaad"/><stop offset="1" stop-color="#a7aaad" stop-opacity=".0"/>  </linearGradient></defs><g transform="rotate(-30 256 256)">  <rect x="241" y="34" width="30" height="130" rx="12" fill="#a7aaad"/>  <rect x="241" y="82" width="30" height="20" fill="#ffffff"/>  <path d="M218 172 L294 172 L294 416 L276 454 L236 454 L218 416 Z" fill="#a7aaad"/>  <rect x="249" y="198" width="14" height="196" rx="7" fill="#ffffff"/></g><path d="M44 430 Q250 350 446 142" fill="none" stroke="url(#arcg)" stroke-width="30" stroke-linecap="round"/><path d="M62 424 Q252 350 436 150" fill="none" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="7" stroke-linecap="round" style="mix-blend-mode:normal"/><circle cx="446" cy="142" r="23" fill="#a7aaad"/></svg>' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
+		add_menu_page( 'Cricket Sport Live', 'Cricket Sport', self::cap(), self::PAGE, array( __CLASS__, 'render' ), $icon, 58 );
 	}
 
 	public static function assets( $hook ) {
@@ -96,7 +96,7 @@ class SF_Admin {
 		$tab    = self::tab();
 		$notice = get_transient( 'sf_notice_' . get_current_user_id() );
 		delete_transient( 'sf_notice_' . get_current_user_id() );
-		echo '<div class="wrap sf-wrap"><h1 class="sf-title">Six &amp; Four Live</h1>';
+		echo '<div class="wrap sf-wrap"><h1 class="sf-title">Cricket Sport Live</h1>';
 		if ( $notice ) {
 			printf( '<div class="sf-notice sf-%s" role="status">%s</div>', esc_attr( $notice[0] ), esc_html( $notice[1] ) );
 		}
@@ -111,7 +111,7 @@ class SF_Admin {
 		if ( is_readable( $file ) ) {
 			include $file;
 		}
-		echo '<p class="sf-credit">Six &amp; Four Live ' . esc_html( SF_VERSION ) . ' by <a href="https://mudassar.work" target="_blank" rel="noopener">Mudassar</a></p></div>';
+		echo '<p class="sf-credit">Cricket Sport Live ' . esc_html( SF_VERSION ) . ' by <a href="https://mudassar.work" target="_blank" rel="noopener">Mudassar</a></p></div>';
 	}
 
 	/** Open a form that posts to a handler. */
@@ -371,8 +371,8 @@ class SF_Admin {
 		if ( ! $page || 'page' !== get_post_type( $page ) || 'trash' === get_post_status( $page ) ) {
 			$page = wp_insert_post(
 				array(
-					'post_title'   => 'Six & Four',
-					'post_name'    => 'six-and-four',
+					'post_title'   => 'Cricket Sport',
+					'post_name'    => 'cricket-sport',
 					'post_content' => '[sixandfour_admin]',
 					'post_status'  => 'publish',
 					'post_type'    => 'page',

@@ -116,7 +116,7 @@ add_filter( 'pre_http_request', function ( $pre, $args, $url ) use ( &$world ) {
 	}
 	if ( false !== strpos( $url, '/graph/' ) ) {
 		if ( 'GET' === $args['method'] ) {
-			return $resp( array( 'name' => 'Six & Four Live', 'fan_count' => 9800 ) );
+			return $resp( array( 'name' => 'Cricket Sport', 'fan_count' => 9800 ) );
 		}
 		if ( preg_match( '#/photos$#', $url ) ) {
 			$world['photo'] = $args;

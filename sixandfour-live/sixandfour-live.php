@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       Six & Four Live
+ * Plugin Name:       Cricket Sport Live
  * Plugin URI:        https://c.mudassar.work
  * Description:       Posts cricket scores, toss, results, match summaries, milestones, polls and rankings to your Facebook Page as clean score-card pictures. You can also add your own pictures and posts by hand.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Mudassar
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SF_VERSION', '1.2.0' );
+define( 'SF_VERSION', '1.3.0' );
 define( 'SF_FILE', __FILE__ );
 define( 'SF_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SF_URL', plugin_dir_url( __FILE__ ) );

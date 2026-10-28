@@ -135,7 +135,7 @@ class SF_Passwordless {
 		return array(
 			'publicKey' => array(
 				'challenge'              => $ch,
-				'rp'                     => array( 'name' => get_bloginfo( 'name' ) ? get_bloginfo( 'name' ) : 'Six & Four Live', 'id' => self::rp_id() ),
+				'rp'                     => array( 'name' => get_bloginfo( 'name' ) ? get_bloginfo( 'name' ) : 'Cricket Sport Live', 'id' => self::rp_id() ),
 				'user'                   => array( 'id' => self::handle( $user->ID ), 'name' => $user->user_login, 'displayName' => $user->display_name ),
 				'pubKeyCredParams'       => array( array( 'type' => 'public-key', 'alg' => -7 ), array( 'type' => 'public-key', 'alg' => -257 ) ),
 				'timeout'                => 60000,
@@ -337,7 +337,7 @@ class SF_Passwordless {
 			. 'h1{font-size:22px;margin:0 0 10px;letter-spacing:-.02em}p{color:#6e6e73;margin:0 0 22px;line-height:1.45}'
 			. 'button{width:100%;min-height:52px;border:0;border-radius:999px;background:#0a1b44;color:#fff;font-size:17px;font-weight:600;cursor:pointer}'
 			. '.alt{display:block;min-height:52px;line-height:52px;border-radius:999px;background:#ececf0;color:#0a1b44;font-weight:600;text-decoration:none}'
-			. '</style></head><body><main><h1>Six &amp; Four Live</h1><p>' . esc_html( $message ) . '</p>' . $btn . '</main></body></html>'; // phpcs:ignore WordPress.Security.EscapeOutput
+			. '</style></head><body><main><h1>Cricket Sport Live</h1><p>' . esc_html( $message ) . '</p>' . $btn . '</main></body></html>'; // phpcs:ignore WordPress.Security.EscapeOutput
 		exit;
 	}
 

@@ -19,7 +19,7 @@ class SF_Engine {
 	/* ------------------------------------------------------------------ */
 
 	private static function tag() {
-		return apply_filters( 'sf_hashtags', '#SixAndFourLive #Cricket' );
+		return apply_filters( 'sf_hashtags', '#CricketSport #Cricket' );
 	}
 
 	private static function question( $seed = '' ) {

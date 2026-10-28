@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Cricket Sport"><title>Cricket Sport</title><defs>
+  <linearGradient id="arcil" x1="40" y1="440" x2="450" y2="140" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#00A8C6"/><stop offset=".62" stop-color="#00E5FF"/><stop offset="1" stop-color="#00E5FF" stop-opacity=".0"/>
+  </linearGradient>
+</defs>
+<g transform="rotate(-30 256 256)">
+  <rect x="241" y="34" width="30" height="130" rx="12" fill="#0A1B44"/>
+  <rect x="241" y="82" width="30" height="20" fill="#00E5FF"/>
+  <path d="M218 172 L294 172 L294 416 L276 454 L236 454 L218 416 Z" fill="#0A1B44"/>
+  <rect x="249" y="198" width="14" height="196" rx="7" fill="#2B3A66"/>
+</g>
+<path d="M44 430 Q250 350 446 142" fill="none" stroke="url(#arcil)" stroke-width="30" stroke-linecap="round"/>
+<path d="M62 424 Q252 350 436 150" fill="none" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="7" stroke-linecap="round" style="mix-blend-mode:normal"/>
+<circle cx="446" cy="142" r="23" fill="#00E5FF"/></svg>
