@@ -55,14 +55,21 @@ class SF_Facebook {
 		if ( is_wp_error( $c ) ) {
 			return $c;
 		}
-		$url = add_query_arg(
-			array(
-				'fields'       => 'name,username,fan_count',
-				'access_token' => $c[1],
-			),
-			self::base() . rawurlencode( $c[0] )
-		);
-		$res = self::handle( wp_remote_get( $url, array( 'timeout' => 20, 'redirection' => 0, 'sslverify' => true ) ) );
+		$res = null;
+		// Ask for the follower count too, but fall back to the name alone if this token may not read it.
+		foreach ( array( 'name,fan_count', 'name' ) as $fields ) {
+			$url = add_query_arg(
+				array(
+					'fields'       => $fields,
+					'access_token' => $c[1],
+				),
+				self::base() . rawurlencode( $c[0] )
+			);
+			$res = self::handle( wp_remote_get( $url, array( 'timeout' => 20, 'redirection' => 0, 'sslverify' => true ) ) );
+			if ( ! is_wp_error( $res ) || 'sf_fb_100' !== $res->get_error_code() ) {
+				break;
+			}
+		}
 		if ( is_wp_error( $res ) ) {
 			update_option( 'sf_fb_status', array( 'ok' => false, 'message' => $res->get_error_message(), 'at' => time() ), false );
 			return $res;
@@ -73,7 +80,7 @@ class SF_Facebook {
 				'ok'      => true,
 				'message' => 'Connected',
 				'name'    => isset( $res['name'] ) ? $res['name'] : '',
-				'handle'  => isset( $res['username'] ) ? $res['username'] : '',
+				'handle'  => '',
 				'fans'    => isset( $res['fan_count'] ) ? (int) $res['fan_count'] : 0,
 				'at'      => time(),
 			),
