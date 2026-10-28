@@ -53,6 +53,10 @@ class SF_Options {
 			),
 			'questions'         => "Who is your player of the day?\nWhat is your score prediction?\nGreat knock or lucky day? Tell us.\nWho tops the table next week?\nWhich match are you watching?",
 			'noindex'           => 1,
+			'magic_link'        => 1,
+			'passwordless_only' => 0,
+			'paused'            => 0,
+			'home_page'         => 0,
 			'security'          => array(),
 			'team_logos'        => array(), // lower-case team name => attachment id.
 			'pinned_post_id'    => '',

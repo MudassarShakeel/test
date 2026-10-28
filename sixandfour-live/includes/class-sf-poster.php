@@ -151,7 +151,7 @@ class SF_Poster {
 		$id     = (int) $row['id'];
 
 		if ( ! $manual ) {
-			if ( self::in_quiet_hours() ) {
+			if ( self::in_quiet_hours() || SF_Options::get( 'paused' ) ) {
 				return 'waiting';
 			}
 			$age = time() - (int) strtotime( $row['created_at'] . ' UTC' );
@@ -186,5 +186,89 @@ class SF_Poster {
 		}
 		SF_DB::update_post( $id, array( 'status' => 'posted', 'fb_post_id' => (string) $res, 'posted_at' => gmdate( 'Y-m-d H:i:s' ), 'error' => null ) );
 		return 'posted';
+	}
+
+	/**
+	 * Add a post you wrote yourself: your picture, your words. Used by the admin screen and the mobile console.
+	 *
+	 * @param array $in caption, attachment_id, file ($_FILES style), add_question, watermark, wm_pos, when (now|later), when_at.
+	 * @return array [ ok, message ]
+	 */
+	public static function manual_post( array $in ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		wp_raise_memory_limit( 'image' );
+		$caption = isset( $in['caption'] ) ? sanitize_textarea_field( $in['caption'] ) : '';
+		$src     = '';
+		$att     = isset( $in['attachment_id'] ) ? absint( $in['attachment_id'] ) : 0;
+		if ( $att && wp_attachment_is_image( $att ) ) {
+			$src = get_attached_file( $att );
+		} elseif ( ! empty( $in['file']['name'] ) ) {
+			$up = wp_handle_upload(
+				$in['file'],
+				array(
+					'test_form' => false,
+					'mimes'     => array( 'jpg|jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp' ),
+				)
+			);
+			if ( isset( $up['error'] ) ) {
+				return array( 'ok' => false, 'message' => $up['error'] );
+			}
+			$src = $up['file'];
+		}
+		if ( '' === $src && '' === $caption ) {
+			return array( 'ok' => false, 'message' => 'Add a picture or some text.' );
+		}
+		if ( ! empty( $in['add_question'] ) ) {
+			$lines = array_values( array_filter( array_map( 'trim', explode( "\n", (string) SF_Options::get( 'questions', '' ) ) ) ) );
+			if ( $lines ) {
+				$caption = trim( $caption . "\n" . $lines[ array_rand( $lines ) ] );
+			}
+		}
+		$rel = '';
+		if ( '' !== $src ) {
+			if ( filesize( $src ) > 8 * MB_IN_BYTES ) {
+				return array( 'ok' => false, 'message' => 'That picture is larger than 8 MB. Use a smaller file.' );
+			}
+			$sub  = 'manual/' . gmdate( 'Y-m' ) . '/';
+			$name = 'post-' . wp_generate_password( 12, false ) . '.' . SF_Cards::output_extension( $src );
+			$dest = self::dir()['path'] . $sub . $name;
+			$pos  = ( isset( $in['wm_pos'] ) && in_array( $in['wm_pos'], array( 'tl', 'tr', 'bl', 'br' ), true ) ) ? $in['wm_pos'] : 'br';
+			self::protect_dir();
+			$cards = new SF_Cards();
+			$res   = $cards->clean_image( $src, $dest, ! empty( $in['watermark'] ), $pos );
+			if ( is_wp_error( $res ) ) {
+				return array( 'ok' => false, 'message' => $res->get_error_message() );
+			}
+			$rel = $sub . $name;
+		}
+		$when = null;
+		if ( isset( $in['when'] ) && 'later' === $in['when'] && ! empty( $in['when_at'] ) ) {
+			$dt = date_create( $in['when_at'], wp_timezone() );
+			if ( $dt && $dt->getTimestamp() > time() ) {
+				$when = gmdate( 'Y-m-d H:i:s', $dt->getTimestamp() );
+			}
+		}
+		$id = SF_DB::add_post(
+			array(
+				'type'         => 'manual',
+				'dedupe'       => 'manual:' . wp_generate_password( 14, false ),
+				'status'       => 'approved',
+				'caption'      => $caption,
+				'image'        => $rel,
+				'scheduled_at' => $when,
+			)
+		);
+		if ( ! $id ) {
+			return array( 'ok' => false, 'message' => 'Could not add the post.' );
+		}
+		if ( null !== $when ) {
+			return array( 'ok' => true, 'message' => 'Scheduled for ' . wp_date( 'j M, H:i', strtotime( $when . ' UTC' ) ) . '.', 'id' => $id );
+		}
+		$res = self::publish_one( SF_DB::get_post( $id ) );
+		if ( 'posted' === $res ) {
+			return array( 'ok' => true, 'message' => 'Posted to Facebook.', 'id' => $id );
+		}
+		$row = SF_DB::get_post( $id );
+		return array( 'ok' => false, 'message' => 'Facebook did not accept it: ' . ( ! empty( $row['error'] ) ? $row['error'] : 'unknown reason' ) . ' It will retry a few times.', 'id' => $id );
 	}
 }

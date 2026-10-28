@@ -191,3 +191,14 @@ require SF_DIR . 'includes/class-sf-samples.php';
 require SF_DIR . 'includes/class-sf-poster.php';
 require SF_DIR . 'includes/class-sf-engine.php';
 require SF_DIR . 'includes/class-sf-security.php';
+require SF_DIR . 'includes/class-sf-webauthn.php';
+require SF_DIR . 'includes/class-sf-passwordless.php';
+require SF_DIR . 'includes/class-sf-console.php';
+require SF_DIR . 'includes/class-sf-plugin.php';
+
+if ( ! function_exists( 'get_users' ) ) {
+	function get_users( $args = array() ) { return array(); }
+}
+if ( ! function_exists( 'get_user_meta' ) ) {
+	function get_user_meta( $uid, $key, $single = false ) { return ''; }
+}

@@ -76,6 +76,10 @@ class SF_Security {
 		return 'sf_login_' . $kind . '_' . md5( self::ip() );
 	}
 
+	public static function is_locked() {
+		return (int) get_transient( self::tkey( 'lock' ) ) > time();
+	}
+
 	public static function check_lock( $user, $username = '', $password = '' ) {
 		$until = (int) get_transient( self::tkey( 'lock' ) );
 		if ( $until > time() ) {
@@ -185,6 +189,17 @@ class SF_Security {
 
 		$fb = get_option( 'sf_fb_status', array() );
 		$add( 'Facebook token', ( is_array( $fb ) && ! empty( $fb['ok'] ) ) ? 'ok' : 'warn', ( is_array( $fb ) && ! empty( $fb['ok'] ) ) ? 'The last check passed.' : 'Not verified yet, or it failed. Use Test connection in Setup.' );
+
+		$pk = false;
+		foreach ( get_users( array( 'capability' => SF_Plugin::cap(), 'fields' => 'ID', 'number' => 50 ) ) as $uid ) {
+			if ( SF_Passwordless::passkeys( (int) $uid ) ) {
+				$pk = true;
+				break;
+			}
+		}
+		$add( 'Passkey for administrators', $pk ? 'ok' : 'warn', $pk ? 'At least one administrator can sign in with a passkey.' : 'Add a passkey below so you can sign in with a fingerprint or face.' );
+		$po = (bool) SF_Options::get( 'passwordless_only', 0 );
+		$add( 'Passwords off for administrators', $po ? 'ok' : 'warn', $po ? 'Administrators sign in with a passkey or an email link only.' : 'Optional. Turn it on below once a passkey is added.' );
 
 		$add( 'Log-in limiter', self::on( 'login_limit' ) ? 'ok' : 'warn', self::on( 'login_limit' ) ? 'Five wrong passwords lock that address out for 15 minutes.' : 'Off.' );
 		return $rows;

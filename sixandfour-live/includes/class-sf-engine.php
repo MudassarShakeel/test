@@ -156,7 +156,7 @@ class SF_Engine {
 	}
 
 	public static function tick( $force = false ) {
-		if ( ! SF_Options::ready() ) {
+		if ( ! SF_Options::ready() || SF_Options::get( 'paused' ) ) {
 			return;
 		}
 		if ( ! $force && time() < (int) get_option( 'sf_next_check', 0 ) ) {

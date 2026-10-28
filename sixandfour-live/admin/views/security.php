@@ -25,6 +25,42 @@ $map    = array( 'ok' => array( 'sf-ok', 'OK' ), 'warn' => array( 'sf-warn', 'Ch
 	<?php endforeach; ?>
 </div>
 
+<?php
+$uid      = get_current_user_id();
+$keys     = SF_Passwordless::passkeys( $uid );
+$only_on  = (bool) SF_Options::get( 'passwordless_only', 0 );
+$magic_on = (bool) SF_Options::get( 'magic_link', 1 );
+?>
+<h2 class="sf-sec">Password-free sign-in for administrators</h2>
+<p class="sf-sub">Sign in with your fingerprint, face or screen lock (a passkey), or with a one-time link sent to your email. Passkeys need an HTTPS address.</p>
+<div class="sf-group">
+	<?php foreach ( $keys as $id => $k ) : ?>
+		<div class="sf-row">
+			<div class="sf-l"><b><?php echo esc_html( isset( $k['name'] ) && '' !== $k['name'] ? $k['name'] : 'Passkey' ); ?></b><span>Added <?php echo esc_html( ! empty( $k['created'] ) ? wp_date( 'j M Y', (int) $k['created'] ) : '' ); ?></span></div>
+			<button type="button" class="sf-btn sf-sm sf-pk-del" data-id="<?php echo esc_attr( $id ); ?>">Remove</button>
+		</div>
+	<?php endforeach; ?>
+	<div class="sf-row sf-block">
+		<label for="sf-pk-name"><b>Add a passkey to this device</b></label>
+		<div class="sf-pickrow">
+			<input type="text" class="sf-field" id="sf-pk-name" placeholder="Name, for example My phone" maxlength="40">
+			<button type="button" class="sf-btn sf-primary" id="sf-pk-add">Add passkey</button>
+		</div>
+		<p class="sf-sub" id="sf-pk-msg"></p>
+	</div>
+</div>
+
+<?php SF_Admin::form_open( 'save_signin' ); ?>
+<div class="sf-group">
+	<?php
+	SF_Admin::switch_row( 'magic_link', $magic_on, 'Email sign-in link', 'Sends a one-time link, valid for 10 minutes, to the administrator email address.' );
+	SF_Admin::switch_row( 'passwordless_only', $only_on, 'Turn passwords off for administrators', $keys ? 'Administrators can only use a passkey or an email link. Other users keep their passwords.' : 'Add a passkey first. This stays locked until you have one.' );
+	?>
+</div>
+<div class="sf-actions"><button class="sf-btn sf-primary" type="submit">Save sign-in settings</button></div>
+</form>
+<p class="sf-sub">Locked out? Add <code>define( 'SF_ALLOW_PASSWORD', true );</code> to wp-config.php to allow passwords again.</p>
+
 <?php SF_Admin::form_open( 'save_security' ); ?>
 <h2 class="sf-sec">Hardening</h2>
 <div class="sf-group">

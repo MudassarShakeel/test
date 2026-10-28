@@ -37,11 +37,18 @@ class SF_Plugin {
 		}
 		SF_Options::protect();
 		SF_Security::init();
+		SF_Passwordless::init();
+		SF_Console::init();
 		self::schedule();
 
 		if ( is_admin() ) {
 			SF_Admin::init();
 		}
+	}
+
+	/** Who may use the plugin. Change it with the sf_capability filter. */
+	public static function cap() {
+		return apply_filters( 'sf_capability', 'manage_options' );
 	}
 
 	public static function cron_schedules( $s ) {

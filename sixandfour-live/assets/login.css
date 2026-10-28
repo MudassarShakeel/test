@@ -1,0 +1,14 @@
+/* Sign-in page additions */
+.sf-pl { margin: 0 0 18px; padding: 18px; background: #fff; border: 1px solid #dcdcde; border-radius: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, .04); }
+.sf-pl[hidden], .sf-pl [hidden] { display: none !important; }
+.sf-pl-btn { display: block; width: 100%; min-height: 48px; margin: 0 0 10px; border: 0; border-radius: 999px; background: #ececf0; color: #0a1b44; font-size: 16px; font-weight: 600; cursor: pointer; }
+.sf-pl-btn:hover { background: #e2e2e8; }
+.sf-pl-main { background: #0a1b44; color: #fff; }
+.sf-pl-main:hover { background: #12306f; }
+.sf-pl-btn:focus-visible { outline: 3px solid rgba(37, 244, 180, .8); outline-offset: 2px; }
+.sf-pl-btn[disabled] { opacity: .55; cursor: default; }
+.sf-pl-ml label { display: block; margin: 8px 0 6px; font-weight: 600; }
+.sf-pl-ml input { width: 100%; min-height: 46px; margin: 0 0 10px; font-size: 16px; }
+.sf-pl-msg { min-height: 1.4em; margin: 4px 0 0; color: #0b6b4f; font-size: 14px; }
+.sf-pl-msg.bad { color: #b3213a; }
+.sf-pl-or { margin: 10px 0 0; text-align: center; color: #6e6e73; font-size: 13px; }

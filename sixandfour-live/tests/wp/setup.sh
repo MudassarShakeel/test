@@ -24,7 +24,7 @@ define( 'AUTH_SALT', 's1-test-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' ); define( 'SECU
 \$table_prefix = 'wp_';
 define( 'WP_DEBUG', true ); define( 'WP_DEBUG_LOG', true ); define( 'WP_DEBUG_DISPLAY', false );
 define( 'DISABLE_WP_CRON', true ); define( 'AUTOMATIC_UPDATER_DISABLED', true );
-define( 'WP_HOME', 'http://127.0.0.1:8099' ); define( 'WP_SITEURL', WP_HOME );
+define( 'WP_HOME', 'http://localhost:8099' ); define( 'WP_SITEURL', WP_HOME );
 if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', __DIR__ . '/' ); }
 require_once ABSPATH . 'wp-settings.php';
 PHP
@@ -35,6 +35,6 @@ php "$HERE/install.php"
 php "$HERE/run.php" "$HERE/activate.php"
 echo "Ready. Next:"
 echo "  node $HERE/mock-servers.cjs &"
-echo "  (cd $W && php -S 127.0.0.1:8099 -t site) &"
+echo "  (cd $W && php -S localhost:8099 -t site) &"
 echo "  SF_WP_WORK=$W node $HERE/http-test.cjs"
 echo "  SF_WP_WORK=$W php $HERE/run.php $HERE/in-process.php"

@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,12 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.1.0 =
+* New: password-free sign-in for administrators with passkeys (fingerprint, face or screen lock) and one-time email links. Passwords can be switched off for administrators once a passkey exists.
+* New: a phone-first console on your home page with the shortcode [sixandfour_admin]. Approve posts, post your own picture, pause posting and run the checks from your phone.
+* New: the settings screens fit phone screens, with large tap targets and scrolling tabs.
+* Emergency way back in: add define( 'SF_ALLOW_PASSWORD', true ); to wp-config.php.
 
 = 1.0.1 =
 * Fixed: the five-minute checks were not scheduled until the second page load after activation.

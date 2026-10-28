@@ -4,7 +4,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const BASE = 'http://127.0.0.1:8099';
+const BASE = 'http://localhost:8099';
 const MOCK = 'http://127.0.0.1:8100';
 const WORK = process.env.SF_WP_WORK;     // work folder made by setup.sh
 const OUT = process.env.OUT || '/tmp/sf-http-out';
@@ -113,12 +113,12 @@ async function login(page, user, pass) {
   ok(/Secrets encrypted/.test(checksText) && /Log-in limiter/.test(checksText), 'the health check lists its rows');
   ok(!/Secrets encrypted[\s\S]{0,200}Fix/.test(checksText), 'secrets show as encrypted');
   await page.uncheck('input[name=sec_headers]', { force: true });
-  await Promise.all([page.waitForNavigation(), page.click('button.sf-primary')]);
+  await Promise.all([page.waitForNavigation(), page.click('form:has(input[value=sf_save_security]) button.sf-primary')]);
   ok(/Security settings saved/.test(await page.locator('.sf-notice').first().innerText()), 'a hardening switch saves');
   await page.goto(BASE + '/wp-admin/admin.php?page=sixandfour-live&tab=security');
   ok(!(await page.locator('input[name=sec_headers]').isChecked()), 'and stays off after reloading');
   await page.check('input[name=sec_headers]', { force: true });
-  await Promise.all([page.waitForNavigation(), page.click('button.sf-primary')]);
+  await Promise.all([page.waitForNavigation(), page.click('form:has(input[value=sf_save_security]) button.sf-primary')]);
 
   console.log('9. Engine through the browser');
   const now = Math.floor(Date.now() / 1000);

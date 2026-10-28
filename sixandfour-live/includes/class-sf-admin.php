@@ -22,6 +22,7 @@ class SF_Admin {
 			'tournaments' => 'Tournaments',
 			'teams'       => 'Teams',
 			'manual'      => 'Manual post',
+			'mobile'      => 'Mobile home',
 			'security'    => 'Security',
 			'setup'       => 'Setup',
 		);
@@ -30,14 +31,14 @@ class SF_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'manual_post', 'create_pinned', 'sample', 'save_security' ) as $a ) {
+		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
 			add_action( 'admin_post_sf_' . $a, array( __CLASS__, 'do_' . $a ) );
 		}
 	}
 
 	/** Who may use the plugin. Change it with the sf_capability filter. */
 	public static function cap() {
-		return apply_filters( 'sf_capability', 'manage_options' );
+		return SF_Plugin::cap();
 	}
 
 	public static function menu() {
@@ -54,6 +55,11 @@ class SF_Admin {
 		$tab = self::tab();
 		if ( in_array( $tab, array( 'teams', 'manual' ), true ) ) {
 			wp_enqueue_media();
+		}
+		if ( 'security' === $tab ) {
+			wp_enqueue_script( 'sf-passkey', SF_URL . 'assets/sf-passkey.js', array(), SF_VERSION, true );
+			wp_enqueue_script( 'sf-passkeys-admin', SF_URL . 'assets/passkeys-admin.js', array( 'sf-passkey' ), SF_VERSION, true );
+			wp_localize_script( 'sf-passkeys-admin', 'SFPK', array( 'rest' => esc_url_raw( rest_url( SF_Passwordless::NS ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ) );
 		}
 	}
 
@@ -322,81 +328,68 @@ class SF_Admin {
 
 	public static function do_manual_post() {
 		self::guard();
-		wp_raise_memory_limit( 'image' );
-		$caption = isset( $_POST['caption'] ) ? sanitize_textarea_field( wp_unslash( $_POST['caption'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-		$src     = '';
-		$att     = isset( $_POST['attachment_id'] ) ? absint( $_POST['attachment_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
-		if ( $att && wp_attachment_is_image( $att ) ) {
-			$src = get_attached_file( $att );
-		} elseif ( ! empty( $_FILES['image']['name'] ) ) {
-			$up = wp_handle_upload(
-				$_FILES['image'], // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				array(
-					'test_form' => false,
-					'mimes'     => array( 'jpg|jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp' ),
-				)
-			);
-			if ( isset( $up['error'] ) ) {
-				self::done( 'manual', 'error', $up['error'] );
-			}
-			$src = $up['file'];
-		}
-		if ( '' === $src && '' === $caption ) {
-			self::done( 'manual', 'error', 'Add a picture or some text.' );
-		}
-		if ( self::bool( 'add_question' ) ) {
-			$lines = array_values( array_filter( array_map( 'trim', explode( "\n", (string) SF_Options::get( 'questions', '' ) ) ) ) );
-			if ( $lines ) {
-				$caption = trim( $caption . "\n" . $lines[ array_rand( $lines ) ] );
-			}
-		}
-		$rel = '';
-		if ( '' !== $src ) {
-			if ( filesize( $src ) > 8 * MB_IN_BYTES ) {
-				self::done( 'manual', 'error', 'That picture is larger than 8 MB. Use a smaller file.' );
-			}
-			$sub   = 'manual/' . gmdate( 'Y-m' ) . '/';
-			$name  = 'post-' . wp_generate_password( 12, false ) . '.' . SF_Cards::output_extension( $src );
-			$dest  = SF_Poster::dir()['path'] . $sub . $name;
-			$pos   = in_array( self::text( 'wm_pos' ), array( 'tl', 'tr', 'bl', 'br' ), true ) ? self::text( 'wm_pos' ) : 'br';
-			SF_Poster::protect_dir();
-			$cards = new SF_Cards();
-			$res   = $cards->clean_image( $src, $dest, (bool) self::bool( 'watermark' ), $pos );
-			if ( is_wp_error( $res ) ) {
-				self::done( 'manual', 'error', $res->get_error_message() );
-			}
-			$rel = $sub . $name;
-		}
-		$when = null;
-		if ( 'later' === self::text( 'when' ) && '' !== self::text( 'when_at' ) ) {
-			$dt = date_create( self::text( 'when_at' ), wp_timezone() );
-			if ( $dt && $dt->getTimestamp() > time() ) {
-				$when = gmdate( 'Y-m-d H:i:s', $dt->getTimestamp() );
-			}
-		}
-		$id = SF_DB::add_post(
+		$res = SF_Poster::manual_post(
 			array(
-				'type'         => 'manual',
-				'dedupe'       => 'manual:' . wp_generate_password( 14, false ),
-				'status'       => 'approved',
-				'caption'      => $caption,
-				'image'        => $rel,
-				'scheduled_at' => $when,
+				'caption'       => isset( $_POST['caption'] ) ? wp_unslash( $_POST['caption'] ) : '', // phpcs:ignore WordPress.Security
+				'attachment_id' => isset( $_POST['attachment_id'] ) ? absint( $_POST['attachment_id'] ) : 0, // phpcs:ignore WordPress.Security.NonceVerification
+				'file'          => isset( $_FILES['image'] ) ? $_FILES['image'] : null, // phpcs:ignore WordPress.Security
+				'add_question'  => self::bool( 'add_question' ),
+				'watermark'     => self::bool( 'watermark' ),
+				'wm_pos'        => self::text( 'wm_pos' ),
+				'when'          => self::text( 'when' ),
+				'when_at'       => self::text( 'when_at' ),
 			)
 		);
-		if ( ! $id ) {
-			self::done( 'manual', 'error', 'Could not add the post.' );
+		self::done( 'manual', $res['ok'] ? 'success' : 'error', $res['message'] );
+	}
+
+	public static function do_save_signin() {
+		self::guard();
+		$only  = self::bool( 'passwordless_only' );
+		$magic = self::bool( 'magic_link' );
+		if ( $only ) {
+			if ( ! SF_Passwordless::passkeys( get_current_user_id() ) ) {
+				self::done( 'security', 'error', 'Add a passkey to this account first. Then you can turn passwords off without locking yourself out.' );
+			}
+			$magic = 1; // The email link stays on as a way back in.
 		}
-		if ( null !== $when ) {
-			self::done( 'manual', 'success', 'Scheduled for ' . wp_date( 'j M, H:i', strtotime( $when . ' UTC' ) ) . '.' );
+		SF_Options::update( array( 'passwordless_only' => $only, 'magic_link' => $magic ) );
+		self::done( 'security', 'success', $only ? 'Passwords are now off for administrators. Sign in with a passkey or an email link.' : 'Sign-in settings saved.' );
+	}
+
+	public static function do_create_home() {
+		self::guard();
+		$page = (int) SF_Options::get( 'home_page', 0 );
+		if ( ! $page || 'page' !== get_post_type( $page ) || 'trash' === get_post_status( $page ) ) {
+			$page = wp_insert_post(
+				array(
+					'post_title'   => 'Six & Four',
+					'post_name'    => 'six-and-four',
+					'post_content' => '[sixandfour_admin]',
+					'post_status'  => 'publish',
+					'post_type'    => 'page',
+				)
+			);
+			if ( ! $page || is_wp_error( $page ) ) {
+				self::done( 'mobile', 'error', 'Could not create the page.' );
+			}
 		}
-		$row = SF_DB::get_post( $id );
-		$res = SF_Poster::publish_one( $row );
-		if ( 'posted' === $res ) {
-			self::done( 'manual', 'success', 'Posted to Facebook.' );
+		if ( 'page' !== get_option( 'show_on_front' ) || (int) get_option( 'page_on_front' ) !== $page ) {
+			update_option( 'sf_home_prev', array( get_option( 'show_on_front' ), (int) get_option( 'page_on_front' ) ), false );
+			update_option( 'show_on_front', 'page' );
+			update_option( 'page_on_front', $page );
 		}
-		$row = SF_DB::get_post( $id );
-		self::done( 'manual', 'error', 'Facebook did not accept it: ' . ( ! empty( $row['error'] ) ? $row['error'] : 'unknown reason' ) . ' It will retry a few times.' );
+		SF_Options::update( array( 'home_page' => $page ) );
+		self::done( 'mobile', 'success', 'Your home page now shows the mobile console. Visitors see only a sign-in card.' );
+	}
+
+	public static function do_restore_home() {
+		self::guard();
+		$prev = get_option( 'sf_home_prev', array( 'posts', 0 ) );
+		update_option( 'show_on_front', $prev[0] ? $prev[0] : 'posts' );
+		update_option( 'page_on_front', (int) $prev[1] );
+		delete_option( 'sf_home_prev' );
+		self::done( 'mobile', 'success', 'Your home page is back to how it was. The console page still exists, with the shortcode.' );
 	}
 
 	/** Draw a sample card and send it as an image. */

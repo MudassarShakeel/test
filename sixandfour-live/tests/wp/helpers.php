@@ -32,4 +32,23 @@ switch ( $cmd ) {
 	case 'uploads-dir':
 		echo SF_Poster::dir()['path'], "\n";
 		break;
+	case 'mobile-reset':
+		SF_Options::update( array( 'passwordless_only' => 0, 'magic_link' => 1, 'paused' => 0 ) );
+		delete_user_meta( 1, 'sf_passkeys' );
+		delete_user_meta( 1, 'sf_magic' );
+		delete_user_meta( 1, 'sf_magic_sent' );
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient%sf_%'" );
+		@unlink( WP_CONTENT_DIR . '/mail-capture.json' );
+		echo "ok\n";
+		break;
+	case 'option':
+		echo wp_json_encode( SF_Options::get( $argv[3], null ) ), "\n";
+		break;
+	case 'passkey-count':
+		echo count( SF_Passwordless::passkeys( 1 ) ), "\n";
+		break;
+	case 'add-pending':
+		SF_DB::add_post( array( 'type' => 'toss', 'dedupe' => 'mob' . time(), 'status' => 'pending', 'caption' => 'TOSS | mobile test', 'image' => '' ) );
+		echo "ok\n";
+		break;
 }
