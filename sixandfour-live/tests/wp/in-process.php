@@ -7,6 +7,7 @@ if ( ! defined( 'SF_TEST_WP' ) ) {
 	exit( "Run this through tests/wp/run.php\n" );
 }
 $fail = 0;
+SF_API::$reuse = 0;
 function ok( $c, $l ) {
 	global $fail;
 	echo ( $c ? '  PASS  ' : '  FAIL  ' ) . $l . "\n";
