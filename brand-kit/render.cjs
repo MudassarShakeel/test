@@ -5,7 +5,7 @@ const fs = require('fs'); const path = require('path');
   const b = await chromium.launch(); const dir = path.join(__dirname, 'svg'); const out = path.join(__dirname, 'png'); fs.mkdirSync(out, { recursive: true });
   const jobs = {
     'cricket-sport-icon-light': [1024, 1024], 'cricket-sport-icon-dark': [1024, 1024],
-    'cricket-sport-profile-light': [1024, 1024], 'cricket-sport-profile-dark': [1024, 1024],
+    'cricket-sport-profile-light': [1024, 1024], 'cricket-sport-profile-dark': [1024, 1024], 'cricket-sport-profile-dark-ring': [1024, 1024],
     'cricket-sport-horizontal-light': [2000, null], 'cricket-sport-horizontal-dark': [2000, null],
     'cricket-sport-stacked-light': [1200, null], 'cricket-sport-stacked-dark': [1200, null],
     'cricket-sport-cover': [1640, 624],

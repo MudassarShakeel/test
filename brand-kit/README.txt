@@ -7,7 +7,8 @@ icon        The mark alone, transparent background.
 horizontal  Mark and name side by side.
 stacked     Mark above the name.
 profile     Square picture for the Facebook profile photo. It fits inside the round crop.
-cover       Facebook cover, 1640 x 624.
+cover       Facebook cover, 1640 x 624: logo, name, Page link, ten team flags and drawn player silhouettes.
+profile-dark-ring  Dark profile picture with a cyan ring.
 
 light       For white or light backgrounds (navy bat, teal and cyan arc).
 dark        For navy or dark backgrounds (white bat, cyan arc).
@@ -15,4 +16,4 @@ dark        For navy or dark backgrounds (white bat, cyan arc).
 Colours: navy #0A1B44, cyan #00E5FF, teal #00A8C6 (cyan for white backgrounds), white #FFFFFF.
 Font: Inter ExtraBold (open licence).
 
-To rebuild: python3 build.py && node render.cjs  (needs fonttools and Playwright)
+To rebuild: python3 build.py && python3 cover.py && node render.cjs  (needs fonttools and Playwright)

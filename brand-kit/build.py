@@ -85,11 +85,13 @@ def stacked(theme):
     return svg(int(W), 840, body)
 
 
-def avatar(theme):
+def avatar(theme, ring=False):
     """Profile picture: the mark on a plain square. Facebook crops it to a circle, so it sits inside a safe area."""
     bg = NAVY if theme == 'dark' else WHITE
     uid = 'a' + theme[0]
     body = f'<g transform="translate(66 66) scale(.742)">{icon(theme, uid)}</g>'
+    if ring:
+        body += f'<circle cx="256" cy="256" r="244" fill="none" stroke="{CYAN}" stroke-width="10"/>'
     return svg(512, 512, body, bg)
 
 
@@ -122,5 +124,6 @@ if __name__ == '__main__':
         write(f'cricket-sport-horizontal-{t}.svg', horizontal(t))
         write(f'cricket-sport-stacked-{t}.svg', stacked(t))
         write(f'cricket-sport-profile-{t}.svg', avatar(t))
+    write('cricket-sport-profile-dark-ring.svg', avatar('dark', True))
     write('cricket-sport-cover.svg', cover())
     print('ok')
