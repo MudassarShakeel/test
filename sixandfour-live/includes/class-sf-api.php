@@ -14,73 +14,197 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class SF_API {
 
-		const STATS = 'sf_api_stats';
+	const STATS = 'sf_api_stats';
+
+	/** Seconds a forced check reuses the list it just fetched. Tests set it to 0. */
+	public static $reuse = 60;
 
 	private static function base() {
 		return apply_filters( 'sf_api_base', 'https://api.cricapi.com/v1/' );
 	}
 
-	/** Send a request. Returns the decoded JSON array or WP_Error. */
-	private static function request( $endpoint, array $params = array() ) {
-		$key = SF_Options::get( 'api_key' );
-		if ( '' === $key ) {
-			return new WP_Error( 'sf_api_key', 'Add your cricket API key in Setup.' );
+	/** The saved API keys, main first. Index 1 is the main key, 2 to 4 are backups. */
+	public static function keys() {
+		$o   = SF_Options::all();
+		$out = array();
+		foreach ( array( 1 => 'api_key', 2 => 'api_key2', 3 => 'api_key3', 4 => 'api_key4' ) as $i => $name ) {
+			if ( ! empty( $o[ $name ] ) ) {
+				$out[ $i ] = $o[ $name ];
+			}
 		}
-		if ( ! self::budget_ok() ) {
-			return new WP_Error( 'sf_api_budget', 'The daily API limit is nearly used up, so no more calls today.' );
-		}
-		$params['apikey'] = $key;
-		$res              = wp_remote_get( add_query_arg( $params, self::base() . $endpoint ), array( 'timeout' => 20, 'redirection' => 2, 'sslverify' => true ) );
-		if ( is_wp_error( $res ) ) {
-			return new WP_Error( $res->get_error_code(), SF_Secrets::scrub( $res->get_error_message() ) );
-		}
-		$code = wp_remote_retrieve_response_code( $res );
-		$body = json_decode( wp_remote_retrieve_body( $res ), true );
-		if ( $code < 200 || $code >= 300 || ! is_array( $body ) ) {
-			return new WP_Error( 'sf_api_http', 'The cricket API answered with status ' . $code . '.' );
-		}
-		self::track( $body );
-		if ( isset( $body['status'] ) && 'success' !== $body['status'] ) {
-			$why = isset( $body['reason'] ) ? SF_Secrets::scrub( $body['reason'] ) : 'unknown reason';
-			return new WP_Error( 'sf_api_fail', 'The cricket API refused the request: ' . $why );
-		}
-		return $body;
+		return $out;
 	}
 
-	private static function track( array $body ) {
-		$s   = get_option( self::STATS, array() );
-		$day = gmdate( 'Y-m-d' );
-		if ( ! is_array( $s ) || ( isset( $s['day'] ) ? $s['day'] : '' ) !== $day ) {
-			$s = array( 'day' => $day, 'hits' => 0, 'limit' => (int) SF_Options::get( 'api_limit', 100 ) );
+	private static function fresh_stats() {
+		return array( 'day' => gmdate( 'Y-m-d' ), 'keys' => array() );
+	}
+
+	private static function raw_stats() {
+		$s = get_option( self::STATS, array() );
+		if ( is_array( $s ) && isset( $s['day'], $s['hits'] ) && ! isset( $s['keys'] ) ) { // Saved by version 1.1.0 or older.
+			$s = array( 'day' => $s['day'], 'keys' => array( 1 => array( 'hits' => (int) $s['hits'], 'limit' => (int) $s['limit'] ) ) );
 		}
-		if ( isset( $body['info']['hitsToday'] ) ) {
-			$s['hits'] = (int) $body['info']['hitsToday'];
-		} else {
-			$s['hits']++;
+		return ( is_array( $s ) && isset( $s['day'], $s['keys'] ) && gmdate( 'Y-m-d' ) === $s['day'] ) ? $s : self::fresh_stats();
+	}
+
+	private static function key_state( array $s, $i ) {
+		$k = isset( $s['keys'][ $i ] ) ? $s['keys'][ $i ] : array();
+		return array(
+			'hits'  => isset( $k['hits'] ) ? (int) $k['hits'] : 0,
+			'limit' => isset( $k['limit'] ) ? (int) $k['limit'] : (int) SF_Options::get( 'api_limit', 100 ),
+			'dead'  => ! empty( $k['dead'] ),
+		);
+	}
+
+	/** A key can be used while it is under 90% of its daily limit and has not been refused. */
+	private static function usable( array $st, $reserve = 0.1 ) {
+		return ! $st['dead'] && $st['hits'] < floor( $st['limit'] * ( 1 - $reserve ) );
+	}
+
+	private static function pick_key() {
+		$s = self::raw_stats();
+		foreach ( self::keys() as $i => $key ) {
+			if ( self::usable( self::key_state( $s, $i ) ) ) {
+				return array( $i, $key );
+			}
 		}
-		if ( isset( $body['info']['hitsLimit'] ) ) {
-			$s['limit'] = (int) $body['info']['hitsLimit'];
+		return null;
+	}
+
+	/** Send a request. Uses the next backup key when one is used up. Returns the decoded JSON array or WP_Error. */
+	private static function request( $endpoint, array $params = array() ) {
+		if ( ! self::keys() ) {
+			return new WP_Error( 'sf_api_key', 'Add your cricket API key in Setup.' );
 		}
+		for ( $try = 0; $try < 4; $try++ ) {
+			$pick = self::pick_key();
+			if ( ! $pick ) {
+				return new WP_Error( 'sf_api_budget', 'The daily API limit is nearly used up on every key, so no more calls today.' );
+			}
+			list( $i, $key ) = $pick;
+			$params['apikey'] = $key;
+			$res              = wp_remote_get( add_query_arg( $params, self::base() . $endpoint ), array( 'timeout' => 20, 'redirection' => 2, 'sslverify' => true ) );
+			if ( is_wp_error( $res ) ) {
+				return new WP_Error( $res->get_error_code(), SF_Secrets::scrub( $res->get_error_message() ) );
+			}
+			$code = wp_remote_retrieve_response_code( $res );
+			$body = json_decode( wp_remote_retrieve_body( $res ), true );
+			if ( $code < 200 || $code >= 300 || ! is_array( $body ) ) {
+				return new WP_Error( 'sf_api_http', 'The cricket API answered with status ' . $code . '.' );
+			}
+			self::track( $body, $i );
+			if ( isset( $body['status'] ) && 'success' !== $body['status'] ) {
+				$why = isset( $body['reason'] ) ? (string) $body['reason'] : 'unknown reason';
+				if ( preg_match( '/limit|exceed|quota|too many/i', $why ) ) {
+					self::mark_dead( $i );
+					SF_Log::add( 'API key ' . $i . ' is used up for today. Trying the next key.', 'warning' );
+					continue;
+				}
+				return new WP_Error( 'sf_api_fail', 'The cricket API refused the request: ' . SF_Secrets::scrub( $why ) );
+			}
+			return $body;
+		}
+		return new WP_Error( 'sf_api_budget', 'Every cricket API key is used up for today.' );
+	}
+
+	private static function mark_dead( $i ) {
+		$s = self::raw_stats();
+		$s['keys'][ $i ] = array_merge( self::key_state( $s, $i ), array( 'dead' => true ) );
 		update_option( self::STATS, $s, false );
 	}
 
-	public static function stats() {
-		$s = get_option( self::STATS, array() );
-		if ( ! is_array( $s ) || ( isset( $s['day'] ) ? $s['day'] : '' ) !== gmdate( 'Y-m-d' ) ) {
-			return array( 'day' => gmdate( 'Y-m-d' ), 'hits' => 0, 'limit' => (int) SF_Options::get( 'api_limit', 100 ) );
+	private static function track( array $body, $i ) {
+		$s = self::raw_stats();
+		$k = self::key_state( $s, $i );
+		if ( isset( $body['info']['hitsToday'] ) ) {
+			$k['hits'] = (int) $body['info']['hitsToday'];
+		} else {
+			$k['hits']++;
 		}
-		return $s;
+		if ( isset( $body['info']['hitsLimit'] ) ) {
+			$k['limit'] = (int) $body['info']['hitsLimit'];
+		}
+		if ( $k['hits'] >= $k['limit'] ) {
+			$k['dead'] = true;
+		}
+		$s['keys'][ $i ] = $k;
+		update_option( self::STATS, $s, false );
 	}
 
-	/** Keep 10% of the daily calls in reserve. */
-	public static function budget_ok( $reserve = 0.1 ) {
-		$s = self::stats();
-		return $s['hits'] < floor( $s['limit'] * ( 1 - $reserve ) );
+	/** Calls used today and the daily total, added up over every saved key. */
+	public static function stats() {
+		$s     = self::raw_stats();
+		$hits  = 0;
+		$limit = 0;
+		$keys  = self::keys();
+		foreach ( $keys as $i => $key ) {
+			$k      = self::key_state( $s, $i );
+			$hits  += $k['hits'];
+			$limit += $k['limit'];
+		}
+		if ( ! $keys ) {
+			$limit = (int) SF_Options::get( 'api_limit', 100 );
+		}
+		return array( 'day' => $s['day'], 'hits' => $hits, 'limit' => $limit, 'keys' => count( $keys ) );
 	}
 
+	/** True while at least one key still has calls to spare. */
+	public static function budget_ok() {
+		return null !== self::pick_key();
+	}
+
+	/** Calls left before the 10% reserve, over every usable key. */
 	public static function remaining() {
-		$s = self::stats();
-		return max( 0, (int) floor( $s['limit'] * 0.9 ) - $s['hits'] );
+		$s   = self::raw_stats();
+		$sum = 0;
+		foreach ( self::keys() as $i => $key ) {
+			$k = self::key_state( $s, $i );
+			if ( ! $k['dead'] ) {
+				$sum += max( 0, (int) floor( $k['limit'] * 0.9 ) - $k['hits'] );
+			}
+		}
+		return $sum;
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Which matches to cover                                              */
+	/* ------------------------------------------------------------------ */
+
+	public static function is_women( array $m ) {
+		$text = $m['name'] . ' ' . $m['teams'][0]['name'] . ' ' . $m['teams'][1]['name'];
+		return (bool) preg_match( '/\b(women|womens|woman|ladies)\b|\(W\)|\bW\s*$|\bW\s+vs\b|-W\b/i', $text );
+	}
+
+	private static function team_key( $name ) {
+		$n = strtolower( trim( preg_replace( '/[^a-z ]/i', '', (string) $name ) ) );
+		$alias = array( 'uae' => 'united arab emirates', 'usa' => 'united states of america', 'united states' => 'united states of america', 'us' => 'united states of america' );
+		return isset( $alias[ $n ] ) ? $alias[ $n ] : $n;
+	}
+
+	/** Is this match one we should post about? Tournaments you follow always count, except women's matches. */
+	public static function wanted( array $m ) {
+		if ( SF_Options::get( 'skip_women', 1 ) && self::is_women( $m ) ) {
+			return false;
+		}
+		$followed = SF_Options::get( 'followed', array() );
+		if ( ! empty( $followed ) ) {
+			return isset( $followed[ $m['series_id'] ] );
+		}
+		if ( ! SF_Options::get( 'top_only', 1 ) ) {
+			return true;
+		}
+		$top = array();
+		foreach ( explode( "\n", (string) SF_Options::get( 'top_teams', '' ) ) as $t ) {
+			if ( '' !== trim( $t ) ) {
+				$top[ self::team_key( $t ) ] = true;
+			}
+		}
+		foreach ( $m['teams'] as $t ) {
+			if ( ! isset( $top[ self::team_key( $t['name'] ) ] ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** All current and recent matches in one call. Cached for two minutes. */
@@ -88,6 +212,11 @@ class SF_API {
 		$cached = get_transient( 'sf_current_matches' );
 		if ( ! $fresh && is_array( $cached ) ) {
 			return $cached;
+		}
+		// Pressing Check now twice in a row should not cost two calls.
+		$last = get_option( 'sf_last_matches', array() );
+		if ( $fresh && is_array( $last ) && isset( $last[0], $last[1] ) && time() - (int) $last[0] < self::$reuse ) {
+			return $last[1];
 		}
 		$res = self::request( 'currentMatches', array( 'offset' => 0 ) );
 		if ( is_wp_error( $res ) ) {

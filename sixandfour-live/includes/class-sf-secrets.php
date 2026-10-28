@@ -63,7 +63,7 @@ class SF_Secrets {
 	public static function scrub( $text ) {
 		$text = (string) $text;
 		$o    = get_option( SF_Options::KEY, array() );
-		foreach ( array( 'fb_token', 'api_key' ) as $k ) {
+		foreach ( SF_Options::SECRETS as $k ) {
 			$plain = isset( $o[ $k ] ) ? self::decrypt( $o[ $k ] ) : '';
 			if ( strlen( $plain ) >= 8 ) {
 				$text = str_replace( $plain, '[hidden]', $text );

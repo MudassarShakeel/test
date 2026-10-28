@@ -182,7 +182,7 @@ class SF_Engine {
 				continue;
 			}
 			$m = SF_API::normalize_match( $raw );
-			if ( '' === $m['id'] || ! SF_Options::is_followed( $m['series_id'] ) ) {
+			if ( '' === $m['id'] || ! SF_API::wanted( $m ) ) {
 				continue;
 			}
 			foreach ( $m['teams'] as $t ) {
@@ -221,13 +221,21 @@ class SF_Engine {
 		}
 		update_option( 'sf_state', $state, false );
 
-		$soon = false;
+		// Check often only around live matches. Otherwise sleep until the next one is close.
+		$next_start = 0;
 		foreach ( $matches as $m ) {
-			if ( ! $m['started'] && $m['start'] && $m['start'] - time() < 3600 ) {
-				$soon = true;
+			if ( ! $m['started'] && $m['start'] > time() && ( ! $next_start || $m['start'] < $next_start ) ) {
+				$next_start = $m['start'];
 			}
 		}
-		update_option( 'sf_next_check', time() + self::interval( ! empty( $live ) || $soon ) * MINUTE_IN_SECONDS - 30, false );
+		if ( ! empty( $live ) || ( $next_start && $next_start - time() <= 3600 ) ) {
+			$wait = self::interval( true ) * MINUTE_IN_SECONDS;
+		} elseif ( $next_start ) {
+			$wait = max( 20 * MINUTE_IN_SECONDS, min( 2 * HOUR_IN_SECONDS, $next_start - time() - 45 * MINUTE_IN_SECONDS ) );
+		} else {
+			$wait = 90 * MINUTE_IN_SECONDS;
+		}
+		update_option( 'sf_next_check', time() + $wait - 30, false );
 		update_option( 'sf_last_tick', time(), false );
 		SF_Poster::publish_due();
 	}
@@ -287,7 +295,7 @@ class SF_Engine {
 			$st['inn'] = count( $m['innings'] );
 			$st['w']   = ( count( $m['innings'] ) === $st['inn'] ) ? $cur_w : 0;
 
-			if ( $is_card_match && SF_Options::job( 'milestones' ) && time() - $st['sc_at'] >= 10 * MINUTE_IN_SECONDS && SF_API::budget_ok() ) {
+			if ( $is_card_match && SF_Options::job( 'milestones' ) && time() - $st['sc_at'] >= 15 * MINUTE_IN_SECONDS && SF_API::budget_ok() ) {
 				$sc = SF_API::scorecard( $id );
 				if ( ! is_wp_error( $sc ) ) {
 					self::scan_milestones( $m, $sc );
@@ -704,7 +712,7 @@ class SF_Engine {
 				continue;
 			}
 			$m = SF_API::normalize_match( $raw );
-			if ( '' === $m['id'] || ! SF_Options::is_followed( $m['series_id'] ) || ! $m['start'] ) {
+			if ( '' === $m['id'] || ! SF_API::wanted( $m ) || ! $m['start'] ) {
 				continue;
 			}
 			if ( wp_date( 'Y-m-d', $m['start'] ) === $today ) {

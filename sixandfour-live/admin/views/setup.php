@@ -41,8 +41,22 @@ SF_Admin::form_open( 'save_setup' );
 <h2 class="sf-sec">Cricket data</h2>
 <div class="sf-group">
 	<div class="sf-row"><label class="sf-l" for="api_key"><b>CricketData.org API key</b><span><?php echo $o['api_key'] ? 'A key is saved. Leave blank to keep it.' : 'Get a free key at cricketdata.org'; ?></span></label><input class="sf-field" id="api_key" name="api_key" type="password" autocomplete="new-password" placeholder="<?php echo $o['api_key'] ? '••••••••••••' : 'Paste the key'; ?>"></div>
-	<div class="sf-row"><label class="sf-l" for="api_limit"><b>Daily call limit</b><span>The plugin keeps 10% in reserve and spaces its checks to last the day</span></label><input class="sf-field sf-narrow" id="api_limit" name="api_limit" type="number" min="10" value="<?php echo (int) $o['api_limit']; ?>"></div>
+	<?php foreach ( array( 2, 3, 4 ) as $n ) : $kn = 'api_key' . $n; ?>
+	<div class="sf-row"><label class="sf-l" for="<?php echo esc_attr( $kn ); ?>"><b>Backup key <?php echo (int) ( $n - 1 ); ?></b><span><?php echo $o[ $kn ] ? 'A key is saved. Leave blank to keep it. Type - to remove it.' : 'Optional. Used when the key before it is used up for the day.'; ?></span></label><input class="sf-field" id="<?php echo esc_attr( $kn ); ?>" name="<?php echo esc_attr( $kn ); ?>" type="password" autocomplete="new-password" placeholder="<?php echo $o[ $kn ] ? '••••••••••••' : 'Paste the key'; ?>"></div>
+	<?php endforeach; ?>
+	<div class="sf-row"><label class="sf-l" for="api_limit"><b>Daily call limit for each key</b><span>The plugin keeps 10% in reserve and spaces its checks to last the day</span></label><input class="sf-field sf-narrow" id="api_limit" name="api_limit" type="number" min="10" value="<?php echo (int) $o['api_limit']; ?>"></div>
 	<div class="sf-row"><div class="sf-l"><b>API key</b><span>Test costs one call</span></div><button class="sf-btn sf-sm" type="submit" formaction="<?php echo esc_url( admin_url( 'admin-post.php?action=sf_test_api' ) ); ?>">Test key</button></div>
+</div>
+
+<h2 class="sf-sec">Which matches to cover</h2>
+<div class="sf-group">
+	<?php
+	SF_Admin::switch_row( 'skip_women', $o['skip_women'], 'Skip women\'s matches', 'Leaves them out of every post and saves API calls.' );
+	SF_Admin::switch_row( 'top_only', $o['top_only'], 'Only matches between the top teams', 'Used when you follow no tournament. A tournament you follow on the Tournaments screen is always covered.' );
+	?>
+	<div class="sf-row sf-block"><label for="top_teams"><b>Top teams</b> <span class="sf-muted">One per line. Both teams must be on the list.</span></label><textarea class="sf-field" id="top_teams" name="top_teams" rows="8"><?php echo esc_textarea( $o['top_teams'] ); ?></textarea></div>
+	<?php $st = SF_API::stats(); ?>
+	<div class="sf-row"><div class="sf-l"><b>Cricket calls today</b><span><?php echo (int) $st['hits']; ?> of <?php echo (int) $st['limit']; ?> used over <?php echo (int) $st['keys']; ?> key<?php echo 1 === (int) $st['keys'] ? '' : 's'; ?>. The plugin checks often only around live matches.</span></div></div>
 </div>
 
 <h2 class="sf-sec">This site</h2>

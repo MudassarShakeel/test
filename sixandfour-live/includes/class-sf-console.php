@@ -135,7 +135,7 @@ class SF_Console {
 				continue;
 			}
 			$m = SF_API::normalize_match( $m );
-			if ( '' === $m['id'] || ! SF_Options::is_followed( $m['series_id'] ) ) {
+			if ( '' === $m['id'] || ! SF_API::wanted( $m ) ) {
 				continue;
 			}
 			if ( $m['ended'] ) {
@@ -176,7 +176,7 @@ class SF_Console {
 			'mode'     => $o['mode'],
 			'paused'   => (bool) $o['paused'],
 			'fb'       => array( 'ok' => ! empty( $fb['ok'] ), 'name' => isset( $fb['name'] ) ? $fb['name'] : '', 'fans' => isset( $fb['fans'] ) ? (int) $fb['fans'] : 0, 'message' => isset( $fb['message'] ) ? $fb['message'] : '' ),
-			'api'      => array( 'hits' => (int) $stats['hits'], 'limit' => (int) $stats['limit'] ),
+			'api'      => array( 'hits' => (int) $stats['hits'], 'limit' => (int) $stats['limit'], 'keys' => (int) $stats['keys'] ),
 			'next'     => $next > time() ? human_time_diff( time(), $next ) : 'now',
 			'seen'     => $seen ? human_time_diff( $seen ) . ' ago' : '',
 			'matches'  => array_slice( $matches, 0, 20 ),

@@ -159,7 +159,7 @@ class SF_Security {
 		$o   = get_option( SF_Options::KEY, array() );
 		$enc = true;
 		$any = false;
-		foreach ( array( 'fb_token', 'api_key' ) as $k ) {
+		foreach ( SF_Options::SECRETS as $k ) {
 			if ( ! empty( $o[ $k ] ) ) {
 				$any = true;
 				$enc = $enc && SF_Secrets::is_encrypted( $o[ $k ] );

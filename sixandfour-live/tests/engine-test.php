@@ -7,6 +7,7 @@
 require __DIR__ . '/wp-stubs.php';
 
 $fail = 0;
+SF_API::$reuse = 0;
 function ok( $cond, $label ) {
 	global $fail;
 	echo ( $cond ? '  PASS  ' : '  FAIL  ' ) . $label . "\n";
@@ -217,6 +218,71 @@ $id = SF_Poster::queue_text( 'result', 'fail-test', 'Will fail' );
 SF_Poster::publish_due();
 $row = SF_DB::get_post( $id );
 ok( 'failed' === $row['status'] && false !== strpos( $row['error'], 'access token' ), 'an expired token marks the post failed (' . $row['error'] . ')' );
+
+echo "10. Which matches are covered\n";
+function mk( $a, $b, $series = 'x9', $name = null ) {
+	return SF_API::normalize_match( array_merge( match_json( 'z' . crc32( $a . $b . $series ), $a, $b, time() + 7200, false, false, 'Match not started', array(), $series ), $name ? array( 'name' => $name ) : array() ) );
+}
+SF_Options::update( array( 'followed' => array(), 'top_only' => 1, 'skip_women' => 1 ) );
+ok( SF_API::wanted( mk( 'India', 'Australia' ) ), 'top team v top team is covered' );
+ok( SF_API::wanted( mk( 'UAE', 'USA' ) ), 'short names UAE and USA count as top teams' );
+ok( ! SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings' ) ), 'a club match is skipped when you follow nothing' );
+ok( ! SF_API::wanted( mk( 'India', 'Papua New Guinea' ) ), 'a match with a team outside the list is skipped' );
+ok( ! SF_API::wanted( mk( 'India Women', 'Australia Women' ) ), "women's teams are skipped" );
+ok( ! SF_API::wanted( mk( 'India', 'Australia', 'x9', 'India vs Australia (W), 3rd T20I' ) ), "a (W) match name is skipped" );
+SF_Options::update( array( 'followed' => array( 'ipl' => 'IPL 2026' ) ) );
+ok( SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings', 'ipl' ) ), 'a tournament you follow is always covered' );
+ok( ! SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'a series you do not follow is skipped when you follow some' );
+ok( ! SF_API::wanted( mk( 'Delhi Women', 'Mumbai Women', 'ipl' ) ), "women's matches are skipped even in a followed series" );
+SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'skip_women' => 1 ) );
+
+echo "11. Fewer calls and backup keys\n";
+SF_Options::update( array( 'api_limit' => 10, 'api_key' => 'KEYONE', 'api_key2' => 'KEYTWO', 'api_key3' => '', 'api_key4' => '' ) );
+update_option( 'sf_api_stats', array() );
+delete_transient( 'sf_current_matches' );
+$used = array();
+$GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$used ) {
+	parse_str( parse_url( $url, PHP_URL_QUERY ), $q );
+	$used[] = $q['apikey'];
+	if ( 'KEYONE' === $q['apikey'] ) {
+		return sf_json( array( 'status' => 'failure', 'reason' => 'Hits today exceeded hits limit' ) );
+	}
+	return sf_json( array( 'status' => 'success', 'data' => array(), 'info' => array( 'hitsToday' => 1, 'hitsLimit' => 10 ) ) );
+};
+$r = SF_API::current_matches( true );
+ok( ! is_wp_error( $r ), 'a refused key falls back to the next key in the same call' );
+ok( array( 'KEYONE', 'KEYTWO' ) === $used, 'the main key was tried first, then the backup (' . implode( ',', $used ) . ')' );
+$used = array();
+delete_transient( 'sf_current_matches' );
+update_option( 'sf_last_matches', array( 0, array() ) );
+SF_API::current_matches( true );
+ok( array( 'KEYTWO' ) === $used, 'the used-up key is not tried again today' );
+$st = SF_API::stats();
+ok( 2 === $st['keys'] && 20 === $st['limit'], 'the daily total adds up over both keys (' . $st['hits'] . ' of ' . $st['limit'] . ')' );
+$used = array();
+update_option( 'sf_last_matches', array( time(), array( array( 'id' => 'cached' ) ) ) );
+SF_API::$reuse = 60;
+$r = SF_API::current_matches( true );
+ok( empty( $used ) && 'cached' === $r[0]['id'], 'two quick presses of Check now cost one call' ) ;
+SF_API::$reuse = 0;
+
+SF_Options::update( array( 'api_key2' => '', 'api_limit' => 100 ) );
+update_option( 'sf_api_stats', array() );
+SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ) ) );
+$GLOBALS['sf_http'] = function ( $method, $url ) use ( &$world ) {
+	return sf_json( array( 'status' => 'success', 'data' => $world['matches'], 'info' => array( 'hitsToday' => 1, 'hitsLimit' => 100 ) ) );
+};
+$world['matches'] = array( match_json( 'far', 'India', 'Australia', time() + 6 * 3600, false, false, 'Match not started', array(), 's1' ) );
+delete_transient( 'sf_current_matches' );
+update_option( 'sf_state', array() );
+tick();
+$wait = (int) get_option( 'sf_next_check' ) - time();
+ok( $wait > 90 * 60 && $wait <= 120 * 60, 'with the next match 6 hours away the plugin sleeps 2 hours (' . round( $wait / 60 ) . ' min)' );
+$world['matches'] = array();
+delete_transient( 'sf_current_matches' );
+tick();
+$wait = (int) get_option( 'sf_next_check' ) - time();
+ok( $wait > 80 * 60, 'with no match in sight the plugin waits 90 minutes (' . round( $wait / 60 ) . ' min)' );
 
 echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
 exit( $fail ? 1 : 0 );

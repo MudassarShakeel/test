@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,12 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.2.0 =
+* New: only men's matches between the top 20 teams are covered by default. Women's matches are skipped. Tournaments you follow are always covered. The team list is editable in Setup.
+* New: up to three backup cricket API keys. When one is used up for the day, the next one takes over.
+* Changed: the plugin now checks often only around live matches and the hour before a match. Between matches it sleeps up to two hours. Two quick presses of Check now cost one call.
+* The Setup screen shows the calls used today over all keys.
 
 = 1.1.0 =
 * New: password-free sign-in for administrators with passkeys (fingerprint, face or screen lock) and one-time email links. Passwords can be switched off for administrators once a passkey exists.

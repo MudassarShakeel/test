@@ -154,6 +154,14 @@ class SF_Admin {
 		$new['fb_page_id'] = $page;
 		$new['fb_token']   = '' !== $token ? $token : $old['fb_token'];
 		$new['api_key']    = '' !== $key ? $key : $old['api_key'];
+		foreach ( array( 'api_key2', 'api_key3', 'api_key4' ) as $kn ) {
+			$kv         = isset( $_POST[ $kn ] ) ? trim( sanitize_text_field( wp_unslash( $_POST[ $kn ] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$new[ $kn ] = '-' === $kv ? '' : ( '' !== $kv ? $kv : $old[ $kn ] );
+		}
+		$new['skip_women'] = self::bool( 'skip_women' );
+		$new['top_only']   = self::bool( 'top_only' );
+		$teams             = isset( $_POST['top_teams'] ) ? sanitize_textarea_field( wp_unslash( $_POST['top_teams'] ) ) : $old['top_teams']; // phpcs:ignore WordPress.Security.NonceVerification
+		$new['top_teams']  = implode( "\n", array_slice( array_filter( array_map( 'trim', explode( "\n", $teams ) ) ), 0, 60 ) );
 		$new['fb_handle']  = self::text( 'fb_handle', $old['fb_handle'] );
 		$new['mode']       = 'approve' === self::text( 'mode', 'auto' ) ? 'approve' : 'auto';
 		$new['api_limit']  = max( 10, min( 100000, (int) self::text( 'api_limit', 100 ) ) );

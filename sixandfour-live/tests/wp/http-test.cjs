@@ -96,15 +96,19 @@ async function login(page, user, pass) {
   await page.fill('#fb_page_id', '1001234567');
   await page.fill('#fb_token', 'EAABSECRETTOKEN1234567890abcdef');
   await page.fill('#api_key', 'mock-cricket-key-0001');
+  await page.fill('#api_key2', 'mock-backup-key-0002');
+  await page.fill('#api_key3', 'mock-backup-key-0003');
   await page.fill('#quiet_start', '00:00'); await page.fill('#quiet_end', '00:00');
   await Promise.all([page.waitForNavigation(), page.click('button.sf-primary')]);
   const notice = await page.locator('.sf-notice').first().innerText();
   ok(/Settings saved/.test(notice) && /Connected to Six & Four Live/.test(notice), 'settings saved and the Page was verified: "' + notice.replace(/\s+/g, ' ') + '"');
   const raw = php('raw-option');
-  ok(!raw.includes('SECRETTOKEN') && !raw.includes('mock-cricket-key') && raw.includes('sf1:'), 'the saved option holds only encrypted secrets');
+  ok(!raw.includes('SECRETTOKEN') && !raw.includes('mock-cricket-key') && !raw.includes('mock-backup-key') && raw.includes('sf1:'), 'the saved option holds only encrypted secrets');
   const setupHtml = await page.content();
-  ok(!setupHtml.includes('SECRETTOKEN') && !setupHtml.includes('mock-cricket-key'), 'the Setup page never prints the secrets back');
+  ok(!setupHtml.includes('SECRETTOKEN') && !setupHtml.includes('mock-cricket-key') && !setupHtml.includes('mock-backup-key'), 'the Setup page never prints the secrets back');
   ok(/A token is saved/.test(setupHtml), 'it says a token is saved instead');
+  ok(/of 300 used over 3 keys/.test(setupHtml.replace(/\s+/g,' ')) || /used over 3 keys/.test(setupHtml), 'Setup counts three keys and shows the calls used');
+  ok(/Top teams/.test(setupHtml) && /Skip women/.test(setupHtml), 'Setup shows the match filter');
   await page.screenshot({ path: path.join(OUT, 'wp-setup-saved.png'), fullPage: true });
 
   console.log('8. Security screen');

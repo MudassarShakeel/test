@@ -20,7 +20,13 @@ class SF_Options {
 			'fb_token'          => '',
 			'fb_handle'         => 'facebook.com/sixandfourlive',
 			'api_key'           => '',
+			'api_key2'          => '', // Backup keys. Used in turn when the one before is used up.
+			'api_key3'          => '',
+			'api_key4'          => '',
 			'api_limit'         => 100,
+			'top_only'          => 1, // Men's matches between the teams below, unless you follow the tournament.
+			'skip_women'        => 1,
+			'top_teams'         => "India\nAustralia\nEngland\nSouth Africa\nNew Zealand\nPakistan\nSri Lanka\nBangladesh\nWest Indies\nAfghanistan\nZimbabwe\nIreland\nNetherlands\nScotland\nNepal\nUnited Arab Emirates\nUnited States of America\nNamibia\nOman\nCanada",
 			'max_posts_day'     => 15,
 			'quiet_start'       => '01:00',
 			'quiet_end'         => '06:00',
@@ -64,7 +70,7 @@ class SF_Options {
 	}
 
 	/** Settings that are encrypted before they are saved. */
-	const SECRETS = array( 'fb_token', 'api_key' );
+	const SECRETS = array( 'fb_token', 'api_key', 'api_key2', 'api_key3', 'api_key4' );
 
 	public static function all() {
 		$o = get_option( self::KEY, array() );
