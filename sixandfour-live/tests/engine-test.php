@@ -1,0 +1,222 @@
+<?php
+/**
+ * End-to-end test of the engine with fake CricketData and Facebook responses.
+ * Run: php tests/engine-test.php
+ */
+
+require __DIR__ . '/wp-stubs.php';
+
+$fail = 0;
+function ok( $cond, $label ) {
+	global $fail;
+	echo ( $cond ? '  PASS  ' : '  FAIL  ' ) . $label . "\n";
+	if ( ! $cond ) {
+		$fail++;
+	}
+}
+function iso( $ts ) {
+	return gmdate( 'Y-m-d\TH:i:s', $ts );
+}
+function match_json( $id, $a, $b, $start, $started, $ended, $status, $score = array(), $series = 's1', $type = 't20' ) {
+	return array(
+		'id' => $id, 'name' => "$a vs $b, 14th Match", 'matchType' => $type, 'status' => $status, 'venue' => 'Harbour Oval, Harbour',
+		'date' => gmdate( 'Y-m-d', $start ), 'dateTimeGMT' => iso( $start ),
+		'teams' => array( $a, $b ),
+		'teamInfo' => array( array( 'name' => $a, 'shortname' => strtoupper( substr( $a, 0, 3 ) ) ), array( 'name' => $b, 'shortname' => strtoupper( substr( $b, 0, 3 ) ) ) ),
+		'score' => $score, 'series_id' => $series, 'matchStarted' => $started, 'matchEnded' => $ended,
+	);
+}
+
+// ---- Fake world -----------------------------------------------------------
+$world = array( 'matches' => array(), 'hits' => 0, 'scorecards' => array(), 'points' => array(), 'fb_posts' => array(), 'fb_edits' => array() );
+$GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$world ) {
+	if ( false !== strpos( $url, 'api.cricapi.com' ) ) {
+		$world['hits']++;
+		$info = array( 'hitsToday' => $world['hits'], 'hitsLimit' => 100 );
+		if ( false !== strpos( $url, '/currentMatches' ) ) {
+			return sf_json( array( 'status' => 'success', 'data' => $world['matches'], 'info' => $info ) );
+		}
+		if ( false !== strpos( $url, '/match_scorecard' ) ) {
+			parse_str( parse_url( $url, PHP_URL_QUERY ), $q );
+			return sf_json( array( 'status' => 'success', 'data' => isset( $world['scorecards'][ $q['id'] ] ) ? $world['scorecards'][ $q['id'] ] : array(), 'info' => $info ) );
+		}
+		if ( false !== strpos( $url, '/series_points' ) ) {
+			return sf_json( array( 'status' => 'success', 'data' => $world['points'], 'info' => $info ) );
+		}
+		return sf_json( array( 'status' => 'success', 'data' => array(), 'info' => $info ) );
+	}
+	if ( false !== strpos( $url, 'graph.facebook.com' ) ) {
+		if ( 'GET' === $method ) {
+			return sf_json( array( 'name' => 'Six & Four Live', 'username' => 'sixandfourlive', 'fan_count' => 9800 ) );
+		}
+		if ( preg_match( '#/photos$#', $url ) ) {
+			$world['fb_posts'][] = array( 'photo', strlen( $args['body'] ) );
+			return sf_json( array( 'id' => 'P' . count( $world['fb_posts'] ), 'post_id' => '1_' . count( $world['fb_posts'] ) ) );
+		}
+		if ( preg_match( '#/feed$#', $url ) ) {
+			$world['fb_posts'][] = array( 'feed', $args['body']['message'] );
+			return sf_json( array( 'id' => '1_feed' . count( $world['fb_posts'] ) ) );
+		}
+		$world['fb_edits'][] = array( $url, $args['body']['message'] );
+		return sf_json( array( 'success' => true ) );
+	}
+	return array( 'code' => 404, 'body' => '' );
+};
+
+SF_Options::update( array(
+	'api_key' => 'k', 'fb_page_id' => '123', 'fb_token' => 'tok', 'mode' => 'auto',
+	'quiet_start' => '00:00', 'quiet_end' => '00:00', 'max_posts_day' => 50, 'per_match_hour' => 5, 'live_cards' => 2,
+	'followed' => array( 's1' => 'Harbour Cup 2026' ), 'fb_handle' => 'facebook.com/sixandfourlive',
+) );
+function posts( $type = null ) {
+	global $wpdb;
+	$rows = $wpdb->get_results( 'SELECT * FROM wp_sf_posts ORDER BY id' );
+	return $type ? array_values( array_filter( $rows, function ( $r ) use ( $type ) {
+		return $r['type'] === $type;
+	} ) ) : $rows;
+}
+function force_due() {
+	global $wpdb;
+	$wpdb->query( "UPDATE wp_sf_posts SET scheduled_at = '2000-01-01 00:00:00' WHERE scheduled_at IS NOT NULL" );
+}
+function tick() {
+	update_option( 'sf_next_check', 0 );
+	SF_API::current_matches( true );
+	SF_Engine::tick( true );
+}
+
+echo "1. Facebook and API checks\n";
+$fb = SF_Facebook::verify();
+ok( ! is_wp_error( $fb ) && 'Six & Four Live' === $fb['name'], 'verify() reads the Page name' );
+ok( SF_Options::ready(), 'plugin is ready with keys' );
+
+echo "2. Upcoming match: toss post and Pick a side post\n";
+$now = time();
+$world['matches'] = array( match_json( 'm1', 'England', 'Australia', $now + 1800, false, false, 'Australia won the toss and elected to bat first' ) );
+tick();
+ok( 1 === count( posts( 'toss' ) ), 'one toss post queued' );
+ok( 1 === count( posts( 'poll' ) ), 'one poll post queued' );
+ok( 'posted' === posts( 'toss' )[0]['status'] && 'posted' === posts( 'poll' )[0]['status'], 'both were sent to Facebook' );
+tick();
+ok( 1 === count( posts( 'toss' ) ) && 1 === count( posts( 'poll' ) ), 'ticking again makes no duplicates' );
+ok( is_file( SF_Poster::dir()['path'] . posts( 'toss' )[0]['image'] ), 'toss card file exists' );
+
+echo "3. Live match: wicket and innings break\n";
+$sc1 = array( array( 'r' => 80, 'w' => 2, 'o' => 10.0, 'inning' => 'Australia Inning 1' ) );
+$world['matches'] = array( match_json( 'm1', 'England', 'Australia', $now - 3600, true, false, 'Match in progress', $sc1 ) );
+tick(); // first sight: no posts.
+$before = count( posts( 'live' ) );
+$sc1[0] = array( 'r' => 95, 'w' => 3, 'o' => 12.1, 'inning' => 'Australia Inning 1' );
+$world['matches'][0]['score'] = $sc1;
+tick();
+ok( count( posts( 'live' ) ) === $before + 1, 'a wicket card was queued' );
+$sc2 = array( array( 'r' => 168, 'w' => 7, 'o' => 20.0, 'inning' => 'Australia Inning 1' ), array( 'r' => 12, 'w' => 0, 'o' => 1.4, 'inning' => 'England Inning 1' ) );
+$world['matches'][0]['score'] = $sc2;
+tick();
+ok( count( posts( 'live' ) ) === $before + 2, 'an innings break card was queued' );
+$live = posts( 'live' );
+$last = end( $live );
+ok( 0 === strpos( $last['caption'], 'INNINGS BREAK' ), 'innings break caption: ' . strtok( $last['caption'], "\n" ) );
+
+echo "4. Match ends: result, summary, top performer, century, five-for\n";
+$sc3 = array( array( 'r' => 168, 'w' => 7, 'o' => 20.0, 'inning' => 'Australia Inning 1' ), array( 'r' => 171, 'w' => 4, 'o' => 18.3, 'inning' => 'England Inning 1' ) );
+$bat = function ( $id, $name, $r, $b, $f, $s, $out = true ) {
+	return array( 'batsman' => array( 'id' => $id, 'name' => $name ), 'dismissal' => $out ? 'b Someone' : 'not out', 'r' => $r, 'b' => $b, '4s' => $f, '6s' => $s, 'sr' => round( $r * 100 / $b, 2 ) );
+};
+$bowl = function ( $id, $name, $o, $m, $r, $w ) {
+	return array( 'bowler' => array( 'id' => $id, 'name' => $name ), 'o' => $o, 'm' => $m, 'r' => $r, 'w' => $w, 'eco' => round( $r / $o, 2 ) );
+};
+$world['scorecards']['m1'] = array(
+	'id' => 'm1', 'status' => 'England won by 6 wkts',
+	'scorecard' => array(
+		array( 'inning' => 'Australia Inning 1', 'batting' => array( $bat( 'a1', 'Jack Merriman', 61, 38, 6, 2 ), $bat( 'a2', 'Noah Pryce', 34, 25, 3, 1 ) ), 'bowling' => array( $bowl( 'e1', 'Sam Whitlock', 4, 1, 24, 3 ), $bowl( 'e2', 'Rhys Colby', 4, 0, 33, 1 ) ) ),
+		array( 'inning' => 'England Inning 1', 'batting' => array( $bat( 'e3', 'Oliver Hartley', 100, 52, 8, 5, false ), $bat( 'e4', 'Dan Rowe', 40, 30, 4, 1 ) ), 'bowling' => array( $bowl( 'a3', 'Liam Corbett', 4, 0, 18, 5 ), $bowl( 'a4', 'Tom Ash', 3.3, 0, 41, 1 ) ) ),
+	),
+);
+$world['matches'] = array( match_json( 'm1', 'England', 'Australia', $now - 10800, true, true, 'England won by 6 wkts', $sc3 ) );
+tick();
+ok( 1 === count( posts( 'result' ) ), 'result queued' );
+ok( 1 === count( posts( 'summary' ) ), 'summary queued' );
+ok( 1 === count( posts( 'potm' ) ), 'top performer queued' );
+ok( 1 === count( posts( 'century' ) ), 'century queued (Oliver Hartley 100*)' );
+ok( 1 === count( posts( 'fivefor' ) ), 'five-wicket haul queued (Liam Corbett 5/18)' );
+ok( 'posted' === posts( 'result' )[0]['status'], 'result posted immediately' );
+ok( 'approved' === posts( 'summary' )[0]['status'] && null !== posts( 'summary' )[0]['scheduled_at'], 'summary waits for its delay' );
+force_due();
+SF_Poster::publish_due();
+SF_Poster::publish_due();
+ok( 'posted' === posts( 'summary' )[0]['status'] && 'posted' === posts( 'potm' )[0]['status'], 'summary and top performer post after the delay' );
+echo '  caption: ', str_replace( "\n", ' | ', posts( 'summary' )[0]['caption'] ), "\n";
+tick();
+ok( 1 === count( posts( 'result' ) ) && 1 === count( posts( 'summary' ) ), 'no duplicates on the next tick' );
+ok( 1 === count( $GLOBALS['wpdb']->get_results( 'SELECT * FROM wp_sf_results' ) ), 'result stored for the monthly ranking' );
+
+echo "5. Busy day: scoreboard digest\n";
+$m = array();
+foreach ( array( array( 'x1', 'India', 'Pakistan' ), array( 'x2', 'New Zealand', 'South Africa' ), array( 'x3', 'Sri Lanka', 'Bangladesh' ), array( 'x4', 'Desert Riders', 'City Falcons' ) ) as $i => $t ) {
+	$m[] = match_json( $t[0], $t[1], $t[2], $now - 1800, true, false, 'Match in progress', array( array( 'r' => 50 + $i, 'w' => 1, 'o' => 6.0, 'inning' => $t[1] . ' Inning 1' ) ) );
+}
+$world['matches'] = $m;
+tick();
+ok( 1 === count( posts( 'digest' ) ), 'scoreboard digest queued for 4 live matches' );
+tick();
+ok( 1 === count( posts( 'digest' ) ), 'digest respects the 30 minute gap' );
+
+echo "6. Daily, weekly and monthly jobs\n";
+$world['matches'] = array(
+	match_json( 'd1', 'England', 'Australia', $now + 600, false, false, 'Match not started' ),
+	match_json( 'd2', 'India', 'Pakistan', $now + 1200, false, false, 'Match not started' ),
+);
+tick();
+SF_Engine::daily();
+ok( 1 === count( posts( 'fixtures' ) ), 'fixtures card queued' );
+$world['points'] = array(
+	array( 'teamname' => 'England', 'shortname' => 'ENG', 'matches' => 4, 'wins' => 3, 'loss' => 1, 'nr' => 0, 'points' => 6 ),
+	array( 'teamname' => 'Australia', 'shortname' => 'AUS', 'matches' => 4, 'wins' => 3, 'loss' => 1, 'nr' => 0, 'points' => 6 ),
+	array( 'teamname' => 'India', 'shortname' => 'IND', 'matches' => 4, 'wins' => 2, 'loss' => 2, 'nr' => 0, 'points' => 4 ),
+);
+SF_Engine::weekly();
+ok( 1 === count( posts( 'table' ) ), 'points table queued' );
+$rows = array();
+$teams = array( 'England', 'Australia', 'India', 'New Zealand' );
+for ( $i = 0; $i < 8; $i++ ) {
+	$a = $teams[ $i % 4 ];
+	$b = $teams[ ( $i + 1 ) % 4 ];
+	$rows[] = array( 'team_a' => $a, 'team_b' => $b, 'winner' => $a, 'result_type' => 'win' );
+}
+$rk = SF_Engine::build_ranking( $rows, 'October 2026' );
+ok( is_array( $rk ) && 'October 2026, from matches tracked on this Page' === $rk[0]['meta'], 'monthly ranking built from results' );
+$cards = new SF_Cards();
+$res = $cards->render( 'ranking', $rk[0], sys_get_temp_dir() . '/sf-ranking-test.png' );
+ok( ! is_wp_error( $res ) && is_file( $res ), 'ranking card renders' );
+
+echo "7. Pinned post\n";
+$id = SF_Engine::create_pinned();
+ok( ! is_wp_error( $id ) && SF_Options::get( 'pinned_post_id' ) === $id, 'pinned post created and its id saved' );
+$world['matches'][0]['status'] = 'Match in progress';
+$world['matches'][0]['matchStarted'] = true;
+tick();
+ok( count( $world['fb_edits'] ) >= 1, 'pinned post text was edited after a change' );
+echo '  edit text: ', str_replace( "\n", ' | ', end( $world['fb_edits'] )[1] ), "\n";
+
+echo "8. Quiet hours and the daily limit\n";
+SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '23:59' ) );
+ok( SF_Poster::in_quiet_hours(), 'quiet hours detected' );
+SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '00:00', 'max_posts_day' => 1 ) );
+$id = SF_Poster::queue_text( 'live', 'limit-test', 'Over the limit', array( 'match_id' => 'zz' ) );
+SF_Poster::publish_due();
+$row = SF_DB::get_post( $id );
+ok( 'skipped' === $row['status'], 'a live post over the daily limit is skipped (' . $row['error'] . ')' );
+
+echo "9. Failure handling\n";
+SF_Options::update( array( 'max_posts_day' => 50 ) );
+$GLOBALS['sf_http'] = function () {
+	return sf_json( array( 'error' => array( 'message' => 'Error validating access token', 'code' => 190 ) ), 400 );
+};
+$id = SF_Poster::queue_text( 'result', 'fail-test', 'Will fail' );
+SF_Poster::publish_due();
+$row = SF_DB::get_post( $id );
+ok( 'failed' === $row['status'] && false !== strpos( $row['error'], 'access token' ), 'an expired token marks the post failed (' . $row['error'] . ')' );
+
+echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
+exit( $fail ? 1 : 0 );

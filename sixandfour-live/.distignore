@@ -1,0 +1,5 @@
+.git
+.gitignore
+tools
+node_modules
+*.zip

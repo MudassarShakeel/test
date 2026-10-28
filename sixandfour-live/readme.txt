@@ -1,0 +1,74 @@
+=== Six & Four Live ===
+Contributors: mudassar
+Tags: cricket, facebook, scores, social, auto post
+Requires at least: 6.0
+Tested up to: 6.6
+Requires PHP: 7.4
+Stable tag: 1.0.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Posts cricket scores, toss, results, match summaries, milestones, polls and rankings to your Facebook Page as clean score-card pictures.
+
+== Description ==
+
+Six & Four Live reads match data from CricketData.org and posts finished score-card pictures to your Facebook Page.
+
+* Today's matches, toss, live updates, results and a full match summary with the top scorer and top wicket taker.
+* Milestone alerts for centuries and five-wicket hauls, with tournament records.
+* "Pick a side" posts before a match, weekly points tables, a monthly team ranking, and a pinned "Today's matches" post that the plugin keeps up to date.
+* A shared scoreboard card for busy days, so ten matches in one day do not mean ten separate streams of posts.
+* Manual posts: add your own picture and words, with an optional Six & Four mark, and post now or schedule.
+* Auto-post, or Ask me first so every post waits for your approval.
+
+Cards are drawn with PHP GD using the Inter font. National teams show a country flag. You can upload your own picture for any team.
+
+= Needs =
+
+* A Facebook Page, a Meta developer app, and a Page access token with pages_manage_posts and pages_read_engagement.
+* A CricketData.org API key. The free plan has a small daily limit, and the plugin spaces its checks to stay inside it.
+* PHP 7.4 or newer with the GD extension and FreeType support.
+
+= About the monthly ranking =
+
+The monthly ranking is worked out from the results this plugin saw, with 2 points for a win and 1 for a tie or no result. It is not an official ranking.
+
+= Logos and licences =
+
+Official cricket board and league logos are not included. Flags come from the flag-icons set (MIT). The Inter font is under the SIL Open Font License. Icons are from Phosphor Icons (MIT).
+
+== Installation ==
+
+1. Upload the sixandfour-live folder to /wp-content/plugins/, or upload the zip under Plugins, Add New.
+2. Activate the plugin.
+3. Open Six & Four, then Setup. Add the Page ID, the Page access token and the CricketData.org key, then press Test connection.
+4. Under Tournaments, follow the tournaments you want.
+5. For steady posting, add a real cron job. The Setup screen shows the exact command.
+
+== Getting the Facebook access token ==
+
+1. Go to developers.facebook.com, create an app of the Business type, and add the Facebook Login product.
+2. In the Graph API Explorer, pick your app, choose "Get User Access Token", and tick pages_show_list, pages_manage_posts and pages_read_engagement. Make sure you are an admin of the Page.
+3. Exchange that token for a long-lived user token, then call /me/accounts. The access_token returned for your Page is a Page token that does not expire.
+4. Paste the Page ID and that Page token into Six & Four, then Setup.
+
+While your Meta app is in Development mode you can post to a Page you admin without App Review.
+
+== Frequently Asked Questions ==
+
+= Why is a toss post missing? =
+
+The toss post depends on the match status text from your cricket API. If the status does not mention the toss, there is nothing to post.
+
+= Why is the card called Top performer, not Player of the match? =
+
+The free API data does not include the official award. The plugin picks the standout player from the scorecard using runs plus 25 points per wicket.
+
+= Can I post to Facebook with no approval? =
+
+Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
+
+== Changelog ==
+
+= 1.0.0 =
+* First release.
