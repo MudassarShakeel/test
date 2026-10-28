@@ -6,7 +6,7 @@
 	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif; font-size: 16px; line-height: 1.45; color: var(--fg);
 	-webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; letter-spacing: -.01em;
 }
-.sfc-full { position: fixed; inset: 0; z-index: 999999; background: var(--bg); overflow: hidden; display: flex; flex-direction: column; }
+.sfc-full { position: fixed; inset: 0; width: auto !important; max-width: none !important; margin: 0 !important; z-index: 999999; background: var(--bg); overflow: hidden; display: flex; flex-direction: column; }
 html.sfc-lock, body.sfc-page { margin: 0 !important; }
 body.sfc-page { overflow: hidden; }
 .sfc-noscript { padding: 24px; }
@@ -100,3 +100,24 @@ textarea.sfc-field { min-height: 110px; resize: vertical; }
 @keyframes sfc-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .sfc * { transition: none !important; animation-duration: 2s !important; } }
 @media (min-width: 700px) { .sfc-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* Desktop: the tab bar becomes a left sidebar. Phones keep the bottom bar. */
+@media (min-width: 900px) {
+	.sfc-full { display: grid; grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "top top" "nav main"; }
+	.sfc-top { grid-area: top; padding-left: 24px; padding-right: 24px; }
+	.sfc-main { grid-area: main; padding: 28px 40px 40px; }
+	.sfc-wrap { max-width: 1040px; }
+	.sfc-tabs { grid-area: nav; display: flex; flex-direction: column; gap: 4px; align-content: start; border-top: 0; border-right: 1px solid var(--line); padding: 20px 14px; background: rgba(251, 251, 253, .94); }
+	.sfc-tabs button { flex-direction: row; justify-content: flex-start; gap: 12px; min-height: 48px; padding: 0 16px; font-size: 16px; color: #55555b; text-align: left; }
+	.sfc-tabs button:hover { background: rgba(0, 0, 0, .05); }
+	.sfc-tabs button[aria-current="page"] { background: #fff; color: var(--navy); box-shadow: 0 1px 3px rgba(10, 27, 68, .12); }
+	.sfc-tabs button svg { width: 24px; height: 24px; }
+	.sfc-tabs .badge { position: static; margin-left: auto; }
+	.sfc-btn { width: auto; min-width: 180px; }
+	.sfc-row2 .sfc-btn, .sfc-post .body .sfc-btn { width: 100%; min-width: 0; }
+	.sfc-toast { bottom: 28px; left: calc(50% + 120px); }
+	.sfc-login .sfc-btn { width: 100%; }
+}
+@media (min-width: 1280px) {
+	.sfc-wrap { max-width: 1160px; }
+}
