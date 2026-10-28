@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,16 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.0.1 =
+* Fixed: the five-minute checks were not scheduled until the second page load after activation.
+* Fixed: the match summary could use a stale scorecard fetched while the match was still live.
+* Security: the Facebook token and cricket API key are now encrypted in the database and scrubbed from logs and error messages.
+* Security: uploaded pictures are re-drawn before posting, which strips hidden code and metadata. Files over 8 MB or 5000 pixels are refused.
+* Security: the picture folder now has index.php and .htaccess files that block listings and PHP.
+* Security: posted items can no longer be edited, and requests to Facebook and the cricket API no longer follow redirects.
+* New Security screen with a health check and switches for a log-in limiter, blocking the file editor, turning off XML-RPC, hiding the WordPress version, hiding user names and safety headers.
+* New sf_capability filter to choose who can use the plugin.
 
 = 1.0.0 =
 * First release.

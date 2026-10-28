@@ -21,6 +21,21 @@ class SF_Poster {
 		return array( 'path' => trailingslashit( $u['basedir'] ) . 'sixandfour-live/', 'url' => trailingslashit( $u['baseurl'] ) . 'sixandfour-live/' );
 	}
 
+	/** Stop the picture folder from listing files or running PHP. */
+	public static function protect_dir() {
+		$base = self::dir()['path'];
+		wp_mkdir_p( $base );
+		$files = array(
+			'index.php' => "<?php\n// Silence is golden.\n",
+			'.htaccess' => "Options -Indexes\n<IfModule mod_authz_core.c>\n<FilesMatch \"\\.(php|phtml|php[0-9]?|phar)$\">\nRequire all denied\n</FilesMatch>\n</IfModule>\n<IfModule !mod_authz_core.c>\n<FilesMatch \"\\.(php|phtml|php[0-9]?|phar)$\">\nOrder allow,deny\nDeny from all\n</FilesMatch>\n</IfModule>\n",
+		);
+		foreach ( $files as $name => $body ) {
+			if ( ! is_file( $base . $name ) ) {
+				file_put_contents( $base . $name, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			}
+		}
+	}
+
 	public static function image_path( $row ) {
 		return '' === $row['image'] ? '' : self::dir()['path'] . $row['image'];
 	}
@@ -63,6 +78,7 @@ class SF_Poster {
 		$sub  = gmdate( 'Y-m' ) . '/';
 		$name = $type . '-' . substr( md5( $dedupe ), 0, 12 ) . '.png';
 		$dir  = self::dir()['path'] . 'cards/' . $sub;
+		self::protect_dir();
 		$cards = new SF_Cards();
 		$res   = $cards->render( $type, $data, $dir . $name );
 		if ( is_wp_error( $res ) ) {

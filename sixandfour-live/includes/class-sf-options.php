@@ -53,16 +53,25 @@ class SF_Options {
 			),
 			'questions'         => "Who is your player of the day?\nWhat is your score prediction?\nGreat knock or lucky day? Tell us.\nWho tops the table next week?\nWhich match are you watching?",
 			'noindex'           => 1,
+			'security'          => array(),
 			'team_logos'        => array(), // lower-case team name => attachment id.
 			'pinned_post_id'    => '',
 		);
 	}
+
+	/** Settings that are encrypted before they are saved. */
+	const SECRETS = array( 'fb_token', 'api_key' );
 
 	public static function all() {
 		$o = get_option( self::KEY, array() );
 		$d = self::defaults();
 		$o = is_array( $o ) ? $o : array();
 		$m = array_merge( $d, $o );
+		foreach ( self::SECRETS as $k ) {
+			if ( isset( $m[ $k ] ) ) {
+				$m[ $k ] = SF_Secrets::decrypt( $m[ $k ] );
+			}
+		}
 		foreach ( array( 'jobs', 'milestones' ) as $k ) {
 			$m[ $k ] = array_merge( $d[ $k ], isset( $o[ $k ] ) && is_array( $o[ $k ] ) ? $o[ $k ] : array() );
 		}
@@ -79,7 +88,24 @@ class SF_Options {
 		foreach ( $new as $k => $v ) {
 			$o[ $k ] = $v;
 		}
+		foreach ( self::SECRETS as $k ) {
+			$o[ $k ] = SF_Secrets::encrypt( isset( $o[ $k ] ) ? $o[ $k ] : '' );
+		}
 		update_option( self::KEY, $o, false );
+	}
+
+	/** Encrypt secrets saved as plain text by an earlier version. */
+	public static function protect() {
+		$raw = get_option( self::KEY, array() );
+		if ( ! is_array( $raw ) ) {
+			return;
+		}
+		foreach ( self::SECRETS as $k ) {
+			if ( ! empty( $raw[ $k ] ) && ! SF_Secrets::is_encrypted( $raw[ $k ] ) && SF_Secrets::available() ) {
+				self::update( array() );
+				return;
+			}
+		}
 	}
 
 	public static function job( $name ) {
@@ -111,7 +137,7 @@ class SF_Log {
 	public static function add( $message, $level = 'info' ) {
 		$log   = get_option( self::KEY, array() );
 		$log   = is_array( $log ) ? $log : array();
-		$log[] = array( time(), $level, (string) $message );
+		$log[] = array( time(), $level, SF_Secrets::scrub( $message ) );
 		$log   = array_slice( $log, -80 );
 		update_option( self::KEY, $log, false );
 	}

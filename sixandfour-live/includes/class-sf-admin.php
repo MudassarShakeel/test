@@ -22,6 +22,7 @@ class SF_Admin {
 			'tournaments' => 'Tournaments',
 			'teams'       => 'Teams',
 			'manual'      => 'Manual post',
+			'security'    => 'Security',
 			'setup'       => 'Setup',
 		);
 	}
@@ -29,14 +30,19 @@ class SF_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'manual_post', 'create_pinned', 'sample' ) as $a ) {
+		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'manual_post', 'create_pinned', 'sample', 'save_security' ) as $a ) {
 			add_action( 'admin_post_sf_' . $a, array( __CLASS__, 'do_' . $a ) );
 		}
 	}
 
+	/** Who may use the plugin. Change it with the sf_capability filter. */
+	public static function cap() {
+		return apply_filters( 'sf_capability', 'manage_options' );
+	}
+
 	public static function menu() {
 		$icon = 'data:image/svg+xml;base64,' . base64_encode( '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><g transform="rotate(25 120 120)"><path d="M115 12H125L126 16V74L140 92V214L134 222H106L100 214V92L114 74V16Z" fill="#a7aaad"/></g><path d="M8 190C70 166 170 98 234 18C174 124 76 198 8 190Z" fill="#a7aaad"/></svg>' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
-		add_menu_page( 'Six & Four Live', 'Six & Four', 'manage_options', self::PAGE, array( __CLASS__, 'render' ), $icon, 58 );
+		add_menu_page( 'Six & Four Live', 'Six & Four', self::cap(), self::PAGE, array( __CLASS__, 'render' ), $icon, 58 );
 	}
 
 	public static function assets( $hook ) {
@@ -71,15 +77,15 @@ class SF_Admin {
 	}
 
 	private static function guard( $nonce_action = 'sf_admin' ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( self::cap() ) ) {
 			wp_die( esc_html__( 'You do not have permission to do that.', 'sixandfour-live' ), 403 );
 		}
 		check_admin_referer( $nonce_action );
 	}
 
 	public static function render() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
+		if ( ! current_user_can( self::cap() ) ) {
+			wp_die( esc_html__( 'You do not have permission to see this page.', 'sixandfour-live' ), 403 );
 		}
 		$tab    = self::tab();
 		$notice = get_transient( 'sf_notice_' . get_current_user_id() );
@@ -152,6 +158,7 @@ class SF_Admin {
 		}
 		$new['noindex'] = self::bool( 'noindex' );
 		SF_Options::update( $new );
+		SF_Poster::protect_dir();
 		$msg = 'Settings saved.';
 		if ( '' !== $new['fb_page_id'] && '' !== $new['fb_token'] && ( $new['fb_token'] !== $old['fb_token'] || $new['fb_page_id'] !== $old['fb_page_id'] ) ) {
 			$res = SF_Facebook::verify();
@@ -159,6 +166,17 @@ class SF_Admin {
 			self::done( 'setup', is_wp_error( $res ) ? 'warning' : 'success', $msg );
 		}
 		self::done( 'setup', 'success', $msg );
+	}
+
+	public static function do_save_security() {
+		self::guard();
+		$new = array();
+		foreach ( array_keys( SF_Security::defaults() ) as $k ) {
+			$new[ $k ] = self::bool( 'sec_' . $k );
+		}
+		SF_Options::update( array( 'security' => $new ) );
+		SF_Poster::protect_dir();
+		self::done( 'security', 'success', 'Security settings saved.' );
 	}
 
 	public static function do_test_fb() {
@@ -196,6 +214,9 @@ class SF_Admin {
 		$row = SF_DB::get_post( $id );
 		if ( ! $row ) {
 			self::done( 'queue', 'error', 'That post no longer exists.' );
+		}
+		if ( 'posted' === $row['status'] ) {
+			self::done( 'queue', 'error', 'That post was already sent, so it cannot be changed.' );
 		}
 		if ( 'approve' === $act || 'retry' === $act ) {
 			if ( isset( $_POST['caption'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -331,30 +352,20 @@ class SF_Admin {
 		}
 		$rel = '';
 		if ( '' !== $src ) {
-			$info = @getimagesize( $src ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-			if ( ! $info || ! in_array( $info[2], array( IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP ), true ) ) {
-				self::done( 'manual', 'error', 'That file is not a JPG, PNG or WebP picture.' );
+			if ( filesize( $src ) > 8 * MB_IN_BYTES ) {
+				self::done( 'manual', 'error', 'That picture is larger than 8 MB. Use a smaller file.' );
 			}
-			$sub  = 'manual/' . gmdate( 'Y-m' ) . '/';
-			$name = 'post-' . wp_generate_password( 10, false ) . '.png';
-			$dest = SF_Poster::dir()['path'] . $sub . $name;
-			if ( self::bool( 'watermark' ) ) {
-				$pos = in_array( self::text( 'wm_pos' ), array( 'tl', 'tr', 'bl', 'br' ), true ) ? self::text( 'wm_pos' ) : 'br';
-				$cards = new SF_Cards();
-				$res   = $cards->watermark( $src, $dest, $pos );
-				if ( is_wp_error( $res ) ) {
-					self::done( 'manual', 'error', $res->get_error_message() );
-				}
-			} else {
-				wp_mkdir_p( dirname( $dest ) );
-				$ext  = image_type_to_extension( $info[2], false );
-				$name = 'post-' . wp_generate_password( 10, false ) . '.' . ( 'jpeg' === $ext ? 'jpg' : $ext );
-				$dest = SF_Poster::dir()['path'] . $sub . $name;
-				if ( ! copy( $src, $dest ) ) {
-					self::done( 'manual', 'error', 'Could not save the picture.' );
-				}
+			$sub   = 'manual/' . gmdate( 'Y-m' ) . '/';
+			$name  = 'post-' . wp_generate_password( 12, false ) . '.' . SF_Cards::output_extension( $src );
+			$dest  = SF_Poster::dir()['path'] . $sub . $name;
+			$pos   = in_array( self::text( 'wm_pos' ), array( 'tl', 'tr', 'bl', 'br' ), true ) ? self::text( 'wm_pos' ) : 'br';
+			SF_Poster::protect_dir();
+			$cards = new SF_Cards();
+			$res   = $cards->clean_image( $src, $dest, (bool) self::bool( 'watermark' ), $pos );
+			if ( is_wp_error( $res ) ) {
+				self::done( 'manual', 'error', $res->get_error_message() );
 			}
-			$rel = $sub . basename( $dest );
+			$rel = $sub . $name;
 		}
 		$when = null;
 		if ( 'later' === self::text( 'when' ) && '' !== self::text( 'when_at' ) ) {
@@ -390,7 +401,7 @@ class SF_Admin {
 
 	/** Draw a sample card and send it as an image. */
 	public static function do_sample() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( self::cap() ) ) {
 			wp_die( 'Not allowed', 403 );
 		}
 		check_admin_referer( 'sf_sample' );

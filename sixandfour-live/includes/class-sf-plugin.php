@@ -35,6 +35,8 @@ class SF_Plugin {
 		if ( get_option( 'sf_db_version' ) !== SF_DB::VERSION ) {
 			SF_DB::install();
 		}
+		SF_Options::protect();
+		SF_Security::init();
 		self::schedule();
 
 		if ( is_admin() ) {
@@ -101,7 +103,11 @@ class SF_Plugin {
 	}
 
 	public static function activate() {
+		// The five-minute schedule must exist before the first event is scheduled.
+		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) );
 		SF_DB::install();
+		SF_Poster::protect_dir();
+		SF_Options::protect();
 		self::schedule();
 	}
 

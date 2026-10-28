@@ -17,7 +17,7 @@ class SF_Facebook {
 	const DEFAULT_VERSION = 'v21.0';
 
 	private static function base() {
-		return 'https://graph.facebook.com/' . apply_filters( 'sf_graph_version', self::DEFAULT_VERSION ) . '/';
+		return apply_filters( 'sf_graph_base', 'https://graph.facebook.com/' ) . apply_filters( 'sf_graph_version', self::DEFAULT_VERSION ) . '/';
 	}
 
 	private static function creds() {
@@ -30,7 +30,7 @@ class SF_Facebook {
 
 	private static function handle( $res ) {
 		if ( is_wp_error( $res ) ) {
-			return $res;
+			return new WP_Error( $res->get_error_code(), SF_Secrets::scrub( $res->get_error_message() ) );
 		}
 		$code = wp_remote_retrieve_response_code( $res );
 		$body = json_decode( wp_remote_retrieve_body( $res ), true );
@@ -41,7 +41,7 @@ class SF_Facebook {
 			if ( 190 === $num ) {
 				update_option( 'sf_fb_status', array( 'ok' => false, 'message' => 'The Page access token has expired or was revoked. Create a new one in Setup.', 'at' => time() ), false );
 			}
-			return new WP_Error( 'sf_fb_' . $num, $msg );
+			return new WP_Error( 'sf_fb_' . $num, SF_Secrets::scrub( $msg ) );
 		}
 		if ( $code < 200 || $code >= 300 || ! is_array( $body ) ) {
 			return new WP_Error( 'sf_fb_http', 'Facebook answered with status ' . $code . '.' );
@@ -62,7 +62,7 @@ class SF_Facebook {
 			),
 			self::base() . rawurlencode( $c[0] )
 		);
-		$res = self::handle( wp_remote_get( $url, array( 'timeout' => 20 ) ) );
+		$res = self::handle( wp_remote_get( $url, array( 'timeout' => 20, 'redirection' => 0, 'sslverify' => true ) ) );
 		if ( is_wp_error( $res ) ) {
 			update_option( 'sf_fb_status', array( 'ok' => false, 'message' => $res->get_error_message(), 'at' => time() ), false );
 			return $res;
@@ -91,6 +91,7 @@ class SF_Facebook {
 		if ( ! is_readable( $path ) ) {
 			return new WP_Error( 'sf_fb_file', 'The picture file is missing.' );
 		}
+		$caption  = self::clean( $caption );
 		$boundary = 'sf' . wp_generate_password( 20, false );
 		$fields   = array(
 			'caption'      => $caption,
@@ -109,6 +110,8 @@ class SF_Facebook {
 				self::base() . rawurlencode( $c[0] ) . '/photos',
 				array(
 					'timeout' => 60,
+					'redirection' => 0,
+					'sslverify' => true,
 					'headers' => array( 'Content-Type' => 'multipart/form-data; boundary=' . $boundary ),
 					'body'    => $body,
 				)
@@ -120,9 +123,15 @@ class SF_Facebook {
 		return isset( $res['post_id'] ) ? $res['post_id'] : ( isset( $res['id'] ) ? $res['id'] : '' );
 	}
 
+	/** Facebook allows about 63,000 characters. Stay well under it. */
+	private static function clean( $text ) {
+		return mb_substr( (string) $text, 0, 5000 );
+	}
+
 	/** Post text only. */
 	public static function feed( $message ) {
-		$c = self::creds();
+		$message = self::clean( $message );
+		$c       = self::creds();
 		if ( is_wp_error( $c ) ) {
 			return $c;
 		}
@@ -131,6 +140,8 @@ class SF_Facebook {
 				self::base() . rawurlencode( $c[0] ) . '/feed',
 				array(
 					'timeout' => 30,
+					'redirection' => 0,
+					'sslverify' => true,
 					'body'    => array(
 						'message'      => $message,
 						'access_token' => $c[1],
@@ -143,7 +154,8 @@ class SF_Facebook {
 
 	/** Change the text of a post you already made. */
 	public static function edit( $post_id, $message ) {
-		$c = self::creds();
+		$message = self::clean( $message );
+		$c       = self::creds();
 		if ( is_wp_error( $c ) ) {
 			return $c;
 		}
@@ -152,6 +164,8 @@ class SF_Facebook {
 				self::base() . rawurlencode( $post_id ),
 				array(
 					'timeout' => 30,
+					'redirection' => 0,
+					'sslverify' => true,
 					'body'    => array(
 						'message'      => $message,
 						'access_token' => $c[1],

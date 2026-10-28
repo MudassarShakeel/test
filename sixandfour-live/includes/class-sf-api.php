@@ -14,8 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class SF_API {
 
-	const BASE  = 'https://api.cricapi.com/v1/';
-	const STATS = 'sf_api_stats';
+		const STATS = 'sf_api_stats';
+
+	private static function base() {
+		return apply_filters( 'sf_api_base', 'https://api.cricapi.com/v1/' );
+	}
 
 	/** Send a request. Returns the decoded JSON array or WP_Error. */
 	private static function request( $endpoint, array $params = array() ) {
@@ -27,9 +30,9 @@ class SF_API {
 			return new WP_Error( 'sf_api_budget', 'The daily API limit is nearly used up, so no more calls today.' );
 		}
 		$params['apikey'] = $key;
-		$res              = wp_remote_get( add_query_arg( $params, self::BASE . $endpoint ), array( 'timeout' => 20 ) );
+		$res              = wp_remote_get( add_query_arg( $params, self::base() . $endpoint ), array( 'timeout' => 20, 'redirection' => 2, 'sslverify' => true ) );
 		if ( is_wp_error( $res ) ) {
-			return $res;
+			return new WP_Error( $res->get_error_code(), SF_Secrets::scrub( $res->get_error_message() ) );
 		}
 		$code = wp_remote_retrieve_response_code( $res );
 		$body = json_decode( wp_remote_retrieve_body( $res ), true );
@@ -38,7 +41,7 @@ class SF_API {
 		}
 		self::track( $body );
 		if ( isset( $body['status'] ) && 'success' !== $body['status'] ) {
-			$why = isset( $body['reason'] ) ? $body['reason'] : 'unknown reason';
+			$why = isset( $body['reason'] ) ? SF_Secrets::scrub( $body['reason'] ) : 'unknown reason';
 			return new WP_Error( 'sf_api_fail', 'The cricket API refused the request: ' . $why );
 		}
 		return $body;

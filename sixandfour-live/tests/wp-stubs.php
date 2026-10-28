@@ -12,6 +12,7 @@ define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'ARRAY_A', 'ARRAY_A' );
+define( 'MB_IN_BYTES', 1048576 );
 
 $GLOBALS['sf_opts']       = array();
 $GLOBALS['sf_transients'] = array();
@@ -57,6 +58,18 @@ function set_transient( $k, $v, $ttl ) {
 function delete_transient( $k ) {
 	unset( $GLOBALS['sf_transients'][ $k ] );
 	return true;
+}
+function wp_salt( $scheme = 'auth' ) {
+	return 'test-salt-' . $scheme;
+}
+function is_ssl() {
+	return true;
+}
+function home_url( $p = '' ) {
+	return 'https://c.example.test' . $p;
+}
+function get_user_by( $f, $v ) {
+	return false;
 }
 function apply_filters( $tag, $value ) {
 	return $value;
@@ -167,6 +180,7 @@ class SF_Test_WPDB {
 }
 $GLOBALS['wpdb'] = new SF_Test_WPDB();
 
+require SF_DIR . 'includes/class-sf-secrets.php';
 require SF_DIR . 'includes/class-sf-options.php';
 require SF_DIR . 'includes/class-sf-db.php';
 require SF_DIR . 'includes/class-sf-api.php';
@@ -176,3 +190,4 @@ require SF_DIR . 'includes/class-sf-cards.php';
 require SF_DIR . 'includes/class-sf-samples.php';
 require SF_DIR . 'includes/class-sf-poster.php';
 require SF_DIR . 'includes/class-sf-engine.php';
+require SF_DIR . 'includes/class-sf-security.php';

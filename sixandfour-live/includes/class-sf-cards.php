@@ -714,32 +714,50 @@ class SF_Cards {
 	}
 
 	/**
-	 * Put the Six & Four mark on an image you uploaded. Writes a JPEG or PNG next to $out.
+	 * Re-draw an uploaded picture into a new file, optionally with the Six & Four mark.
+	 * Re-drawing strips anything hidden inside the file, such as scripts or metadata.
+	 * JPEG stays JPEG. Everything else becomes PNG.
 	 *
-	 * @return string|WP_Error
+	 * @return string|WP_Error The path written.
 	 */
-	public function watermark( $src, $out, $position = 'br' ) {
+	public function clean_image( $src, $out, $mark = true, $position = 'br' ) {
+		$info = @getimagesize( $src ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		if ( ! $info || $info[0] < 1 || $info[1] < 1 ) {
+			return new WP_Error( 'sf_img', 'That image could not be read. Use a JPG, PNG or WebP file.' );
+		}
+		if ( $info[0] > 5000 || $info[1] > 5000 ) {
+			return new WP_Error( 'sf_img_big', 'That picture is larger than 5000 pixels on one side. Resize it first.' );
+		}
 		$im = $this->load( $src );
 		if ( ! $im ) {
 			return new WP_Error( 'sf_img', 'That image could not be read. Use a JPG, PNG or WebP file.' );
 		}
-		$w = imagesx( $im );
-		$h = imagesy( $im );
+		$w    = imagesx( $im );
+		$h    = imagesy( $im );
 		$copy = imagecreatetruecolor( $w, $h );
+		imagefill( $copy, 0, 0, imagecolorallocate( $copy, 255, 255, 255 ) );
 		imagecopy( $copy, $im, 0, 0, 0, 0, $w, $h );
-		$logo = @imagecreatefrompng( $this->assets . 'img/logo-white.png' );
-		if ( $logo ) {
-			$size = (int) max( 64, round( min( $w, $h ) * 0.14 ) );
-			$pad  = (int) round( $size * 0.35 );
-			$x    = ( 'bl' === $position || 'tl' === $position ) ? $pad : $w - $size - $pad;
-			$y    = ( 'tl' === $position || 'tr' === $position ) ? $pad : $h - $size - $pad;
-			imagealphablending( $copy, true );
-			imagecopyresampled( $copy, $logo, $x, $y, 0, 0, $size, $size, imagesx( $logo ), imagesy( $logo ) );
-			imagedestroy( $logo );
+		if ( $mark ) {
+			$logo = @imagecreatefrompng( $this->assets . 'img/logo-white.png' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			if ( $logo ) {
+				$size = (int) max( 64, round( min( $w, $h ) * 0.14 ) );
+				$pad  = (int) round( $size * 0.35 );
+				$x    = ( 'bl' === $position || 'tl' === $position ) ? $pad : $w - $size - $pad;
+				$y    = ( 'tl' === $position || 'tr' === $position ) ? $pad : $h - $size - $pad;
+				imagealphablending( $copy, true );
+				imagecopyresampled( $copy, $logo, $x, $y, 0, 0, $size, $size, imagesx( $logo ), imagesy( $logo ) );
+				imagedestroy( $logo );
+			}
 		}
 		wp_mkdir_p( dirname( $out ) );
-		$ok = imagepng( $copy, $out, 6 );
+		$jpeg = IMAGETYPE_JPEG === $info[2];
+		$ok   = $jpeg ? imagejpeg( $copy, $out, 90 ) : imagepng( $copy, $out, 6 );
 		imagedestroy( $copy );
 		return $ok ? $out : new WP_Error( 'sf_write', 'Could not save the image.' );
+	}
+
+	public static function output_extension( $src ) {
+		$info = @getimagesize( $src ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		return ( $info && IMAGETYPE_JPEG === $info[2] ) ? 'jpg' : 'png';
 	}
 }
