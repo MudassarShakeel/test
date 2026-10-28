@@ -34,6 +34,10 @@ class SF_Cards {
 	private $assets;
 	private $colors = array();
 	private $cache  = array();
+	private $link   = '';
+
+	/** Header design: a (banner), b (floating) or c (banner with a hanging tab). */
+	public $header = 'a';
 
 	public function __construct( $assets_dir = null ) {
 		$this->assets = $assets_dir ? rtrim( $assets_dir, '/' ) . '/' : SF_DIR . 'assets/';
@@ -72,6 +76,13 @@ class SF_Cards {
 		$this->H       = $h;
 		$this->u       = $w / 100;
 		$this->colors  = array();
+		// The Page link goes under the name in the header. Use the saved setting, or the one on the card.
+		$this->link = class_exists( 'SF_Options' ) ? (string) SF_Options::get( 'fb_handle', '' ) : 'facebook.com/cricketsportinfo';
+		foreach ( array( 'foot_left', 'foot_right' ) as $k ) {
+			if ( '' === $this->link && ! empty( $d[ $k ] ) && false !== stripos( $d[ $k ], 'facebook.com' ) ) {
+				$this->link = $d[ $k ];
+			}
+		}
 		$this->im      = imagecreatetruecolor( $w * $this->S, $h * $this->S );
 		imageantialias( $this->im, true );
 		imagefill( $this->im, 0, 0, $this->col( self::WHITE ) );
@@ -340,19 +351,64 @@ class SF_Cards {
 	/* Shared card parts                                                   */
 	/* ------------------------------------------------------------------ */
 
-	private function head( $pill, $live = false ) {
-		$this->paste( $this->assets . 'img/logo-navy.png', 3.4, 2.9, 6.6, 6.6 );
-		$this->text( 'Cricket Sport', 11.4, $this->cb( 6.1, 2.5 ), 2.5, 800, self::NAVY );
+	/** The coloured pill at the right of the header. $cy is its vertical centre. */
+	private function pill( $pill, $live, $cy, $right = 96 ) {
 		$pw = $this->tw( $pill, 1.8, 800 ) + 3.8 + ( $live ? 2.0 : 0 );
-		$px = 96 - $pw;
-		$this->rrect( $px, 4.3, $pw, 3.6, 1.8, self::MINT );
+		$px = $right - $pw;
+		$this->rrect( $px, $cy - 1.8, $pw, 3.6, 1.8, self::MINT );
 		$tx = $px + 1.9;
 		if ( $live ) {
-			$this->rrect( $tx, 5.5, 1.1, 1.1, 0.55, self::NAVY );
+			$this->rrect( $tx, $cy - 0.55, 1.1, 1.1, 0.55, self::NAVY );
 			$tx += 2.0;
 		}
-		$this->text( $pill, $tx, $this->cb( 6.1, 1.8 ), 1.8, 800, self::NAVY );
-		return 8.8;
+		$this->text( $pill, $tx, $this->cb( $cy, 1.8 ), 1.8, 800, self::NAVY );
+	}
+
+	/** Header on a dark band with the logo, the name and the Page link under it. Returns where the content starts. */
+	private function head( $pill, $live = false ) {
+		$link = $this->link;
+		if ( 'b' === $this->header ) {
+			// Floating: a rounded dark card inset from the edges, the logo on a light tile.
+			$this->rrect( 3, 2.6, 94, 9.8, 2.4, self::NAVY );
+			$this->rrect( 4.4, 4.0, 7.0, 7.0, 1.8, self::WHITE );
+			$this->paste( $this->assets . 'img/logo-navy.png', 4.7, 4.3, 6.4, 6.4 );
+			$this->text( 'Cricket Sport', 13, $this->cb( 6.3, 2.7 ), 2.7, 800, self::WHITE );
+			if ( '' !== $link ) {
+				$lw = $this->tw( $link, 1.45, 600 ) + 2.4;
+				$this->rrect( 13, 8.3, $lw, 2.5, 1.25, '16306F' );
+				$this->text( $link, 14.2, $this->cb( 9.55, 1.45 ), 1.45, 600, '9EEFFF' );
+			}
+			$this->pill( $pill, $live, 7.5, 94.6 );
+			return 12.4;
+		}
+		if ( 'c' === $this->header ) {
+			// Banner with a faint arc and a tab that hangs over the bottom edge.
+			$h   = 9.8;
+			$this->rrect( 0, 0, 100, $h, 0, self::NAVY );
+			$arc = $this->col( '15326F' );
+			for ( $t = 0; $t <= 1.0; $t += 0.004 ) {
+				$x = 60 + 42 * $t;
+				$y = ( $h - 1.6 ) - ( $h - 4.2 ) * pow( $t, 1.7 );
+				imagefilledellipse( $this->im, $this->d( $x ), $this->d( $y ), $this->d( 1.5 ), $this->d( 1.5 ), $arc );
+			}
+			$this->paste( $this->assets . 'img/logo-white.png', 3.4, 1.4, 7, 7 );
+			$this->text( 'Cricket Sport', 11.8, $this->cb( 4.3, 2.7 ), 2.7, 800, self::WHITE );
+			if ( '' !== $link ) {
+				$this->text( $link, 11.8, $this->cb( 7.2, 1.5 ), 1.5, 600, '9FB4E6' );
+			}
+			$this->pill( $pill, $live, $h, 96 );
+			return $h + 1.8;
+		}
+		// A: a full-width dark band.
+		$h = 11.4;
+		$this->rrect( 0, 0, 100, $h, 0, self::NAVY );
+		$this->paste( $this->assets . 'img/logo-white.png', 3.4, 2.2, 7, 7 );
+		$this->text( 'Cricket Sport', 11.8, $this->cb( 5.0, 2.7 ), 2.7, 800, self::WHITE );
+		if ( '' !== $link ) {
+			$this->text( $link, 11.8, $this->cb( 8.0, 1.5 ), 1.5, 600, self::MINT );
+		}
+		$this->pill( $pill, $live, $h / 2, 96 );
+		return $h;
 	}
 
 	/** Draw a line of segments [text, bold] and return the baseline-free height in u. */
@@ -384,6 +440,10 @@ class SF_Cards {
 	private function foot( $d ) {
 		$left  = ! empty( $d['foot_left'] ) ? $d['foot_left'] : '';
 		$right = ! empty( $d['foot_right'] ) ? $d['foot_right'] : '';
+		if ( '' !== $this->link ) { // The Page link is in the header.
+			$left  = $left === $this->link ? '' : $left;
+			$right = $right === $this->link ? '' : $right;
+		}
 		$b     = $this->foot_top() + $this->bl( 1.6 );
 		$this->text( $left, 4, $b, 1.6, 600, self::MUTED );
 		$this->text( $right, 96, $b, 1.6, 600, self::MUTED, 'r' );
