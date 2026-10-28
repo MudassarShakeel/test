@@ -81,6 +81,18 @@ class SF_Engine {
 		return trim( $status );
 	}
 
+	/** A team's score as text. A Test shows every innings, such as 312 & 145/3. */
+	private static function score_text( $m, $idx, $s ) {
+		if ( ! empty( $m['is_test'] ) && ! empty( $m['team_inns'][ $idx ] ) ) {
+			$parts = array();
+			foreach ( $m['team_inns'][ $idx ] as $i ) {
+				$parts[] = $i['w'] >= 10 ? (string) $i['r'] : $i['r'] . '/' . $i['w'];
+			}
+			return implode( ' & ', $parts );
+		}
+		return $s['r'] . '/' . $s['w'];
+	}
+
 	/** Team rows in batting order with scores, for the score cards. */
 	private static function team_rows( $m, $scores = true ) {
 		$rows = array();
@@ -88,7 +100,7 @@ class SF_Engine {
 			$t   = $m['teams'][ $idx ];
 			$r   = SF_Teams::resolve( $t['name'], $t['short'] );
 			$s   = isset( $m['scores'][ $idx ] ) ? $m['scores'][ $idx ] : null;
-			$r['score'] = ( $scores && $s ) ? ( $s['r'] . '/' . $s['w'] ) : '';
+			$r['score'] = ( $scores && $s ) ? self::score_text( $m, $idx, $s ) : '';
 			$r['ov']    = ( $scores && $s ) ? self::overs( $s['o'] ) . ' ov' : '';
 			$rows[]     = $r;
 		}
@@ -127,8 +139,11 @@ class SF_Engine {
 	/** Status bar segments for a finished match. */
 	private static function result_status( $m ) {
 		$s = self::short_result( $m['status'] );
-		if ( preg_match( '/^(.+?) won by (\d+) (runs?|wickets?)(.*)$/i', $s, $x ) ) {
-			return array( array( $x[1], true ), array( ' won by ', false ), array( $x[2] . ' ' . $x[3], true ), array( $x[4], false ) );
+		if ( preg_match( '/^(.+?) won by (an innings and )?(\d+) (runs?|wickets?)(.*)$/i', $s, $x ) ) {
+			return array( array( $x[1], true ), array( ' won by ', false ), array( $x[2] . $x[3] . ' ' . $x[4], true ), array( $x[5], false ) );
+		}
+		if ( preg_match( '/\b(drawn?|tied?)\b/i', $s ) ) {
+			return array( array( $s, true ) );
 		}
 		return array( array( $s, false ) );
 	}
@@ -285,7 +300,14 @@ class SF_Engine {
 			if ( $new ) {
 				$st['w'] = $cur_w;
 			}
-			if ( $is_card_match && SF_Options::job( 'live' ) ) {
+			if ( ! empty( $m['is_test'] ) ) {
+				// A Test lasts up to five days. One post at stumps each day, not a post for every wicket.
+				$day = SF_API::stumps_day( $m );
+				if ( $day && SF_Options::job( 'stumps' ) && empty( $st['days'][ $day ] ) ) {
+					self::post_stumps( $m, $day );
+					$st['days'][ $day ] = 1;
+				}
+			} elseif ( $is_card_match && SF_Options::job( 'live' ) ) {
 				if ( count( $m['innings'] ) > $st['inn'] && $st['inn'] > 0 ) {
 					self::post_innings_break( $m, $st['inn'] );
 				} elseif ( SF_Options::job( 'wicket' ) && count( $m['innings'] ) === $st['inn'] && $cur_w > $st['w'] ) {
@@ -328,7 +350,7 @@ class SF_Engine {
 		$d             = self::card_base( $m );
 		$d['teams']    = array( SF_Teams::resolve( $m['teams'][0]['name'], $m['teams'][0]['short'] ), SF_Teams::resolve( $m['teams'][1]['name'], $m['teams'][1]['short'] ) );
 		$d['status']   = array( array( $toss[0], true ), array( ' won the toss and chose to ' . ( 'bat' === $toss[1] ? 'bat' : 'bowl' ) . ' first', false ) );
-		$cap           = self::caption( 'TOSS | ' . trim( self::tour( $m ) . ': ' . $toss[0] . ' have won the toss and chosen to ' . $toss[1] . ' first.', ': ' ), array(), null );
+		$cap           = self::caption( ( ! empty( $m['is_test'] ) ? 'TEST MATCH, DAY 1 | ' : 'TOSS | ' ) . trim( self::tour( $m ) . ': ' . $toss[0] . ' have won the toss and chosen to ' . $toss[1] . ' first.', ': ' ), array(), null );
 		SF_Poster::queue( 'toss', 'toss:' . $m['id'], $d, $cap, array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] ) );
 	}
 
@@ -365,12 +387,26 @@ class SF_Engine {
 		SF_Poster::queue( 'live', 'inn:' . $m['id'] . ':' . $inn, $d, $cap, array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] ) );
 	}
 
+	/** The end-of-day summary of a Test match. */
+	private static function post_stumps( $m, $day ) {
+		$d           = self::card_base( $m );
+		$d['pill']   = 'STUMPS DAY ' . $day;
+		$rest        = trim( preg_replace( '/^.*?(stumps|close of play|end of day)\s*[-:,]?\s*/i', '', $m['status'] ) );
+		if ( preg_match( '/^(.+?)\s+(lead|trail)\s+by\s+(\d+ runs?)(.*)$/i', $rest, $x ) ) {
+			$d['status'] = array( array( $x[1], true ), array( ' ' . strtolower( $x[2] ) . ' by ', false ), array( $x[3], true ), array( $x[4], false ) );
+		} else {
+			$d['status'] = array( array( '' !== $rest ? $rest : 'Stumps on day ' . $day, false ) );
+		}
+		$cap = self::caption( 'STUMPS, DAY ' . $day . ' | ' . self::headline_score( $m ), array( '' !== $rest ? ucfirst( $rest ) . '.' : '' ), 'stumps:' . $m['id'] . ':' . $day );
+		SF_Poster::queue( 'stumps', 'stumps:' . $m['id'] . ':' . $day, $d, $cap, array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] ) );
+	}
+
 	private static function headline_score( $m ) {
 		$parts = array();
 		foreach ( $m['order'] as $idx ) {
 			if ( isset( $m['scores'][ $idx ] ) ) {
 				$s       = $m['scores'][ $idx ];
-				$parts[] = $m['teams'][ $idx ]['name'] . ' ' . $s['r'] . '/' . $s['w'] . ' (' . self::overs( $s['o'] ) . ')';
+				$parts[] = $m['teams'][ $idx ]['name'] . ' ' . self::score_text( $m, $idx, $s ) . ( empty( $m['is_test'] ) ? ' (' . self::overs( $s['o'] ) . ')' : '' );
 			}
 		}
 		$t = self::tour( $m );

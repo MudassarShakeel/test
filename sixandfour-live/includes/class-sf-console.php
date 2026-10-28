@@ -111,6 +111,7 @@ class SF_Console {
 			'toss'       => 'Toss',
 			'live'       => 'Live updates',
 			'wicket'     => 'Every wicket',
+			'stumps'     => 'Test match day summaries',
 			'result'     => 'Result',
 			'summary'    => 'Match summary',
 			'milestones' => 'Milestone alerts',

@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,11 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.4.0 =
+* New card header: a dark rounded card with the logo, the name and your Page link under it, on every card.
+* New: Test matches. A summary card at stumps each day (for example "Stumps Day 2"), the toss as the match start, and the final result, including "won by an innings and 25 runs" and draws. Tests show every innings (312 & 145/3) and do not post a card for every wicket.
+* New: Players screen. Add your own photo for a player and it shows on that player's century, five-wicket, top performer and summary cards. The plugin never downloads player photos.
 
 = 1.3.0 =
 * New: the brand is now Cricket Sport (facebook.com/cricketsportinfo). New logo, cyan accent colour, card header and watermark.

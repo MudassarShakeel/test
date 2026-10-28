@@ -36,16 +36,13 @@ class SF_Cards {
 	private $cache  = array();
 	private $link   = '';
 
-	/** Header design: a (banner), b (floating) or c (banner with a hanging tab). */
-	public $header = 'a';
-
 	public function __construct( $assets_dir = null ) {
 		$this->assets = $assets_dir ? rtrim( $assets_dir, '/' ) . '/' : SF_DIR . 'assets/';
 	}
 
 	/** Card pixel sizes by type. */
 	public static function size( $type ) {
-		$land = array( 'live', 'toss', 'result', 'fixtures' );
+		$land = array( 'live', 'toss', 'result', 'stumps', 'fixtures' );
 		$sq   = array( 'century', 'fivefor', 'potm', 'poll' );
 		if ( in_array( $type, $land, true ) ) {
 			return array( 1200, 630 );
@@ -91,6 +88,7 @@ class SF_Cards {
 			case 'live':
 			case 'toss':
 			case 'result':
+			case 'stumps':
 				$this->card_scoreboard( $type, $d );
 				break;
 			case 'summary':
@@ -347,6 +345,60 @@ class SF_Cards {
 		$this->text( $ini, $x + $w / 2, $this->cb( $y + $h / 2, $sz ), $sz, 800, self::MINT, 'c' );
 	}
 
+	/** A player's photo, cropped to fill a rounded box. Returns false when there is no usable photo. */
+	private function player_pic( $path, $x, $y, $w, $h, $r ) {
+		$src = $path ? $this->load( $path ) : false;
+		if ( ! $src ) {
+			return false;
+		}
+		$tw = $this->d( $w );
+		$th = $this->d( $h );
+		$sw = imagesx( $src );
+		$sh = imagesy( $src );
+		// Cover crop. Faces sit in the upper part of a portrait, so the crop leans up.
+		$ratio = $tw / $th;
+		if ( $sw / $sh > $ratio ) {
+			$cw = (int) round( $sh * $ratio );
+			$ch = $sh;
+			$cx = (int) round( ( $sw - $cw ) / 2 );
+			$cy = 0;
+		} else {
+			$cw = $sw;
+			$ch = (int) round( $sw / $ratio );
+			$cx = 0;
+			$cy = (int) round( ( $sh - $ch ) * 0.2 );
+		}
+		$tmp = imagecreatetruecolor( $tw, $th );
+		imagealphablending( $tmp, false );
+		imagesavealpha( $tmp, true );
+		$clear = imagecolorallocatealpha( $tmp, 0, 0, 0, 127 );
+		imagefill( $tmp, 0, 0, $clear );
+		imagecopyresampled( $tmp, $src, 0, 0, $cx, $cy, $tw, $th, $cw, $ch );
+		$R = min( $this->d( $r ), (int) ( min( $tw, $th ) / 2 ) );
+		for ( $i = 0; $i < $R; $i++ ) {
+			for ( $j = 0; $j < $R; $j++ ) {
+				if ( ( $R - $i - 0.5 ) ** 2 + ( $R - $j - 0.5 ) ** 2 > $R * $R ) {
+					imagesetpixel( $tmp, $i, $j, $clear );
+					imagesetpixel( $tmp, $tw - 1 - $i, $j, $clear );
+					imagesetpixel( $tmp, $i, $th - 1 - $j, $clear );
+					imagesetpixel( $tmp, $tw - 1 - $i, $th - 1 - $j, $clear );
+				}
+			}
+		}
+		imagealphablending( $this->im, true );
+		imagecopy( $this->im, $tmp, $this->d( $x ), $this->d( $y ), 0, 0, $tw, $th );
+		imagedestroy( $tmp );
+		return true;
+	}
+
+	/** The saved photo of a player, as a file path, or null. */
+	private function photo_for( $name, $given = null ) {
+		if ( $given ) {
+			return $given;
+		}
+		return class_exists( 'SF_Players' ) ? SF_Players::photo( $name ) : null;
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* Shared card parts                                                   */
 	/* ------------------------------------------------------------------ */
@@ -364,51 +416,19 @@ class SF_Cards {
 		$this->text( $pill, $tx, $this->cb( $cy, 1.8 ), 1.8, 800, self::NAVY );
 	}
 
-	/** Header on a dark band with the logo, the name and the Page link under it. Returns where the content starts. */
+	/** Header: a rounded dark card with the logo on a light tile, the name, and the Page link under it. Returns where the content starts. */
 	private function head( $pill, $live = false ) {
-		$link = $this->link;
-		if ( 'b' === $this->header ) {
-			// Floating: a rounded dark card inset from the edges, the logo on a light tile.
-			$this->rrect( 3, 2.6, 94, 9.8, 2.4, self::NAVY );
-			$this->rrect( 4.4, 4.0, 7.0, 7.0, 1.8, self::WHITE );
-			$this->paste( $this->assets . 'img/logo-navy.png', 4.7, 4.3, 6.4, 6.4 );
-			$this->text( 'Cricket Sport', 13, $this->cb( 6.3, 2.7 ), 2.7, 800, self::WHITE );
-			if ( '' !== $link ) {
-				$lw = $this->tw( $link, 1.45, 600 ) + 2.4;
-				$this->rrect( 13, 8.3, $lw, 2.5, 1.25, '16306F' );
-				$this->text( $link, 14.2, $this->cb( 9.55, 1.45 ), 1.45, 600, '9EEFFF' );
-			}
-			$this->pill( $pill, $live, 7.5, 94.6 );
-			return 12.4;
+		$this->rrect( 3, 2.6, 94, 9.8, 2.4, self::NAVY );
+		$this->rrect( 4.4, 4.0, 7.0, 7.0, 1.8, self::WHITE );
+		$this->paste( $this->assets . 'img/logo-navy.png', 4.7, 4.3, 6.4, 6.4 );
+		$this->text( 'Cricket Sport', 13, $this->cb( 6.3, 2.7 ), 2.7, 800, self::WHITE );
+		if ( '' !== $this->link ) {
+			$lw = $this->tw( $this->link, 1.45, 600 ) + 2.4;
+			$this->rrect( 13, 8.3, $lw, 2.5, 1.25, '16306F' );
+			$this->text( $this->link, 14.2, $this->cb( 9.55, 1.45 ), 1.45, 600, '9EEFFF' );
 		}
-		if ( 'c' === $this->header ) {
-			// Banner with a faint arc and a tab that hangs over the bottom edge.
-			$h   = 9.8;
-			$this->rrect( 0, 0, 100, $h, 0, self::NAVY );
-			$arc = $this->col( '15326F' );
-			for ( $t = 0; $t <= 1.0; $t += 0.004 ) {
-				$x = 60 + 42 * $t;
-				$y = ( $h - 1.6 ) - ( $h - 4.2 ) * pow( $t, 1.7 );
-				imagefilledellipse( $this->im, $this->d( $x ), $this->d( $y ), $this->d( 1.5 ), $this->d( 1.5 ), $arc );
-			}
-			$this->paste( $this->assets . 'img/logo-white.png', 3.4, 1.4, 7, 7 );
-			$this->text( 'Cricket Sport', 11.8, $this->cb( 4.3, 2.7 ), 2.7, 800, self::WHITE );
-			if ( '' !== $link ) {
-				$this->text( $link, 11.8, $this->cb( 7.2, 1.5 ), 1.5, 600, '9FB4E6' );
-			}
-			$this->pill( $pill, $live, $h, 96 );
-			return $h + 1.8;
-		}
-		// A: a full-width dark band.
-		$h = 11.4;
-		$this->rrect( 0, 0, 100, $h, 0, self::NAVY );
-		$this->paste( $this->assets . 'img/logo-white.png', 3.4, 2.2, 7, 7 );
-		$this->text( 'Cricket Sport', 11.8, $this->cb( 5.0, 2.7 ), 2.7, 800, self::WHITE );
-		if ( '' !== $link ) {
-			$this->text( $link, 11.8, $this->cb( 8.0, 1.5 ), 1.5, 600, self::MINT );
-		}
-		$this->pill( $pill, $live, $h / 2, 96 );
-		return $h;
+		$this->pill( $pill, $live, 7.5, 94.6 );
+		return 12.4;
 	}
 
 	/** Draw a line of segments [text, bold] and return the baseline-free height in u. */
@@ -504,8 +524,9 @@ class SF_Cards {
 	}
 
 	private function card_scoreboard( $type, $d ) {
-		$pill = array( 'live' => 'LIVE', 'toss' => 'TOSS', 'result' => 'RESULT' );
-		$y    = $this->head( $pill[ $type ], 'live' === $type );
+		$pill = array( 'live' => 'LIVE', 'toss' => 'TOSS', 'result' => 'RESULT', 'stumps' => 'STUMPS' );
+		$text = ! empty( $d['pill'] ) ? $d['pill'] : $pill[ $type ];
+		$y    = $this->head( $text, 'live' === $type && empty( $d['pill'] ) );
 		$y   += 2.2;
 		$y   += $this->meta_line( $this->meta_segs( $d ), $y );
 		$y   += 1.6;
@@ -540,10 +561,12 @@ class SF_Cards {
 				$this->text( 'Not available', $x + 2.4, $y + 8, 2.4, 600, self::MUTED );
 				continue;
 			}
-			$yy = $y + 2.2;
+			$yy    = $y + 2.2;
+			$pic   = $this->player_pic( $this->photo_for( $p['name'], isset( $p['photo'] ) ? $p['photo'] : null ), $x + $pw - 2.4 - 9, $y + 2.2, 9, 9, 2.2 );
+			$namew = $pw - 4.8 - ( $pic ? 10.4 : 0 );
 			$this->text( $label, $x + 2.4, $yy + $this->bl( 2.0 ), 2.0, 700, self::MUTED );
 			$yy += 2.0 * 1.47 + 0.6;
-			$this->text( $this->fit( $p['name'], $pw - 4.8, 3.2, 800 ), $x + 2.4, $yy + $this->bl( 3.2, 1.3 ), 3.2, 800, self::NAVY, 'l', -0.02 );
+			$this->text( $this->fit( $p['name'], $namew, 3.2, 800 ), $x + 2.4, $yy + $this->bl( 3.2, 1.3 ), 3.2, 800, self::NAVY, 'l', -0.02 );
 			$yy += 3.2 * 1.3 + 0.5;
 			$fx  = $x + 2.4;
 			$this->small_flag( $p['team'], $fx, $yy + 0.3 );
@@ -675,8 +698,10 @@ class SF_Cards {
 		$y   += 2.6;
 		$y   += $this->meta_line( $this->meta_segs( $d ), $y, 2.2 );
 		$y   += 3;
-		$this->rrect( 4, $y, 19, 19, 4, self::NAVY );
-		$this->text( $d['mono'], 4 + 9.5, $this->cb( $y + 9.5, 7.4 ), 7.4, 800, self::MINT, 'c', -0.02 );
+		if ( ! $this->player_pic( $this->photo_for( $d['name'], isset( $d['photo'] ) ? $d['photo'] : null ), 4, $y, 19, 19, 4 ) ) {
+			$this->rrect( 4, $y, 19, 19, 4, self::NAVY );
+			$this->text( $d['mono'], 4 + 9.5, $this->cb( $y + 9.5, 7.4 ), 7.4, 800, self::MINT, 'c', -0.02 );
+		}
 		$bx  = 26;
 		$top = $y + ( 19 - 11.5 ) / 2;
 		$this->text( $this->fit( $d['name'], 70, 6.2, 800 ), $bx, $top + $this->bl( 6.2, 1.05 ), 6.2, 800, self::NAVY, 'l', -0.02 );

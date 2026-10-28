@@ -62,7 +62,7 @@ async function login(page, user, pass) {
   console.log('4. Administrator');
   await login(page, 'admin', 'Admin#Pass12345');
   ok(/wp-admin/.test(page.url()), 'administrator signs in');
-  const tabs = ['overview', 'queue', 'cards', 'engage', 'tournaments', 'teams', 'manual', 'security', 'setup'];
+  const tabs = ['overview', 'queue', 'cards', 'engage', 'tournaments', 'teams', 'players', 'manual', 'security', 'setup'];
   for (const t of tabs) {
     const resp = await page.goto(BASE + '/wp-admin/admin.php?page=sixandfour-live&tab=' + t);
     const body = await page.content();

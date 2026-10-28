@@ -284,5 +284,69 @@ tick();
 $wait = (int) get_option( 'sf_next_check' ) - time();
 ok( $wait > 80 * 60, 'with no match in sight the plugin waits 90 minutes (' . round( $wait / 60 ) . ' min)' );
 
+echo "12. Test matches\n";
+SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'jobs' => array_merge( SF_Options::get( 'jobs' ), array( 'stumps' => 1 ) ) ) );
+update_option( 'sf_state', array() );
+$before_live = count( posts( 'live' ) );
+$test = match_json( 'tst1', 'England', 'Australia', time() - 2 * DAY_IN_SECONDS, true, false, 'Day 2: Stumps - England lead by 68 runs',
+	array(
+		array( 'r' => 312, 'w' => 10, 'o' => 96.2, 'inning' => 'Australia Inning 1' ),
+		array( 'r' => 244, 'w' => 10, 'o' => 71.0, 'inning' => 'England Inning 1' ),
+		array( 'r' => 136, 'w' => 2, 'o' => 38.0, 'inning' => 'England Inning 2' ),
+	), 's1', 'test' );
+$world['matches'] = array( $test );
+tick();
+$st = posts( 'stumps' );
+ok( 1 === count( $st ), 'a Test at stumps queues one day summary (' . count( $st ) . ')' );
+ok( $st && false !== strpos( $st[0]['caption'], 'STUMPS, DAY 2' ), 'its caption names the day: ' . ( $st ? strtok( $st[0]['caption'], "\n" ) : '' ) );
+ok( $st && false !== strpos( $st[0]['caption'], 'England 244 & 136/2' ), 'the caption shows both innings of each side' );
+tick();
+ok( 1 === count( posts( 'stumps' ) ), 'the same day is not posted twice' );
+$world['matches'][0]['score'][] = array( 'r' => 150, 'w' => 3, 'o' => 40.0, 'inning' => 'England Inning 2' );
+unset( $world['matches'][0]['score'][2] );
+$world['matches'][0]['score'] = array_values( $world['matches'][0]['score'] );
+tick();
+ok( count( posts( 'live' ) ) === $before_live, 'no wicket or innings-break cards for a Test' );
+$world['matches'][0]['status'] = 'Day 3: Stumps - England lead by 120 runs';
+tick();
+ok( 2 === count( posts( 'stumps' ) ), 'day 3 gets its own summary' );
+$world['matches'][0]['status'] = 'England won by an innings and 25 runs';
+$world['matches'][0]['matchEnded'] = true;
+tick();
+$res = posts( 'result' );
+$last = end( $res );
+ok( $last && false !== strpos( $last['caption'], 'won by an innings and 25 runs' ), 'a Test result keeps "an innings and 25 runs"' );
+$rm = new ReflectionMethod( 'SF_Engine', 'result_status' );
+$rm->setAccessible( true );
+$rs = $rm->invoke( null, array( 'status' => 'England won by an innings and 25 runs' ) );
+ok( 'England' === $rs[0][0] && 'an innings and 25 runs' === trim( $rs[2][0] ), 'the result bar highlights the margin' );
+list( $w, $type ) = SF_API::parse_result( array( 'status' => 'Match drawn', 'teams' => array( array( 'name' => 'England' ), array( 'name' => 'Australia' ) ) ) );
+ok( 'draw' === $type && '' === $w, 'a drawn Test is recorded as a draw' );
+$draw = SF_API::normalize_match( match_json( 'tst2', 'India', 'Australia', time() - 5 * DAY_IN_SECONDS, true, true, 'Match drawn', array(), 's1', 'test' ) );
+ok( $draw['is_test'], 'matchType test is recognised' );
+
+echo "13. Player photos\n";
+$img = sys_get_temp_dir() . '/sf-player-test.jpg';
+$g   = imagecreatetruecolor( 400, 600 );
+imagefill( $g, 0, 0, imagecolorallocate( $g, 200, 40, 40 ) );
+imagejpeg( $g, $img );
+$GLOBALS['sf_attached'] = array( 77 => $img );
+SF_Options::update( array( 'player_photos' => array( 'oliver hartley' => 77 ) ) );
+ok( $img === SF_Players::photo( 'Oliver Hartley' ), 'a saved photo is found by name, ignoring case' );
+ok( null === SF_Players::photo( 'Someone Else' ), 'a player without a photo gets none' );
+ok( in_array( 'Someone Else', SF_Players::known(), true ), 'looked-up names are remembered for the Players screen' );
+$cards = new SF_Cards();
+$d     = SF_Samples::all();
+$out1  = sys_get_temp_dir() . '/sf-photo-card.png';
+$cards->render( 'potm', $d['potm'], $out1 );
+$px = imagecreatefrompng( $out1 );
+$c  = imagecolorat( $px, 160, 270 );
+ok( ( ( $c >> 16 ) & 255 ) > 150 && ( ( $c >> 8 ) & 255 ) < 100, 'the photo is drawn on the card in place of the initials tile' );
+SF_Options::update( array( 'player_photos' => array() ) );
+$cards->render( 'potm', $d['potm'], $out1 );
+$px = imagecreatefrompng( $out1 );
+$c  = imagecolorat( $px, 160, 270 );
+ok( ( ( $c >> 16 ) & 255 ) < 60, 'without a photo the navy initials tile is drawn' );
+
 echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
 exit( $fail ? 1 : 0 );

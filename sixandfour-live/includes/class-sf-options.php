@@ -50,6 +50,7 @@ class SF_Options {
 				'ranking'  => 1,
 				'pinned'   => 1,
 				'milestones' => 1,
+				'stumps'   => 1,
 			),
 			'milestones'        => array(
 				'century' => 1,
@@ -65,6 +66,7 @@ class SF_Options {
 			'home_page'         => 0,
 			'security'          => array(),
 			'team_logos'        => array(), // lower-case team name => attachment id.
+			'player_photos'     => array(), // lower-case player name => attachment id.
 			'pinned_post_id'    => '',
 		);
 	}

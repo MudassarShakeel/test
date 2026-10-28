@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $o = SF_Options::all();
 $jobs = array(
 	'milestones' => array( 'Milestone alerts', 'Centuries and five-wicket hauls, with a question for fans' ),
+	'stumps'     => array( 'Test match day summaries', 'A post at stumps each day of a Test, then the final result' ),
 	'poll'       => array( 'Pick a side', 'Before a match, fans vote with a reaction and comment their score' ),
 	'table'      => array( 'Weekly points table', 'Every Monday at 09:00 for the tournaments you follow' ),
 	'ranking'    => array( 'Monthly team ranking', 'On the 1st at 09:00, worked out from the matches this plugin covered' ),

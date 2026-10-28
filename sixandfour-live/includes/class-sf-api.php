@@ -321,6 +321,15 @@ class SF_API {
 				$order[] = $idx;
 			}
 		}
+		// Every innings of each team, in order. A Test has up to two per side.
+		$team_inns = array( 0 => array(), 1 => array() );
+		foreach ( $innings as $i ) {
+			foreach ( $teams as $idx => $t ) {
+				if ( '' !== $t['name'] && 0 === stripos( $i['inning'], $t['name'] ) ) {
+					$team_inns[ $idx ][] = $i;
+				}
+			}
+		}
 
 		$name   = isset( $m['name'] ) ? (string) $m['name'] : '';
 		$suffix = '';
@@ -351,7 +360,23 @@ class SF_API {
 			'order'     => $order,
 			'scores'    => $by_team,
 			'innings'   => $innings,
+			'team_inns' => $team_inns,
+			'is_test'   => 'TEST' === $type,
 		);
+	}
+
+	/** The day number when a Test match is at stumps (close of play), or 0. */
+	public static function stumps_day( array $m ) {
+		if ( empty( $m['is_test'] ) || $m['ended'] || ! $m['started'] ) {
+			return 0;
+		}
+		if ( ! preg_match( '/\b(stumps|close of play|end of day)\b/i', $m['status'] ) ) {
+			return 0;
+		}
+		if ( preg_match( '/day\s*(\d)/i', $m['status'], $x ) ) {
+			return (int) $x[1];
+		}
+		return $m['start'] ? max( 1, min( 5, (int) floor( ( time() - $m['start'] ) / DAY_IN_SECONDS ) + 1 ) ) : 1;
 	}
 
 	/** Parse "England won by 6 wkts" style text. Returns winner name or '' and a type. */
@@ -361,6 +386,9 @@ class SF_API {
 			if ( '' !== $t['name'] && preg_match( '/^' . preg_quote( $t['name'], '/' ) . '\s+won\b/i', $s ) ) {
 				return array( $t['name'], 'win' );
 			}
+		}
+		if ( preg_match( '/\b(drawn?)\b/i', $s ) ) {
+			return array( '', 'draw' );
 		}
 		if ( preg_match( '/\b(tied|tie)\b/i', $s ) ) {
 			return array( '', 'tie' );

@@ -21,6 +21,7 @@ class SF_Admin {
 			'engage'      => 'Engage',
 			'tournaments' => 'Tournaments',
 			'teams'       => 'Teams',
+			'players'     => 'Players',
 			'manual'      => 'Manual post',
 			'mobile'      => 'Mobile home',
 			'security'    => 'Security',
@@ -31,7 +32,7 @@ class SF_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
+		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
 			add_action( 'admin_post_sf_' . $a, array( __CLASS__, 'do_' . $a ) );
 		}
 	}
@@ -53,7 +54,7 @@ class SF_Admin {
 		wp_enqueue_style( 'sf-admin', SF_URL . 'assets/admin.css', array(), SF_VERSION );
 		wp_enqueue_script( 'sf-admin', SF_URL . 'assets/admin.js', array( 'jquery' ), SF_VERSION, true );
 		$tab = self::tab();
-		if ( in_array( $tab, array( 'teams', 'manual' ), true ) ) {
+		if ( in_array( $tab, array( 'teams', 'players', 'manual' ), true ) ) {
 			wp_enqueue_media();
 		}
 		if ( 'security' === $tab ) {
@@ -332,6 +333,24 @@ class SF_Admin {
 		}
 		SF_Options::update( array( 'team_logos' => $map ) );
 		self::done( 'teams', 'success', 'Team pictures saved.' );
+	}
+
+	public static function do_save_players() {
+		self::guard();
+		$names = isset( $_POST['pl_name'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['pl_name'] ) ) : array(); // phpcs:ignore WordPress.Security.NonceVerification
+		$ids   = isset( $_POST['pl_id'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['pl_id'] ) ) : array(); // phpcs:ignore WordPress.Security.NonceVerification
+		$map   = array();
+		foreach ( $names as $i => $n ) {
+			$k = SF_Players::key( $n );
+			if ( '' !== $k && ! empty( $ids[ $i ] ) && wp_attachment_is_image( $ids[ $i ] ) ) {
+				$map[ $k ] = $ids[ $i ];
+			}
+			if ( '' !== trim( $n ) ) {
+				SF_Players::remember( $n );
+			}
+		}
+		SF_Options::update( array( 'player_photos' => $map ) );
+		self::done( 'players', 'success', 'Player photos saved.' );
 	}
 
 	public static function do_manual_post() {

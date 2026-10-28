@@ -34,9 +34,6 @@ require SF_DIR . 'includes/class-sf-samples.php';
 
 $out = isset( $argv[1] ) ? rtrim( $argv[1], '/' ) : sys_get_temp_dir() . '/sf-samples';
 $r   = new SF_Cards();
-if ( isset( $argv[2] ) ) {
-	$r->header = $argv[2];
-}
 foreach ( SF_Samples::all() as $type => $d ) {
 	$res = $r->render( $type, $d, $out . '/' . $type . '.png' );
 	echo $type, ' => ', is_wp_error( $res ) ? 'ERROR ' . $res->get_error_message() : $res, "\n";

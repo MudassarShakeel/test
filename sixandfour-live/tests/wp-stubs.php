@@ -102,7 +102,7 @@ function wp_check_filetype( $f ) {
 	return array( 'ext' => 'png', 'type' => 'image/png' );
 }
 function get_attached_file( $id ) {
-	return false;
+	return isset( $GLOBALS['sf_attached'][ $id ] ) ? $GLOBALS['sf_attached'][ $id ] : false;
 }
 function wp_remote_get( $url, $args = array() ) {
 	return sf_http( 'GET', $url, $args );
@@ -186,6 +186,7 @@ require SF_DIR . 'includes/class-sf-db.php';
 require SF_DIR . 'includes/class-sf-api.php';
 require SF_DIR . 'includes/class-sf-facebook.php';
 require SF_DIR . 'includes/class-sf-teams.php';
+require SF_DIR . 'includes/class-sf-players.php';
 require SF_DIR . 'includes/class-sf-cards.php';
 require SF_DIR . 'includes/class-sf-samples.php';
 require SF_DIR . 'includes/class-sf-poster.php';

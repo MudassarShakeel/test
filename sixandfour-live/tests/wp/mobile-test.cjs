@@ -48,7 +48,7 @@ async function pwLogin(page, user, pass) {
   ok(/mobile console/.test(await page.locator('.sf-notice').first().innerText()), 'the home page is created');
 
   console.log('2. Admin screens fit a phone');
-  for (const tab of ['overview', 'queue', 'cards', 'engage', 'tournaments', 'teams', 'manual', 'security', 'mobile', 'setup']) {
+  for (const tab of ['overview', 'queue', 'cards', 'engage', 'tournaments', 'teams', 'players', 'manual', 'security', 'mobile', 'setup']) {
     await page.goto('/wp-admin/admin.php?page=sixandfour-live&tab=' + tab);
     ok(await noSideScroll(page), 'tab "' + tab + '" has no sideways scroll');
   }
