@@ -170,6 +170,19 @@ class SF_Engine {
 		return (int) max( 5, min( 30, ceil( $left_min / $calls ) ) );
 	}
 
+	/** Post today's matches on the first check after 08:00 if the 08:00 job did not run (a quiet site may skip it). Tests set this to false. */
+	public static $catch_up = true;
+
+	private static function catch_up_daily() {
+		$today = wp_date( 'Y-m-d' );
+		if ( ! self::$catch_up || get_option( 'sf_daily_done', '' ) === $today || (int) wp_date( 'G' ) < 8 || (int) wp_date( 'G' ) >= 21 || ! SF_Options::job( 'fixtures' ) ) {
+			return;
+		}
+		update_option( 'sf_daily_done', $today, false );
+		SF_Log::add( "The 8 am job had not run, so today's matches are posted now." );
+		self::daily();
+	}
+
 	public static function tick( $force = false ) {
 		if ( ! SF_Options::ready() || SF_Options::get( 'paused' ) ) {
 			return;
@@ -190,6 +203,8 @@ class SF_Engine {
 			SF_Poster::publish_due();
 			return;
 		}
+
+		self::catch_up_daily();
 
 		$matches = array();
 		foreach ( $list as $raw ) {
@@ -761,21 +776,53 @@ class SF_Engine {
 		return $out;
 	}
 
+	/** Count the matches in the last list and how many the plugin covers. Returns [seen, covered list, why skipped]. */
+	public static function coverage() {
+		$list    = SF_API::last_matches();
+		$seen    = 0;
+		$covered = array();
+		$skip    = array( 'women' => 0, 'other' => 0 );
+		foreach ( $list[1] as $raw ) {
+			if ( ! is_array( $raw ) ) {
+				continue;
+			}
+			$m = SF_API::normalize_match( $raw );
+			if ( '' === $m['id'] ) {
+				continue;
+			}
+			$seen++;
+			if ( SF_API::wanted( $m ) ) {
+				$covered[] = $m;
+			} elseif ( SF_API::is_women( $m ) ) {
+				$skip['women']++;
+			} else {
+				$skip['other']++;
+			}
+		}
+		return array( $seen, $covered, $skip );
+	}
+
+	/** Post today's matches. Returns a plain sentence that says what happened, also when nothing was posted. */
 	public static function daily() {
 		if ( ! SF_Options::ready() ) {
-			return;
+			return 'Finish Setup first.';
 		}
+		update_option( 'sf_daily_done', wp_date( 'Y-m-d' ), false );
 		$list = SF_API::current_matches( true );
 		if ( is_wp_error( $list ) ) {
 			SF_Log::add( 'Daily fixtures: ' . $list->get_error_message(), 'error' );
-			return;
+			return 'The cricket API did not answer: ' . $list->get_error_message();
 		}
 		if ( ! SF_Options::job( 'fixtures' ) ) {
-			return;
+			SF_Log::add( "Daily fixtures: the Today's matches job is switched off on the Engage screen." );
+			return "The Today's matches job is switched off on the Engage screen.";
 		}
+		list( $seen, , $skip ) = self::coverage();
 		$today = self::todays_matches();
 		if ( empty( $today ) ) {
-			return;
+			$why = $seen . ' matches in the API list; none start today in your covered matches (' . $skip['women'] . " women's and " . $skip['other'] . ' outside your tournaments or top teams were skipped).';
+			SF_Log::add( 'Daily fixtures: ' . $why );
+			return 'No post made. ' . $why;
 		}
 		$rows = array();
 		foreach ( array_slice( $today, 0, 3 ) as $m ) {
@@ -796,9 +843,11 @@ class SF_Engine {
 		}
 		$first = $today[0];
 		$cap   = self::caption( "TODAY | " . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' on the schedule. First ball at ' . self::local_time( $first['start'] ) . '.', array(), 'day:' . wp_date( 'Y-m-d' ) );
-		SF_Poster::queue( 'fixtures', 'fixtures:' . wp_date( 'Y-m-d' ), $d, $cap );
+		$id = SF_Poster::queue( 'fixtures', 'fixtures:' . wp_date( 'Y-m-d' ), $d, $cap );
 		self::update_pinned( $today, true );
 		SF_Poster::publish_due();
+		SF_Log::add( "Daily fixtures: queued today's post for " . count( $today ) . ' matches.' );
+		return "Today's post for " . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' is queued. If it is not on Facebook yet, check the Post queue.';
 	}
 
 	public static function weekly() {

@@ -8,6 +8,7 @@ require __DIR__ . '/wp-stubs.php';
 
 $fail = 0;
 SF_API::$reuse = 0;
+SF_Engine::$catch_up = false;
 function ok( $cond, $label ) {
 	global $fail;
 	echo ( $cond ? '  PASS  ' : '  FAIL  ' ) . $label . "\n";
@@ -283,6 +284,19 @@ delete_transient( 'sf_current_matches' );
 tick();
 $wait = (int) get_option( 'sf_next_check' ) - time();
 ok( $wait > 80 * 60, 'with no match in sight the plugin waits 90 minutes (' . round( $wait / 60 ) . ' min)' );
+
+echo "11b. Today's matches post, also when the 8 am job is missed\n";
+SF_Engine::$catch_up = true;
+delete_option( 'sf_daily_done' );
+SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ) ) );
+$before_fx = count( posts( 'fixtures' ) );
+$world['matches'] = array( match_json( 'fxa', 'India', 'Pakistan', time() + 4 * 3600, false, false, 'Match not started', array(), 's1' ) );
+$msg = SF_Engine::daily();
+ok( 0 === strpos( $msg, "Today's post" ), 'daily() says what it did: ' . $msg );
+$world['matches'] = array( match_json( 'fxw', 'India Women', 'Pakistan Women', time() + 4 * 3600, false, false, 'Match not started', array(), 's1' ) );
+$msg = SF_Engine::daily();
+ok( false !== strpos( $msg, 'No post made' ) && false !== strpos( $msg, "1 women's" ), 'when nothing is covered it explains why: ' . $msg );
+SF_Engine::$catch_up = false;
 
 echo "12. Test matches\n";
 SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'jobs' => array_merge( SF_Options::get( 'jobs' ), array( 'stumps' => 1 ) ) ) );

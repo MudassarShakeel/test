@@ -32,7 +32,7 @@ class SF_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
+		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'run_daily', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
 			add_action( 'admin_post_sf_' . $a, array( __CLASS__, 'do_' . $a ) );
 		}
 	}
@@ -220,6 +220,12 @@ class SF_Admin {
 		}
 		SF_Engine::tick( true );
 		self::done( 'overview', 'success', 'Checked the matches now.' );
+	}
+
+	public static function do_run_daily() {
+		self::guard();
+		$msg = SF_Engine::daily();
+		self::done( 'overview', 0 === strpos( $msg, 'Today' ) ? 'success' : 'warning', $msg );
 	}
 
 	public static function do_queue_action() {

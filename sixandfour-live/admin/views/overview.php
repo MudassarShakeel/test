@@ -15,15 +15,7 @@ $stats = SF_API::stats();
 $next  = (int) get_option( 'sf_next_check', 0 );
 $last  = (int) get_option( 'sf_last_tick', 0 );
 list( $seen_at, $raw ) = SF_API::last_matches();
-$matches = array();
-foreach ( $raw as $r ) {
-	if ( is_array( $r ) ) {
-		$m = SF_API::normalize_match( $r );
-		if ( '' !== $m['id'] && SF_Options::is_followed( $m['series_id'] ) ) {
-			$matches[] = $m;
-		}
-	}
-}
+list( $seen_n, $matches, $skip_n ) = SF_Engine::coverage();
 $live_i = 0;
 $cron_off = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
 ?>
@@ -71,10 +63,16 @@ $cron_off = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
 	<?php SF_Admin::form_open( 'run_now', 'class="sf-inline"' ); ?>
 		<button class="sf-btn sf-primary" type="submit">Check matches now</button>
 	</form>
+	<?php SF_Admin::form_open( 'run_daily', 'class="sf-inline"' ); ?>
+		<button class="sf-btn" type="submit">Post today's matches now</button>
+	</form>
 	<a class="sf-btn" href="<?php echo esc_url( SF_Admin::url( 'cards' ) ); ?>">See sample cards</a>
 </div>
 
 <h2 class="sf-sec">Today's matches</h2>
+<?php if ( $seen_n > count( $matches ) ) : ?>
+	<p class="sf-sub"><?php echo (int) $seen_n; ?> matches in the last list, <?php echo count( $matches ); ?> covered. Skipped: <?php echo (int) $skip_n['women']; ?> women's and <?php echo (int) $skip_n['other']; ?> outside your followed tournaments or top teams. Change this in Setup.</p>
+<?php endif; ?>
 <div class="sf-group">
 	<?php if ( empty( $matches ) ) : ?>
 		<div class="sf-row"><div class="sf-l"><b>No matches yet</b><span>Press Check matches now after Setup. The list updates on every check.</span></div></div>

@@ -201,6 +201,10 @@ class SF_Security {
 		$po = (bool) SF_Options::get( 'passwordless_only', 0 );
 		$add( 'Passwords off for administrators', $po ? 'ok' : 'warn', $po ? 'Administrators sign in with a passkey or an email link only.' : 'Optional. Turn it on below once a passkey is added.' );
 
+		$last = (int) get_option( 'sf_last_tick', 0 );
+		$cron = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+		$fresh = $last && time() - $last < 4 * HOUR_IN_SECONDS;
+		$add( 'Scheduled checks are running', $fresh ? 'ok' : 'warn', $fresh ? 'The last match check was ' . human_time_diff( $last ) . ' ago.' : 'No recent match check. WordPress runs scheduled jobs only when someone visits the site, so a quiet site can miss the 8 am post. Set a real cron job (see Setup).' . ( $cron ? ' WordPress cron is switched off, so check the cron job in Hostinger.' : '' ) );
 		$add( 'Log-in limiter', self::on( 'login_limit' ) ? 'ok' : 'warn', self::on( 'login_limit' ) ? 'Five wrong passwords lock that address out for 15 minutes.' : 'Off.' );
 		return $rows;
 	}

@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,12 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.4.1 =
+* Fixed: a quiet site could miss the 8 am "Today's matches" post, because WordPress only runs scheduled jobs when someone visits. The first match check after 8 am now posts it if the 8 am job did not run.
+* New: Overview has a "Post today's matches now" button that says exactly what it did or why nothing was posted.
+* New: Overview shows how many matches were skipped (women's, not a followed tournament or top team).
+* New: a health check row tells you when scheduled checks are not running.
 
 = 1.4.0 =
 * New card header: a dark rounded card with the logo, the name and your Page link under it, on every card.
