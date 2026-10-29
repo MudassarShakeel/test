@@ -493,5 +493,16 @@ $r = SF_Poster::manual_post( array( 'caption' => 'x' ) );
 ok( ! $r['ok'] && false !== strpos( $r['message'], 'switched off' ), 'manual posts are refused while switched off' );
 ok( ! isset( SF_Admin::tabs()['manual'] ), 'and the Manual post screen is hidden' );
 
+echo "16. Today's matches card fits its list\n";
+$sz5 = SF_Cards::size( 'fixtures', array( 'rows' => array_fill( 0, 5, array() ) ) );
+$sz9 = SF_Cards::size( 'fixtures', array( 'rows' => array_fill( 0, 9, array() ), 'status' => array( array( 'x', true ) ) ) );
+ok( 1080 === $sz5[0] && $sz5[1] > 700 && $sz5[1] < 900, 'five matches make a card about 830 px tall, not a full tall one (' . $sz5[1] . ')' );
+ok( $sz9[1] > $sz5[1] && $sz9[1] <= 1350, 'nine matches make a taller card that still fits (' . $sz9[1] . ')' );
+ok( array( 1200, 630 ) === SF_Cards::size( 'fixtures', array( 'rows' => array_fill( 0, 3, array() ) ) ), 'three or fewer use the wide card' );
+$fx = posts( 'fixtures' );
+$cap = $fx ? end( $fx )['caption'] : '';
+ok( false !== strpos( $cap, 'Which match are you watching today?' ) && false === strpos( $cap, 'Great knock' ), 'the day start caption asks about today, not about a knock' );
+ok( 1 === preg_match( '/\d\d:\d\d  \S.* v \S/', $cap ), 'the caption lists the matches as text too' );
+
 echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
 exit( $fail ? 1 : 0 );

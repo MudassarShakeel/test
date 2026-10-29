@@ -869,7 +869,13 @@ class SF_Engine {
 			$d['status'] = array( array( ( count( $today ) - 9 ) . ' more matches today. ', true ), array( 'Follow the page for each one.', false ) );
 		}
 		$first = $today[0];
-		$cap   = self::caption( "TODAY | " . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' on the schedule. First ball at ' . self::local_time( $first['start'] ) . '.', array(), 'day:' . SF_Plugin::date( 'Y-m-d' ) );
+		$s_tz  = SF_Plugin::date( 'T' );
+		$lines = array();
+		foreach ( array_slice( $today, 0, 12 ) as $m ) {
+			$lines[] = self::local_time( $m['start'] ) . '  ' . $m['teams'][0]['name'] . ' v ' . $m['teams'][1]['name'];
+		}
+		$lines[] = 'Which match are you watching today?';
+		$cap   = self::caption( 'TODAY | ' . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' on the schedule. Times are ' . $s_tz . '.', $lines, null );
 		$id = SF_Poster::queue( 'fixtures', 'fixtures:' . SF_Plugin::date( 'Y-m-d' ), $d, $cap );
 		self::update_pinned( $today, true );
 		SF_Poster::publish_due();

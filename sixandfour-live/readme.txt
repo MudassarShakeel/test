@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.6.1
+Stable tag: 1.6.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,9 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.6.2 =
+* Today's matches card is now as tall as its list needs, with no empty space. Long team names get smaller type before they are cut off. The caption lists the matches as text and asks "Which match are you watching today?".
 
 = 1.6.1 =
 * The cron message now puts the file path last, with no full stop after it, so it can be copied exactly.

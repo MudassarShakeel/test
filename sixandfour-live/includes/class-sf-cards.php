@@ -43,8 +43,14 @@ class SF_Cards {
 	/** Card pixel sizes by type. */
 	public static function size( $type, $d = null ) {
 		// A day with up to three matches fits a landscape card. More need the tall one.
-		if ( 'fixtures' === $type && is_array( $d ) && isset( $d['rows'] ) && count( $d['rows'] ) <= 3 ) {
-			return array( 1200, 630 );
+		if ( 'fixtures' === $type && is_array( $d ) && isset( $d['rows'] ) ) {
+			$n = count( $d['rows'] );
+			if ( $n <= 3 ) {
+				return array( 1200, 630 );
+			}
+			// As tall as the list needs, so there is no empty space under it. Units are % of the width.
+			$u = 25.1 + min( $n, 9 ) * 8.3 + 2 + ( ! empty( $d['status'] ) ? 11 : 0 ) + 6.5 + 1.5;
+			return array( 1080, (int) ceil( $u * 10.8 ) );
 		}
 		$land = array( 'live', 'toss', 'result', 'stumps', 'innings' );
 		$sq   = array( 'century', 'fivefor', 'potm', 'poll' );
@@ -632,7 +638,7 @@ class SF_Cards {
 	}
 
 	private function card_list( $type, $d ) {
-		$tall = 'digest' === $type || ( 'fixtures' === $type && $this->H > $this->W );
+		$tall = 'digest' === $type || ( 'fixtures' === $type && count( $d['rows'] ) > 3 );
 		$y    = $this->head( 'digest' === $type ? 'LIVE' : 'TODAY', 'digest' === $type );
 		$y   += 1.2;
 		$title = 'digest' === $type ? 'Live scoreboard' : "Today's matches";
@@ -674,9 +680,16 @@ class SF_Cards {
 				$rx -= $this->text( $this->fit( $r['sub'], 28, 1.8, 600 ), $rx, $this->cb( $cy, 1.8 ), 1.8, 600, self::MUTED, 'r' );
 			}
 			$avail = $rx - 2 - $x;
-			$nsz   = 2.5;
 			$a     = $r['a'];
 			$b     = $r['b'];
+			// Shrink the type a little before a long name is cut off.
+			$nsz = 2.5;
+			for ( ; $nsz > 2.0; $nsz -= 0.1 ) {
+				$half_try = ( $avail - $this->tw( 'v', $nsz, 600 ) - 1.6 - 2 * 4.2 - 2 * 1.0 ) / 2;
+				if ( $this->tw( $a['name'], $nsz, 700 ) <= $half_try && $this->tw( $b['name'], $nsz, 700 ) <= $half_try ) {
+					break;
+				}
+			}
 			$vw    = $this->tw( 'v', $nsz, 600 ) + 1.6;
 			$flags = 2 * 4.2 + 2 * 1.0;
 			$half  = ( $avail - $vw - $flags ) / 2;
