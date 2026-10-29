@@ -47,6 +47,19 @@ class SF_Engine {
 		return implode( "\n", $out );
 	}
 
+	/** Credit lines for the automatic photos shown on a card. Your own photos need none. */
+	private static function credits( array $names ) {
+		$out = array();
+		foreach ( array_unique( array_filter( $names ) ) as $n ) {
+			SF_Players::photo( $n );   // Finds the photo first, so the credit is known.
+			$c = SF_Players::credit( $n );
+			if ( '' !== $c && ! in_array( $c, $out, true ) ) {
+				$out[] = $c;
+			}
+		}
+		return $out;
+	}
+
 	private static function foot( $left = '' ) {
 		$handle = (string) SF_Options::get( 'fb_handle', '' );
 		return array( 'foot_left' => '' !== $left ? $left : $handle, 'foot_right' => '' !== $left ? $handle : '' );
@@ -590,6 +603,7 @@ class SF_Engine {
 		if ( isset( $perf['bowl'] ) ) {
 			$lines[] = 'Top wicket taker: ' . $perf['bowl']['name'] . ' ' . $perf['bowl']['stat'] . ' ' . $perf['bowl']['small'];
 		}
+		$lines = array_merge( $lines, self::credits( array( isset( $perf['bat'] ) ? $perf['bat']['name'] : '', isset( $perf['bowl'] ) ? $perf['bowl']['name'] : '' ) ) );
 		$cap = self::caption( 'FULL TIME | ' . ( self::tour( $m ) ? self::tour( $m ) . ': ' : '' ) . self::short_result( $m['status'] ) . '.', $lines, 'sum:' . $m['id'] );
 		SF_Poster::queue( 'summary', 'summary:' . $m['id'], $d, $cap, $extra + array( 'delay' => 3 * MINUTE_IN_SECONDS ) );
 	}
@@ -661,7 +675,7 @@ class SF_Engine {
 			'chips'      => $chips,
 			'status'     => self::result_status( $m ),
 		) + self::foot( 'Agree? Tell us your player of the day' );
-		$text = self::caption( 'TOP PERFORMER | ' . $cap . ' in ' . self::short_result( $m['status'] ) . '.', array(), 'potm:' . $m['id'] );
+		$text = self::caption( 'TOP PERFORMER | ' . $cap . ' in ' . self::short_result( $m['status'] ) . '.', self::credits( array( $top['name'] ) ), 'potm:' . $m['id'] );
 		SF_Poster::queue( 'potm', 'potm:' . $m['id'], $d, $text, $extra + array( 'delay' => 18 * MINUTE_IN_SECONDS ) );
 	}
 
@@ -712,7 +726,7 @@ class SF_Engine {
 				'chips'      => array( $b['4s'] . ' fours', $b['6s'] . ' sixes', 'Strike rate ' . number_format( $b['sr'], 1 ) ),
 				'status'     => $status,
 			) + self::foot( 'Great knock? Tell us in the comments' );
-			$cap = self::caption( 'CENTURY | ' . $b['name'] . ' reaches ' . $b['r'] . ' off ' . $b['b'] . ' balls' . ( $record ? ', the fastest hundred' . $of : '' ) . '.', array(), 'c:' . $b['id'] );
+			$cap = self::caption( 'CENTURY | ' . $b['name'] . ' reaches ' . $b['r'] . ' off ' . $b['b'] . ' balls' . ( $record ? ', the fastest hundred' . $of : '' ) . '.', self::credits( array( $b['name'] ) ), 'c:' . $b['id'] );
 			SF_Poster::queue( 'century', $dedupe, $d, $cap, $extra );
 		}
 
@@ -739,7 +753,7 @@ class SF_Engine {
 				'chips'      => array( 'Economy ' . number_format( $b['eco'], 2 ), $b['m'] . ( 1 === $b['m'] ? ' maiden' : ' maidens' ), $b['w'] . ' wickets' ),
 				'status'     => $status,
 			) + self::foot( 'Spell of the day? Tell us in the comments' );
-			$cap = self::caption( 'FIVE-WICKET HAUL | ' . $b['name'] . ' takes ' . $b['w'] . '/' . $b['r'] . ' in ' . self::overs( $b['o'] ) . ' overs' . ( $record ? ', the best figures' . $of : '' ) . '.', array(), 'f:' . $b['id'] );
+			$cap = self::caption( 'FIVE-WICKET HAUL | ' . $b['name'] . ' takes ' . $b['w'] . '/' . $b['r'] . ' in ' . self::overs( $b['o'] ) . ' overs' . ( $record ? ', the best figures' . $of : '' ) . '.', self::credits( array( $b['name'] ) ), 'f:' . $b['id'] );
 			SF_Poster::queue( 'fivefor', $dedupe, $d, $cap, $extra );
 		}
 	}

@@ -187,6 +187,7 @@ require SF_DIR . 'includes/class-sf-api.php';
 require SF_DIR . 'includes/class-sf-facebook.php';
 require SF_DIR . 'includes/class-sf-teams.php';
 require SF_DIR . 'includes/class-sf-players.php';
+require SF_DIR . 'includes/class-sf-playerphotos.php';
 require SF_DIR . 'includes/class-sf-cards.php';
 require SF_DIR . 'includes/class-sf-samples.php';
 require SF_DIR . 'includes/class-sf-poster.php';
@@ -207,5 +208,15 @@ if ( ! function_exists( 'get_user_meta' ) ) {
 if ( ! function_exists( 'wp_timezone_string' ) ) {
 	function wp_timezone_string() {
 		return 'UTC';
+	}
+}
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+	function wp_strip_all_tags( $s ) {
+		return trim( strip_tags( (string) $s ) );
+	}
+}
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $p = '' ) {
+		return 'https://c.example.test' . $p;
 	}
 }

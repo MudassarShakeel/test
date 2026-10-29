@@ -65,6 +65,7 @@ class SF_Options {
 			'security'          => array(),
 			'team_logos'        => array(), // lower-case team name => attachment id.
 			'player_photos'     => array(), // lower-case player name => attachment id.
+			'auto_player_photos' => 1,    // Find free photos on Wikimedia Commons.
 			'pinned_post_id'    => '',
 		);
 	}

@@ -32,7 +32,7 @@ class SF_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'run_daily', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
+		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'run_daily', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'block_player_photo', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
 			add_action( 'admin_post_sf_' . $a, array( __CLASS__, 'do_' . $a ) );
 		}
 	}
@@ -360,8 +360,14 @@ class SF_Admin {
 				SF_Players::remember( $n );
 			}
 		}
-		SF_Options::update( array( 'player_photos' => $map ) );
+		SF_Options::update( array( 'player_photos' => $map, 'auto_player_photos' => self::bool( 'auto_player_photos' ) ) );
 		self::done( 'players', 'success', 'Player photos saved.' );
+	}
+
+	public static function do_block_player_photo() {
+		self::guard();
+		SF_Players::block( sanitize_text_field( self::text( 'key' ) ) );
+		self::done( 'players', 'success', 'That photo will not be used again.' );
 	}
 
 	public static function do_manual_post() {

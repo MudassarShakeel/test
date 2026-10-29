@@ -22,9 +22,14 @@ foreach ( $photos as $k => $att ) {
 		$names[] = ucwords( $k );
 	}
 }
+$auto_on = (bool) SF_Options::get( 'auto_player_photos', 1 );
+$auto    = SF_Players::auto_list();
 SF_Admin::form_open( 'save_players' );
 ?>
-<p class="sf-lede">Add a photo for a player and it shows on that player's cards: centuries, five-wicket hauls, top performer and the match summary. Players without a photo show their initials.</p>
+<p class="sf-lede">A player's photo shows on that player's cards: centuries, five-wicket hauls, top performer and the match summary. Your own photo comes first. Players without a photo show their initials.</p>
+<div class="sf-group">
+	<?php SF_Admin::switch_row( 'auto_player_photos', $auto_on, 'Find photos automatically', 'Looks the player up on Wikimedia Commons and uses a photo only when its licence allows reuse. Where the licence asks for a credit, the post gets a short credit line.' ); ?>
+</div>
 <div class="sf-group sf-teams">
 	<?php foreach ( $names as $name ) : ?>
 		<?php
@@ -63,3 +68,19 @@ SF_Admin::form_open( 'save_players' );
 <p class="sf-sub">Only use photos you took or have permission to use. Player photos belong to photographers and agencies, so the plugin never downloads them for you. A clear head-and-shoulders photo works best, in portrait or square.</p>
 <div class="sf-actions"><button class="sf-btn sf-primary" type="submit">Save player photos</button></div>
 </form>
+
+<?php if ( $auto ) : ?>
+	<h2 class="sf-sec">Photos found automatically</h2>
+	<div class="sf-group">
+		<?php foreach ( $auto as $k => $e ) : ?>
+			<div class="sf-row">
+				<div class="sf-l"><b><?php echo esc_html( $e['name'] ); ?></b><span><?php echo esc_html( $e['licence'] . ( '' !== $e['credit'] ? '. ' . $e['credit'] : '. No credit needed.' ) ); ?> <a href="<?php echo esc_url( $e['page'] ); ?>" target="_blank" rel="noopener">Source</a></span></div>
+				<?php SF_Admin::form_open( 'block_player_photo', 'class="sf-inline"' ); ?>
+					<input type="hidden" name="key" value="<?php echo esc_attr( $k ); ?>">
+					<button class="sf-btn sf-sm" type="submit">Stop using</button>
+				</form>
+			</div>
+		<?php endforeach; ?>
+	</div>
+	<p class="sf-sub">A wrong match is possible when two players share a name. Press Stop using and upload the right photo above.</p>
+<?php endif; ?>

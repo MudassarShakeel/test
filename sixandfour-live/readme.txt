@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.4.5
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,10 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.5.0 =
+* New: player photos are found automatically on Wikimedia Commons. A photo is used only when its licence allows reuse (Creative Commons BY or BY-SA, CC0, public domain). Where the licence asks for a credit, the post caption gets a line such as "Photo: Name, CC BY-SA 4.0, via Wikimedia Commons". Your own uploaded photo always comes first and needs no credit.
+* The plugin never fetches photos from news sites, Cricinfo or search engines. Players with no free photo show their initials. The Players screen lists the photos found and lets you stop using any of them.
 
 = 1.4.5 =
 * Easier to read on a phone: the poll card is redesigned with a big headline, two large choices and one clear instruction. Footers, match info and the Page link are larger on every card. The Like and Love icons use the new cyan.

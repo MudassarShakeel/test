@@ -388,5 +388,65 @@ $px = imagecreatefrompng( $out1 );
 $c  = imagecolorat( $px, 160, 270 );
 ok( ( ( $c >> 16 ) & 255 ) < 60, 'without a photo the navy initials tile is drawn' );
 
+echo "14. Free player photos from Wikimedia Commons\n";
+$wiki_calls = array();
+$png = (function () { $g = imagecreatetruecolor( 300, 400 ); imagefill( $g, 0, 0, imagecolorallocate( $g, 30, 90, 200 ) ); ob_start(); imagejpeg( $g ); return ob_get_clean(); })();
+$GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$wiki_calls, $png ) {
+	$wiki_calls[] = $url;
+	parse_str( (string) parse_url( $url, PHP_URL_QUERY ), $q );
+	if ( false !== strpos( $url, 'en.wikipedia.org' ) && isset( $q['list'] ) ) {
+		$name = trim( str_replace( ' cricketer', '', $q['srsearch'] ) );
+		return sf_json( array( 'query' => array( 'search' => array( array( 'title' => $name ) ) ) ) );
+	}
+	if ( false !== strpos( $url, 'en.wikipedia.org' ) ) {
+		$t = $q['titles'];
+		$img = 'Oliver Hartley.jpg' ;
+		if ( 'Nonfree Player' === $t ) { $img = 'Nonfree.jpg'; }
+		if ( 'Nolic Player' === $t ) { $img = 'Nolic.jpg'; }
+		return sf_json( array( 'query' => array( 'pages' => array( array( 'title' => $t, 'pageimage' => $img, 'pageprops' => array( 'wikibase-shortdesc' => 'English cricketer' ) ) ) ) ) );
+	}
+	if ( false !== strpos( $url, 'commons.wikimedia.org' ) ) {
+		$f = $q['titles'];
+		if ( 'File:Nonfree.jpg' === $f ) { return sf_json( array( 'query' => array( 'pages' => array( array( 'title' => $f, 'missing' => true ) ) ) ) ); }
+		$lic = 'File:Nolic.jpg' === $f ? 'CC BY-NC 4.0' : 'CC BY-SA 4.0';
+		return sf_json( array( 'query' => array( 'pages' => array( array( 'title' => $f, 'imageinfo' => array( array( 'thumburl' => 'https://upload.wikimedia.org/thumb/x.jpg', 'mime' => 'image/jpeg', 'extmetadata' => array( 'LicenseShortName' => array( 'value' => $lic ), 'Artist' => array( 'value' => '<a href="x">Jane Photographer</a>' ) ) ) ) ) ) ) ) );
+	}
+	if ( false !== strpos( $url, 'upload.wikimedia.org' ) ) {
+		return array( 'code' => 200, 'body' => $png );
+	}
+	return array( 'code' => 404, 'body' => '' );
+};
+SF_Options::update( array( 'player_photos' => array(), 'auto_player_photos' => 1 ) );
+delete_option( 'sf_player_auto' );
+SF_Players::$fetched = 0;
+$path = SF_Players::photo( 'Oliver Hartley' );
+ok( $path && is_readable( $path ), 'a freely licensed photo is found and saved' );
+ok( 'Photo: Jane Photographer, CC BY-SA 4.0, via Wikimedia Commons' === SF_Players::credit( 'Oliver Hartley' ), 'the credit line names the photographer and licence: ' . SF_Players::credit( 'Oliver Hartley' ) );
+$n = count( $wiki_calls );
+SF_Players::photo( 'Oliver Hartley' );
+ok( count( $wiki_calls ) === $n, 'a saved photo is not looked up again' );
+SF_Players::$fetched = 0;
+ok( null === SF_Players::photo( 'Nonfree Player' ), 'a photo that is not on Commons (non-free) is not used' );
+ok( null === SF_Players::photo( 'Nolic Player' ), 'a non-commercial licence is refused' );
+$n = count( $wiki_calls );
+SF_Players::photo( 'Nolic Player' );
+ok( count( $wiki_calls ) === $n, 'a player with no usable photo is not looked up again for 30 days' );
+ok( ! SF_PlayerPhotos::licence_ok( 'CC BY-ND 2.0' ) && ! SF_PlayerPhotos::licence_ok( 'Fair use' ) && SF_PlayerPhotos::licence_ok( 'CC0' ) && SF_PlayerPhotos::licence_ok( 'Public domain' ), 'only reusable licences are accepted' );
+ok( '' === ( SF_PlayerPhotos::credit_needed( 'CC0' ) ? 'x' : '' ), 'CC0 needs no credit' );
+$rc = new ReflectionMethod( 'SF_Engine', 'credits' );
+$rc->setAccessible( true );
+ok( array( 'Photo: Jane Photographer, CC BY-SA 4.0, via Wikimedia Commons' ) === $rc->invoke( null, array( 'Oliver Hartley', 'Oliver Hartley', '' ) ), 'the post caption gets the credit line once for the player' );
+SF_Options::update( array( 'player_photos' => array( 'oliver hartley' => 77 ) ) );
+ok( '' === SF_Players::credit( 'Oliver Hartley' ), 'your own uploaded photo needs no credit line' );
+SF_Options::update( array( 'player_photos' => array() ) );
+SF_Players::block( SF_Players::key( 'Oliver Hartley' ) );
+SF_Players::$fetched = 0;
+ok( null === SF_Players::photo( 'Oliver Hartley' ) && '' === SF_Players::credit( 'Oliver Hartley' ), 'Stop using removes the photo and the credit' );
+SF_Options::update( array( 'auto_player_photos' => 0 ) );
+delete_option( 'sf_player_auto' );
+$n = count( $wiki_calls );
+ok( null === SF_Players::photo( 'Another Player' ) && count( $wiki_calls ) === $n, 'with the switch off nothing is looked up' );
+SF_Options::update( array( 'auto_player_photos' => 1 ) );
+
 echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
 exit( $fail ? 1 : 0 );
