@@ -50,7 +50,7 @@ $cron_off = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
 	</div>
 	<div class="sf-tile">
 		<h3>Next score check</h3>
-		<div class="sf-big"><?php echo $next > time() ? esc_html( human_time_diff( time(), $next ) ) : 'Due now'; ?></div>
+		<div class="sf-big"><?php echo $next > time() ? esc_html( human_time_diff( time(), $next ) ) : ( $next && time() - $next > 10 * MINUTE_IN_SECONDS ? 'Overdue' : 'Due now' ); ?></div>
 		<p class="sf-sub"><?php echo $last ? 'Last check ' . esc_html( human_time_diff( $last ) ) . ' ago.' : 'No check yet.'; ?></p>
 	</div>
 </div>

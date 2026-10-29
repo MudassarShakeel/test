@@ -201,10 +201,19 @@ class SF_Security {
 		$po = (bool) SF_Options::get( 'passwordless_only', 0 );
 		$add( 'Passwords off for administrators', $po ? 'ok' : 'warn', $po ? 'Administrators sign in with a passkey or an email link only.' : 'Optional. Turn it on below once a passkey is added.' );
 
-		$last = (int) get_option( 'sf_last_tick', 0 );
-		$cron = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
-		$fresh = $last && time() - $last < 4 * HOUR_IN_SECONDS;
-		$add( 'Scheduled checks are running', $fresh ? 'ok' : 'warn', $fresh ? 'The last match check was ' . human_time_diff( $last ) . ' ago.' : 'No recent match check. WordPress runs scheduled jobs only when someone visits the site, so a quiet site can miss the 8 am post. Set a real cron job (see Setup).' . ( $cron ? ' WordPress cron is switched off, so check the cron job in Hostinger.' : '' ) );
+		$last    = (int) get_option( 'sf_last_tick', 0 );
+		$due     = (int) get_option( 'sf_next_check', 0 );
+		$cron    = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+		$overdue = $due && time() - $due > 10 * MINUTE_IN_SECONDS;   // A check was due and nothing ran it.
+		$fresh   = $last && time() - $last < 4 * HOUR_IN_SECONDS && ! $overdue;
+		if ( $fresh ) {
+			$msg = 'The last match check was ' . human_time_diff( $last ) . ' ago.';
+		} elseif ( $overdue ) {
+			$msg = 'A check was due ' . human_time_diff( $due ) . ' ago but did not run, so the scheduled job is not firing every 5 minutes. Check the cron job in Hostinger (see Setup).';
+		} else {
+			$msg = 'No recent match check. WordPress runs scheduled jobs only when someone visits the site, so a quiet site can miss posts. Set a real cron job (see Setup).' . ( $cron ? ' WordPress cron is switched off, so check the cron job in Hostinger.' : '' );
+		}
+		$add( 'Scheduled checks are running', $fresh ? 'ok' : 'warn', $msg );
 		$add( 'Log-in limiter', self::on( 'login_limit' ) ? 'ok' : 'warn', self::on( 'login_limit' ) ? 'Five wrong passwords lock that address out for 15 minutes.' : 'Off.' );
 		return $rows;
 	}
