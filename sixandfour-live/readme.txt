@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,11 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.4.2 =
+* Fixed: posts waiting for a posting rule (such as the per-match limit) could block newer approved posts from being sent. The sender now looks past them.
+* New: every waiting post says why it has not gone out (quiet hours, paused, daily limit, per-match limit or waiting for the next run), and has a Post now button that sends it past the rules.
+* Setup shows the site's current time and time zone next to the quiet hours.
 
 = 1.4.1 =
 * Fixed: a quiet site could miss the 8 am "Today's matches" post, because WordPress only runs scheduled jobs when someone visits. The first match check after 8 am now posts it if the 8 am job did not run.

@@ -237,6 +237,33 @@ ok( ! SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'a series you do no
 ok( ! SF_API::wanted( mk( 'Delhi Women', 'Mumbai Women', 'ipl' ) ), "women's matches are skipped even in a followed series" );
 SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'skip_women' => 1 ) );
 
+echo "10b. A waiting post does not block newer ones\n";
+$GLOBALS['sf_http'] = function () {
+	return sf_json( array( 'id' => '1_ok' ) );
+};
+SF_Options::update( array( 'per_match_hour' => 1, 'max_posts_day' => 50, 'quiet_start' => '00:00', 'quiet_end' => '00:00', 'paused' => 0 ) );
+global $wpdb;
+$wpdb->query( "UPDATE wp_sf_posts SET status = 'skipped' WHERE status = 'approved'" );
+SF_DB::add_post( array( 'type' => 'live', 'dedupe' => 'blk-posted', 'match_id' => 'mm', 'status' => 'posted', 'caption' => 'x', 'posted_at' => gmdate( 'Y-m-d H:i:s' ) ) );
+$ids = array();
+foreach ( array( 'a', 'b', 'c' ) as $k ) {
+	$ids[] = SF_Poster::queue_text( 'live', 'blk-' . $k, 'Waiting ' . $k, array( 'match_id' => 'mm' ) );
+}
+$res_id = SF_Poster::queue_text( 'result', 'blk-result', 'RESULT | later post', array( 'match_id' => 'other' ) );
+SF_Poster::publish_due();
+$row = SF_DB::get_post( $res_id );
+ok( 'posted' === $row['status'], 'a result is sent although three older live posts are waiting on the per-match limit (' . $row['status'] . ')' );
+$w = SF_Poster::wait_reason( SF_DB::get_post( $ids[0] ) );
+ok( false !== strpos( $w, 'already had 1 live posts' ), 'the waiting post says why: ' . $w );
+SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '23:59' ) );
+$w = SF_Poster::wait_reason( SF_DB::get_post( $ids[0] ) );
+ok( false !== strpos( $w, 'Quiet hours' ), 'quiet hours are named as the reason: ' . $w );
+SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '00:00' ) );
+$ok_now = SF_Poster::publish_one( SF_DB::get_post( $ids[0] ), true );
+ok( 'posted' === $ok_now, 'Post now sends it past the rules' );
+$wpdb->query( "UPDATE wp_sf_posts SET status = 'skipped' WHERE status = 'approved'" );
+SF_Options::update( array( 'per_match_hour' => 5 ) );
+
 echo "11. Fewer calls and backup keys\n";
 SF_Options::update( array( 'api_limit' => 10, 'api_key' => 'KEYONE', 'api_key2' => 'KEYTWO', 'api_key3' => '', 'api_key4' => '' ) );
 update_option( 'sf_api_stats', array() );

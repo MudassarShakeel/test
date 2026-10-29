@@ -203,3 +203,9 @@ if ( ! function_exists( 'get_users' ) ) {
 if ( ! function_exists( 'get_user_meta' ) ) {
 	function get_user_meta( $uid, $key, $single = false ) { return ''; }
 }
+
+if ( ! function_exists( 'wp_timezone_string' ) ) {
+	function wp_timezone_string() {
+		return 'UTC';
+	}
+}

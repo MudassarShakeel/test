@@ -139,15 +139,45 @@ class SF_Poster {
 
 	/** Send what is due, within the posting rules. */
 	public static function publish_due() {
-		foreach ( SF_DB::due_posts( 3 ) as $row ) {
-			self::publish_one( $row );
+		// Look past posts that are waiting on a rule, so they cannot block newer ones. Send at most three per run.
+		$sent = 0;
+		foreach ( SF_DB::due_posts( 30 ) as $row ) {
+			if ( 'posted' === self::publish_one( $row ) && ++$sent >= 3 ) {
+				break;
+			}
 		}
 	}
 
+	/** Why an approved post has not gone out yet, in plain words. */
+	public static function wait_reason( array $row ) {
+		if ( 'approved' !== $row['status'] ) {
+			return '';
+		}
+		$o = SF_Options::all();
+		if ( 'manual' !== $row['type'] ) {
+			if ( SF_Options::get( 'paused' ) ) {
+				return 'Posting is paused. Resume it on the Overview or the mobile console.';
+			}
+			if ( self::in_quiet_hours() ) {
+				return 'Quiet hours: nothing posts between ' . $o['quiet_start'] . ' and ' . $o['quiet_end'] . ' (site time, now ' . wp_date( 'H:i' ) . '). Change this in Setup.';
+			}
+			if ( SF_DB::count_posted_since( self::day_start() ) >= (int) $o['max_posts_day'] ) {
+				return 'The daily limit of ' . (int) $o['max_posts_day'] . ' posts was reached.';
+			}
+			if ( self::is_live_type( $row['type'] ) && '' !== $row['match_id'] && SF_DB::count_posted_since( time() - HOUR_IN_SECONDS, $row['match_id'] ) >= (int) $o['per_match_hour'] ) {
+				return 'This match already had ' . (int) $o['per_match_hour'] . ' live posts in the last hour.';
+			}
+		}
+		if ( ! empty( $row['scheduled_at'] ) && strtotime( $row['scheduled_at'] . ' UTC' ) > time() ) {
+			return 'Scheduled for ' . wp_date( 'j M, H:i', strtotime( $row['scheduled_at'] . ' UTC' ) ) . '.';
+		}
+		return 'Ready. It goes out on the next scheduled run, within about 5 minutes. If it stays here, the site cron is not running. Use Post now.';
+	}
+
 	/** @return string posted|waiting|skipped|failed */
-	public static function publish_one( array $row ) {
+	public static function publish_one( array $row, $force = false ) {
 		$o      = SF_Options::all();
-		$manual = 'manual' === $row['type'];
+		$manual = 'manual' === $row['type'] || $force;
 		$id     = (int) $row['id'];
 
 		if ( ! $manual ) {

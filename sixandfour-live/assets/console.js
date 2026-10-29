@@ -126,8 +126,9 @@
 			h += '<div class="sfc-post" data-id="' + p.id + '">' + ( p.image ? '<img class="full" alt="" loading="lazy" src="' + esc( p.image ) + '">' : '' ) +
 				'<div class="body"><div><span class="sfc-pill ' + pillFor( p.status ) + '">' + esc( p.status ) + '</span> <span class="sfc-sub">' + esc( p.type ) + ' ' + esc( p.when || p.time ) + '</span></div>' +
 				( p.error ? '<p class="sfc-err">' + esc( p.error ) + '</p>' : '' ) +
+				( p.wait ? '<p class="sfc-sub"><b>Why it has not posted:</b> ' + esc( p.wait ) + '</p>' : '' ) +
 				'<label class="l" for="c' + p.id + '">Caption</label><textarea class="sfc-field" id="c' + p.id + '">' + esc( p.caption ) + '</textarea>' +
-				'<div class="sfc-row2"><button class="sfc-btn primary q-go" data-do="' + ( failed ? 'retry' : 'approve' ) + '" type="button">' + ( failed ? 'Try again' : 'Approve and post' ) + '</button><button class="sfc-btn q-skip" type="button">Skip</button></div></div></div>';
+				'<div class="sfc-row2"><button class="sfc-btn primary q-go" data-do="' + ( failed ? 'retry' : ( p.status === 'approved' ? 'now' : 'approve' ) ) + '" type="button">' + ( failed ? 'Try again' : ( p.status === 'approved' ? 'Post now' : 'Approve and post' ) ) + '</button><button class="sfc-btn q-skip" type="button">Skip</button></div></div></div>';
 		} );
 		return h;
 	}

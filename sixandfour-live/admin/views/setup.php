@@ -26,7 +26,7 @@ SF_Admin::form_open( 'save_setup' );
 		</div>
 	</div>
 	<div class="sf-row"><label class="sf-l" for="max_posts_day"><b>Posts per day</b><span>Keeps the Page from feeling spammy. Manual posts do not count.</span></label><input class="sf-field sf-narrow" id="max_posts_day" name="max_posts_day" type="number" min="1" max="100" value="<?php echo (int) $o['max_posts_day']; ?>"></div>
-	<div class="sf-row"><label class="sf-l" for="quiet_start"><b>Quiet hours start</b><span>Nothing posts between start and end, in the site's time zone</span></label><input class="sf-field sf-narrow" id="quiet_start" name="quiet_start" type="time" value="<?php echo esc_attr( $o['quiet_start'] ); ?>"></div>
+	<div class="sf-row"><label class="sf-l" for="quiet_start"><b>Quiet hours start</b><span>Nothing posts between start and end, in the site's time zone. Now it is <?php echo esc_html( wp_date( 'H:i' ) ); ?> (<?php echo esc_html( wp_timezone_string() ); ?>). If that is not your time, set the time zone in WordPress under Settings, General.</span></label><input class="sf-field sf-narrow" id="quiet_start" name="quiet_start" type="time" value="<?php echo esc_attr( $o['quiet_start'] ); ?>"></div>
 	<div class="sf-row"><label class="sf-l" for="quiet_end"><b>Quiet hours end</b></label><input class="sf-field sf-narrow" id="quiet_end" name="quiet_end" type="time" value="<?php echo esc_attr( $o['quiet_end'] ); ?>"></div>
 </div>
 

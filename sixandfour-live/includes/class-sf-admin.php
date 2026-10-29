@@ -249,6 +249,15 @@ class SF_Admin {
 			$msg = array( 'posted' => 'Posted to Facebook.', 'waiting' => 'Approved. It will go out when the posting rules allow.', 'skipped' => 'Skipped by the posting rules.', 'failed' => 'Facebook refused it. See the reason in the list.' );
 			self::done( 'queue', 'posted' === $res ? 'success' : ( 'failed' === $res ? 'error' : 'warning' ), $msg[ $res ] );
 		}
+		if ( 'now' === $act ) {
+			if ( isset( $_POST['caption'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+				SF_DB::update_post( $id, array( 'caption' => sanitize_textarea_field( wp_unslash( $_POST['caption'] ) ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			}
+			SF_Poster::approve( $id );
+			$res = SF_Poster::publish_one( SF_DB::get_post( $id ), true );
+			$msg = array( 'posted' => 'Posted to Facebook.', 'waiting' => 'Facebook did not accept it yet. It will try again in a few minutes.', 'skipped' => 'Skipped.', 'failed' => 'Facebook refused it. See the reason in the list.' );
+			self::done( 'queue', 'posted' === $res ? 'success' : ( 'failed' === $res ? 'error' : 'warning' ), $msg[ $res ] );
+		}
 		if ( 'skip' === $act ) {
 			SF_Poster::skip( $id );
 			self::done( 'queue', 'success', 'Skipped.' );

@@ -199,6 +199,7 @@ class SF_Console {
 			'image'   => SF_Poster::image_url( $p ),
 			'error'   => (string) $p['error'],
 			'time'    => wp_date( 'H:i', strtotime( ( $p['posted_at'] ? $p['posted_at'] : $p['created_at'] ) . ' UTC' ) ),
+			'wait'    => SF_Poster::wait_reason( $p ),
 			'when'    => $p['scheduled_at'] ? wp_date( 'j M H:i', strtotime( $p['scheduled_at'] . ' UTC' ) ) : '',
 		);
 	}
@@ -220,6 +221,12 @@ class SF_Console {
 		if ( 'skip' === $act ) {
 			SF_Poster::skip( $id );
 			return array( 'message' => 'Skipped.', 'state' => self::state() );
+		}
+		if ( 'now' === $act ) {
+			SF_Poster::approve( $id );
+			$res = SF_Poster::publish_one( SF_DB::get_post( $id ), true );
+			$msg = array( 'posted' => 'Posted to Facebook.', 'waiting' => 'Facebook did not accept it yet. It will try again in a few minutes.', 'skipped' => 'Skipped.', 'failed' => 'Facebook refused it. The reason is shown on the post.' );
+			return array( 'message' => $msg[ $res ], 'ok' => ( 'posted' === $res || 'waiting' === $res ), 'state' => self::state() );
 		}
 		if ( 'approve' === $act || 'retry' === $act ) {
 			$cap = $req->get_param( 'caption' );

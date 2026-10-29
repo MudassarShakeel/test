@@ -21,6 +21,7 @@ $render = function ( $p, $buttons ) {
 		<div class="sf-body">
 			<div class="sf-meta"><span class="sf-pill sf-warn"><?php echo esc_html( ucfirst( $p['status'] ) ); ?></span> <?php echo esc_html( ucfirst( $p['type'] ) ); ?> <span class="sf-muted"><?php echo esc_html( wp_date( 'j M, H:i', strtotime( $p['created_at'] . ' UTC' ) ) ); ?></span></div>
 			<?php if ( $p['error'] ) : ?><p class="sf-err"><?php echo esc_html( $p['error'] ); ?></p><?php endif; ?>
+			<?php $why = SF_Poster::wait_reason( $p ); if ( '' !== $why ) : ?><p class="sf-sub"><b>Why it has not posted:</b> <?php echo esc_html( $why ); ?></p><?php endif; ?>
 			<?php SF_Admin::form_open( 'queue_action' ); ?>
 				<input type="hidden" name="id" value="<?php echo (int) $p['id']; ?>">
 				<label class="sf-field-l" for="cap<?php echo (int) $p['id']; ?>">Caption</label>
@@ -33,6 +34,7 @@ $render = function ( $p, $buttons ) {
 						<button class="sf-btn sf-primary" type="submit" name="do" value="retry">Try again</button>
 						<button class="sf-btn" type="submit" name="do" value="skip">Skip</button>
 					<?php else : ?>
+						<button class="sf-btn sf-primary" type="submit" name="do" value="now">Post now</button>
 						<button class="sf-btn" type="submit" name="do" value="skip">Cancel this post</button>
 					<?php endif; ?>
 				</div>
