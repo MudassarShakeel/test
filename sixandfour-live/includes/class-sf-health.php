@@ -34,7 +34,7 @@ class SF_Health {
 		$file = ABSPATH . 'wp-cron.php';
 		$root = isset( $_SERVER['DOCUMENT_ROOT'] ) ? rtrim( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ), '/' ) : '';
 		$sub  = '' !== $root && rtrim( ABSPATH, '/' ) !== $root;
-		return 'In Hostinger, Advanced, Cron Jobs: choose PHP, every 5 minutes, and run ' . $file . ( $sub ? '. WordPress is in a sub folder, so use this exact path and not public_html/wp-cron.php.' : '.' );
+		return 'In Hostinger, Advanced, Cron Jobs: choose PHP and every 5 minutes. ' . ( $sub ? 'WordPress is in a sub folder, so use the exact path below, not public_html/wp-cron.php. ' : '' ) . 'Command to run (copy it without any full stop at the end): ' . $file;
 	}
 
 	/**
