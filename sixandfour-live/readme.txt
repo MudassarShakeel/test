@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.4.4
+Stable tag: 1.4.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,9 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.4.5 =
+* Easier to read on a phone: the poll card is redesigned with a big headline, two large choices and one clear instruction. Footers, match info and the Page link are larger on every card. The Like and Love icons use the new cyan.
 
 = 1.4.4 =
 * The health check now warns when a match check was due and did not run, and Overview says Overdue instead of Due now.

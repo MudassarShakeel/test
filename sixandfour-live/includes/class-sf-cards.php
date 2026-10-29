@@ -423,16 +423,16 @@ class SF_Cards {
 		$this->paste( $this->assets . 'img/logo-navy.png', 4.7, 4.3, 6.4, 6.4 );
 		$this->text( 'Cricket Sport', 13, $this->cb( 6.3, 2.7 ), 2.7, 800, self::WHITE );
 		if ( '' !== $this->link ) {
-			$lw = $this->tw( $this->link, 1.45, 600 ) + 2.4;
-			$this->rrect( 13, 8.3, $lw, 2.5, 1.25, '16306F' );
-			$this->text( $this->link, 14.2, $this->cb( 9.55, 1.45 ), 1.45, 600, '9EEFFF' );
+			$lw = $this->tw( $this->link, 1.6, 600 ) + 2.4;
+			$this->rrect( 13, 8.2, $lw, 2.7, 1.35, '16306F' );
+			$this->text( $this->link, 14.2, $this->cb( 9.55, 1.6 ), 1.6, 600, '9EEFFF' );
 		}
 		$this->pill( $pill, $live, 7.5, 94.6 );
 		return 12.4;
 	}
 
 	/** Draw a line of segments [text, bold] and return the baseline-free height in u. */
-	private function meta_line( $segs, $top, $size = 1.9 ) {
+	private function meta_line( $segs, $top, $size = 2.3 ) {
 		$x = 4;
 		$b = $top + $this->bl( $size );
 		foreach ( $segs as $seg ) {
@@ -454,7 +454,7 @@ class SF_Cards {
 	}
 
 	private function foot_top() {
-		return $this->H / $this->u - 3.4 - 2.35;
+		return $this->H / $this->u - 3.4 - 3.1;
 	}
 
 	private function foot( $d ) {
@@ -464,9 +464,9 @@ class SF_Cards {
 			$left  = $left === $this->link ? '' : $left;
 			$right = $right === $this->link ? '' : $right;
 		}
-		$b     = $this->foot_top() + $this->bl( 1.6 );
-		$this->text( $left, 4, $b, 1.6, 600, self::MUTED );
-		$this->text( $right, 96, $b, 1.6, 600, self::MUTED, 'r' );
+		$b     = $this->foot_top() + $this->bl( 2.1 );
+		$this->text( $left, 4, $b, 2.1, 600, self::MUTED );
+		$this->text( $right, 96, $b, 2.1, 600, self::MUTED, 'r' );
 	}
 
 	/** Navy status bar with mint highlights, anchored above the footer. Returns its top. */
@@ -728,35 +728,36 @@ class SF_Cards {
 	}
 
 	private function card_poll( $d ) {
-		$y  = $this->head( 'WHO WINS?' );
+		// Big, plain and quick to read: a headline, two large choices and one instruction.
+		$y  = $this->head( 'POLL' );
+		$y += 2.4;
+		$this->text( 'Who wins?', 4, $y + $this->bl( 8.6, 1.05 ), 8.6, 800, self::NAVY, 'l', -0.025 );
+		$y += 8.6 * 1.05 + 1.2;
+		$y += $this->meta_line( $this->meta_segs( $d ), $y, 3.0 );
 		$y += 2.6;
-		$y += $this->meta_line( $this->meta_segs( $d ), $y, 2.2 );
-		$y += 3;
 		$pw = 45;
-		$ph = 8 + 21 + 3 + 4.4 * 1.47 + 3 + 5.6 + 8;
+		$ph = 5 + 19.5 + 2.6 + 5.2 * 1.3 + 2.6 + 7.4 + 4.6;
 		foreach ( array( 0, 1 ) as $i ) {
 			$t  = $d['teams'][ $i ];
 			$x  = 4 + $i * ( $pw + 2 );
 			$cx = $x + $pw / 2;
 			$this->rrect( $x, $y, $pw, $ph, 3, self::FILL );
-			$yy = $y + 8;
-			$this->team_pic( $t, $cx - 14, $yy, 28, 21, 2 );
-			$yy += 21 + 3;
-			$this->text( $this->fit( $t['name'], $pw - 4, 4.4, 800 ), $cx, $yy + $this->bl( 4.4 ), 4.4, 800, self::NAVY, 'c', -0.02 );
-			$yy += 4.4 * 1.47 + 3;
-			$icon  = 0 === $i ? 'like' : 'love';
-			$word  = 0 === $i ? 'Like' : 'Love';
-			$ww    = $this->tw( $word, 2.2, 800 );
-			$rest  = $this->tw( ' to vote', 2.2, 700 );
-			$pillw = 3.2 + 1.2 + $ww + $rest + 6;
-			$px    = $cx - $pillw / 2;
-			$this->rrect( $px, $yy, $pillw, 5.6, 2.8, self::NAVY );
-			$this->paste( $this->assets . 'img/icon-' . $icon . '.png', $px + 3, $yy + 1.2, 3.2, 3.2 );
-			$tx = $px + 3 + 3.2 + 1.2;
-			$tx += $this->text( $word, $tx, $this->cb( $yy + 2.8, 2.2 ), 2.2, 800, self::MINT );
-			$this->text( ' to vote', $tx, $this->cb( $yy + 2.8, 2.2 ), 2.2, 700, self::WHITE );
+			$yy = $y + 5;
+			$this->team_pic( $t, $cx - 13, $yy, 26, 19.5, 2 );
+			$yy += 19.5 + 2.6;
+			$this->text( $this->fit( $t['name'], $pw - 4, 5.2, 800 ), $cx, $yy + $this->bl( 5.2, 1.3 ), 5.2, 800, self::NAVY, 'c', -0.02 );
+			$yy += 5.2 * 1.3 + 2.6;
+			$icon = 0 === $i ? 'like' : 'love';
+			$word = 0 === $i ? 'LIKE' : 'LOVE';
+			$pillw = $pw - 6;
+			$px    = $x + 3;
+			$this->rrect( $px, $yy, $pillw, 7.4, 3.7, self::NAVY );
+			$ww = $this->tw( $word, 3.4, 800, 0.04 );
+			$gx = $cx - ( 4.4 + 1.4 + $ww ) / 2;
+			$this->paste( $this->assets . 'img/icon-' . $icon . '.png', $gx, $yy + 1.5, 4.4, 4.4 );
+			$this->text( $word, $gx + 4.4 + 1.4, $this->cb( $yy + 3.7, 3.4 ), 3.4, 800, self::MINT, 'l', 0.04 );
 		}
-		$this->status_bar( $d['status'], 3.0, 3.0, 2.0, 2.0 );
+		$this->status_bar( array( array( 'Tap Like or Love to vote, ', false ), array( 'then comment your score', true ) ), 3.2, 3.0, 2.2, 2.0 );
 		$this->foot( $d );
 	}
 
