@@ -50,7 +50,7 @@ SF_Admin::form_open( 'save_setup' );
 <div class="sf-group">
 	<?php
 	SF_Admin::switch_row( 'skip_women', $o['skip_women'], 'Skip women\'s matches', 'Leaves them out of every post and saves API calls.' );
-	SF_Admin::switch_row( 'top_only', $o['top_only'], 'Only matches between the top teams', 'Used when you follow no tournament. A tournament you follow on the Tournaments screen is always covered.' );
+	SF_Admin::switch_row( 'top_only', $o['top_only'], 'Always cover matches between the top teams', 'Any series, for example a tri-series. A tournament you follow on the Tournaments screen is covered as well, so club leagues still work.' );
 	?>
 	<div class="sf-row sf-block"><label for="top_teams"><b>Top teams</b> <span class="sf-muted">One per line. Both teams must be on the list.</span></label><textarea class="sf-field" id="top_teams" name="top_teams" rows="8"><?php echo esc_textarea( $o['top_teams'] ); ?></textarea></div>
 	<?php $st = SF_API::stats(); ?>

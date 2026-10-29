@@ -186,12 +186,13 @@ class SF_API {
 		if ( SF_Options::get( 'skip_women', 1 ) && self::is_women( $m ) ) {
 			return false;
 		}
+		// A tournament you follow is always covered. With "top teams" on, matches between those teams are covered too, in any series.
 		$followed = SF_Options::get( 'followed', array() );
-		if ( ! empty( $followed ) ) {
-			return isset( $followed[ $m['series_id'] ] );
+		if ( ! empty( $followed ) && isset( $followed[ $m['series_id'] ] ) ) {
+			return true;
 		}
 		if ( ! SF_Options::get( 'top_only', 1 ) ) {
-			return true;
+			return empty( $followed );
 		}
 		$top = array();
 		foreach ( explode( "\n", (string) SF_Options::get( 'top_teams', '' ) ) as $t ) {

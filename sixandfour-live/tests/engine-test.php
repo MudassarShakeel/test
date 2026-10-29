@@ -231,7 +231,11 @@ ok( ! SF_API::wanted( mk( 'India Women', 'Australia Women' ) ), "women's teams a
 ok( ! SF_API::wanted( mk( 'India', 'Australia', 'x9', 'India vs Australia (W), 3rd T20I' ) ), "a (W) match name is skipped" );
 SF_Options::update( array( 'followed' => array( 'ipl' => 'IPL 2026' ) ) );
 ok( SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings', 'ipl' ) ), 'a tournament you follow is always covered' );
-ok( ! SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'a series you do not follow is skipped when you follow some' );
+ok( SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'a top-team match in a series you do not follow is still covered' );
+ok( ! SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings', 'other' ) ), 'a club match in a series you do not follow is skipped' );
+SF_Options::update( array( 'top_only' => 0 ) );
+ok( ! SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'with top teams switched off only followed tournaments are covered' );
+SF_Options::update( array( 'top_only' => 1 ) );
 ok( ! SF_API::wanted( mk( 'Delhi Women', 'Mumbai Women', 'ipl' ) ), "women's matches are skipped even in a followed series" );
 SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'skip_women' => 1 ) );
 

@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,9 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.5.1 =
+* Fixed: when you followed a tournament, top-team matches in other series (such as a tri-series) were skipped. Matches between the top teams are now always covered, and followed tournaments are covered as well.
 
 = 1.5.0 =
 * New: player photos are found automatically on Wikimedia Commons. A photo is used only when its licence allows reuse (Creative Commons BY or BY-SA, CC0, public domain). Where the licence asks for a credit, the post caption gets a line such as "Photo: Name, CC BY-SA 4.0, via Wikimedia Commons". Your own uploaded photo always comes first and needs no credit.
