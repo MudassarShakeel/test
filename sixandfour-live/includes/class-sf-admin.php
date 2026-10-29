@@ -165,7 +165,7 @@ class SF_Admin {
 		}
 		$new['skip_women'] = self::bool( 'skip_women' );
 		$cover             = self::text( 'cover', 'all' );
-		$new['cover']      = in_array( $cover, array( 'all', 'top', 'followed' ), true ) ? $cover : 'all';
+		$new['cover']      = in_array( $cover, array( 'all', 'full', 'top', 'followed' ), true ) ? $cover : 'all';
 		$tz                = self::text( 'tz', $old['tz'] );
 		$new['tz']         = in_array( $tz, timezone_identifiers_list(), true ) ? $tz : $old['tz'];
 		$dt                = self::text( 'daily_time', $old['daily_time'] );

@@ -27,7 +27,7 @@ class SF_Options {
 			'top_only'          => 1, // Men's matches between the teams below, unless you follow the tournament.
 			'skip_women'        => 1,
 			'top_teams'         => "India\nAustralia\nEngland\nSouth Africa\nNew Zealand\nPakistan\nSri Lanka\nBangladesh\nWest Indies\nAfghanistan\nZimbabwe\nIreland\nNetherlands\nScotland\nNepal\nUnited Arab Emirates\nUnited States of America\nNamibia\nOman\nCanada",
-			'cover'             => 'all', // all (every match except women's), top (top teams and followed tournaments) or followed.
+			'cover'             => 'all', // all (every match except women's), full (ICC full members only), top (top teams and followed tournaments) or followed.
 			'tz'                => 'Asia/Karachi', // The time zone for the day start and for match times on cards.
 			'daily_time'        => '06:00',        // When the day's matches are posted, in that time zone.
 			'manual_enabled'    => 0,              // Manual posts from the admin and the mobile console.

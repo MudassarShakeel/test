@@ -191,6 +191,9 @@ class SF_API {
 	}
 
 	/** Is this match one we should post about? Tournaments you follow always count, except women's matches. */
+	/** The twelve ICC full members. */
+	const FULL_MEMBERS = array( 'india', 'australia', 'england', 'south africa', 'new zealand', 'pakistan', 'sri lanka', 'bangladesh', 'west indies', 'afghanistan', 'zimbabwe', 'ireland' );
+
 	public static function wanted( array $m ) {
 		if ( SF_Options::get( 'skip_women', 1 ) && self::is_women( $m ) ) {
 			return false;
@@ -198,6 +201,14 @@ class SF_API {
 		$cover = SF_Options::get( 'cover', 'all' );
 		if ( 'all' === $cover ) {
 			return true;   // Every match except women's.
+		}
+		if ( 'full' === $cover ) {   // Both teams must be ICC full members. A, U19 and board XI sides do not count.
+			foreach ( $m['teams'] as $t ) {
+				if ( ! in_array( self::team_key( $t['name'] ), self::FULL_MEMBERS, true ) ) {
+					return false;
+				}
+			}
+			return true;
 		}
 		$followed = SF_Options::get( 'followed', array() );
 		if ( ! empty( $followed ) && isset( $followed[ $m['series_id'] ] ) ) {

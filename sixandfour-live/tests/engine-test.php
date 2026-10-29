@@ -242,6 +242,12 @@ ok( SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings', 'other' ) ) && 
 ok( ! SF_API::wanted( mk( 'England Women', 'Sri Lanka Women', 'tri' ) ), "and women's matches are still skipped" );
 SF_Options::update( array( 'cover' => 'top' ) );
 ok( ! SF_API::wanted( mk( 'Delhi Women', 'Mumbai Women', 'ipl' ) ), "women's matches are skipped even in a followed series" );
+SF_Options::update( array( 'cover' => 'full' ) );
+ok( SF_API::wanted( mk( 'England', 'Sri Lanka', 'tri' ) ) && SF_API::wanted( mk( 'West Indies', 'Ireland', 'x' ) ), 'full members only: two ICC full members are covered, in any series' );
+ok( ! SF_API::wanted( mk( 'Oman', 'United Arab Emirates', 'x' ) ) && ! SF_API::wanted( mk( 'India', 'Nepal', 'x' ) ), 'full members only: an associate side rules the match out' );
+ok( ! SF_API::wanted( mk( 'India A', 'Australia A', 'x' ) ) && ! SF_API::wanted( mk( 'Otago', 'Wellington', 'x' ) ), 'full members only: A teams and domestic sides are left out' );
+ok( ! SF_API::wanted( mk( 'England Women', 'India Women', 'x' ) ), "full members only: women's matches are still left out" );
+SF_Options::update( array( 'cover' => 'top' ) );
 SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'skip_women' => 1 ) );
 
 echo "10b. A waiting post does not block newer ones\n";

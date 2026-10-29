@@ -60,6 +60,7 @@ SF_Admin::form_open( 'save_setup' );
 		<div class="sf-l"><b>Which matches</b></div>
 		<div class="sf-stack">
 			<label><input type="radio" name="cover" value="all" <?php checked( $o['cover'], 'all' ); ?>> <b>Every match</b>, except women's. Any series, any team, including tri-series.</label>
+			<label><input type="radio" name="cover" value="full" <?php checked( $o['cover'], 'full' ); ?>> <b>Full member teams only.</b> Both sides must be one of the 12 ICC full members (India, Australia, England, South Africa, New Zealand, Pakistan, Sri Lanka, Bangladesh, West Indies, Afghanistan, Zimbabwe, Ireland), in any series. A teams, youth sides and domestic teams are left out.</label>
 			<label><input type="radio" name="cover" value="top" <?php checked( $o['cover'], 'top' ); ?>> <b>Top teams only</b> (the list below), plus the tournaments you follow.</label>
 			<label><input type="radio" name="cover" value="followed" <?php checked( $o['cover'], 'followed' ); ?>> <b>Followed tournaments only.</b> Everything if you follow none.</label>
 		</div>
