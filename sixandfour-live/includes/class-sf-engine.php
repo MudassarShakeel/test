@@ -191,11 +191,6 @@ class SF_Engine {
 			SF_Poster::publish_due();
 			return;
 		}
-		if ( ! $force && SF_Poster::in_quiet_hours() ) {
-			update_option( 'sf_next_check', time() + 30 * MINUTE_IN_SECONDS, false );
-			SF_Poster::publish_due();
-			return;
-		}
 		$list = SF_API::current_matches( $force );
 		if ( is_wp_error( $list ) ) {
 			SF_Log::add( $list->get_error_message(), 'error' );

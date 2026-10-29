@@ -50,16 +50,6 @@ class SF_Poster {
 		return $dt->getTimestamp();
 	}
 
-	public static function in_quiet_hours() {
-		$o = SF_Options::all();
-		$s = $o['quiet_start'];
-		$e = $o['quiet_end'];
-		if ( ! preg_match( '/^\d{2}:\d{2}$/', $s ) || ! preg_match( '/^\d{2}:\d{2}$/', $e ) || $s === $e ) {
-			return false;
-		}
-		$now = wp_date( 'H:i' );
-		return $s < $e ? ( $now >= $s && $now < $e ) : ( $now >= $s || $now < $e );
-	}
 
 	/**
 	 * Draw the card and add it to the queue.
@@ -158,9 +148,6 @@ class SF_Poster {
 			if ( SF_Options::get( 'paused' ) ) {
 				return 'Posting is paused. Resume it on the Overview or the mobile console.';
 			}
-			if ( self::in_quiet_hours() ) {
-				return 'Quiet hours: nothing posts between ' . $o['quiet_start'] . ' and ' . $o['quiet_end'] . ' (site time, now ' . wp_date( 'H:i' ) . '). Change this in Setup.';
-			}
 			if ( SF_DB::count_posted_since( self::day_start() ) >= (int) $o['max_posts_day'] ) {
 				return 'The daily limit of ' . (int) $o['max_posts_day'] . ' posts was reached.';
 			}
@@ -181,7 +168,7 @@ class SF_Poster {
 		$id     = (int) $row['id'];
 
 		if ( ! $manual ) {
-			if ( self::in_quiet_hours() || SF_Options::get( 'paused' ) ) {
+			if ( SF_Options::get( 'paused' ) ) {
 				return 'waiting';
 			}
 			$age = time() - (int) strtotime( $row['created_at'] . ' UTC' );

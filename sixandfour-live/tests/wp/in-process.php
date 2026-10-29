@@ -126,7 +126,7 @@ add_filter( 'pre_http_request', function ( $pre, $args, $url ) use ( &$world ) {
 	}
 	return $pre;
 }, 10, 3 );
-SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '00:00', 'followed' => array() ) );
+SF_Options::update( array( 'followed' => array() ) );
 $now = time();
 $world['matches'] = array( array(
 	'id' => 'wm1', 'name' => 'England vs Australia, 14th Match', 'matchType' => 't20', 'status' => 'Australia won the toss and elected to bat first', 'venue' => 'Harbour Oval, Harbour',
@@ -157,10 +157,8 @@ SF_Engine::tick( true );
 ok( 2 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . SF_DB::posts() . " WHERE type IN ('toss','poll')" ), 'a second tick makes no duplicates' );
 ok( SF_API::stats()['hits'] > 0, 'API usage is counted: ' . SF_API::stats()['hits'] . ' calls' );
 
-echo "7. Daily limit and quiet hours\n";
-SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '23:59' ) );
-ok( SF_Poster::in_quiet_hours(), 'quiet hours block posting' );
-SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '00:00' ) );
+echo "7. No quiet hours\n";
+ok( ! method_exists( 'SF_Poster', 'in_quiet_hours' ), 'posting is allowed at any hour' );
 
 echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
 exit( $fail ? 1 : 0 );

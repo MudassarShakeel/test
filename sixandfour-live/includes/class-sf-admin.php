@@ -167,10 +167,6 @@ class SF_Admin {
 		$new['mode']       = 'approve' === self::text( 'mode', 'auto' ) ? 'approve' : 'auto';
 		$new['api_limit']  = max( 10, min( 100000, (int) self::text( 'api_limit', 100 ) ) );
 		$new['max_posts_day'] = max( 1, min( 100, (int) self::text( 'max_posts_day', 15 ) ) );
-		foreach ( array( 'quiet_start', 'quiet_end' ) as $k ) {
-			$v          = self::text( $k, $old[ $k ] );
-			$new[ $k ]  = preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/', $v ) ? $v : $old[ $k ];
-		}
 		$new['noindex'] = self::bool( 'noindex' );
 		SF_Options::update( $new );
 		SF_Poster::protect_dir();

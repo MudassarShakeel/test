@@ -28,8 +28,6 @@ class SF_Options {
 			'skip_women'        => 1,
 			'top_teams'         => "India\nAustralia\nEngland\nSouth Africa\nNew Zealand\nPakistan\nSri Lanka\nBangladesh\nWest Indies\nAfghanistan\nZimbabwe\nIreland\nNetherlands\nScotland\nNepal\nUnited Arab Emirates\nUnited States of America\nNamibia\nOman\nCanada",
 			'max_posts_day'     => 15,
-			'quiet_start'       => '01:00',
-			'quiet_end'         => '06:00',
 			'live_cards'        => 2,
 			'per_match_hour'    => 2,
 			'digest'            => 1,

@@ -98,7 +98,7 @@ async function login(page, user, pass) {
   await page.fill('#api_key', 'mock-cricket-key-0001');
   await page.fill('#api_key2', 'mock-backup-key-0002');
   await page.fill('#api_key3', 'mock-backup-key-0003');
-  await page.fill('#quiet_start', '00:00'); await page.fill('#quiet_end', '00:00');
+  ok(await page.locator('#quiet_start').count() === 0, 'Setup has no quiet hours');
   await Promise.all([page.waitForNavigation(), page.click('button.sf-primary')]);
   const notice = await page.locator('.sf-notice').first().innerText();
   ok(/Settings saved/.test(notice) && /Connected to Cricket Sport/.test(notice), 'settings saved and the Page was verified: "' + notice.replace(/\s+/g, ' ') + '"');

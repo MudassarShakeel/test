@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,10 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.4.3 =
+* Removed: quiet hours. The plugin now posts at any hour.
+* Posts go out automatically with no approval step. A site that was set to "Ask me first" is switched to Auto-post once on update. The setting is still on the Setup screen if you ever want it back.
 
 = 1.4.2 =
 * Fixed: posts waiting for a posting rule (such as the per-match limit) could block newer approved posts from being sent. The sender now looks past them.

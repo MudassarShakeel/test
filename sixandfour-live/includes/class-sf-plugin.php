@@ -12,6 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class SF_Plugin {
 
 	public static function init() {
+		// Version 1.4.2 posts at any hour with no approval step, so the old "Ask me first" setting is switched to Auto-post once.
+		if ( ! get_option( 'sf_auto_v142' ) ) {
+			update_option( 'sf_auto_v142', 1, false );
+			if ( 'approve' === SF_Options::get( 'mode', 'auto' ) ) {
+				SF_Options::update( array( 'mode' => 'auto' ) );
+			}
+		}
 		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) );
 		add_action( 'sf_tick', array( 'SF_Engine', 'tick' ) );
 		add_action( 'sf_publish', array( 'SF_Poster', 'publish_due' ) );

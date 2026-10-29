@@ -67,7 +67,7 @@ $GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$world ) {
 
 SF_Options::update( array(
 	'api_key' => 'k', 'fb_page_id' => '123', 'fb_token' => 'tok', 'mode' => 'auto',
-	'quiet_start' => '00:00', 'quiet_end' => '00:00', 'max_posts_day' => 50, 'per_match_hour' => 5, 'live_cards' => 2,
+	'max_posts_day' => 50, 'per_match_hour' => 5, 'live_cards' => 2,
 	'followed' => array( 's1' => 'Harbour Cup 2026' ), 'fb_handle' => 'facebook.com/cricketsportinfo',
 ) );
 function posts( $type = null ) {
@@ -201,10 +201,8 @@ tick();
 ok( count( $world['fb_edits'] ) >= 1, 'pinned post text was edited after a change' );
 echo '  edit text: ', str_replace( "\n", ' | ', end( $world['fb_edits'] )[1] ), "\n";
 
-echo "8. Quiet hours and the daily limit\n";
-SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '23:59' ) );
-ok( SF_Poster::in_quiet_hours(), 'quiet hours detected' );
-SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '00:00', 'max_posts_day' => 1 ) );
+echo "8. The daily limit, and no quiet hours\n";
+SF_Options::update( array( 'max_posts_day' => 1 ) );
 $id = SF_Poster::queue_text( 'live', 'limit-test', 'Over the limit', array( 'match_id' => 'zz' ) );
 SF_Poster::publish_due();
 $row = SF_DB::get_post( $id );
@@ -241,7 +239,7 @@ echo "10b. A waiting post does not block newer ones\n";
 $GLOBALS['sf_http'] = function () {
 	return sf_json( array( 'id' => '1_ok' ) );
 };
-SF_Options::update( array( 'per_match_hour' => 1, 'max_posts_day' => 50, 'quiet_start' => '00:00', 'quiet_end' => '00:00', 'paused' => 0 ) );
+SF_Options::update( array( 'per_match_hour' => 1, 'max_posts_day' => 50, 'paused' => 0 ) );
 global $wpdb;
 $wpdb->query( "UPDATE wp_sf_posts SET status = 'skipped' WHERE status = 'approved'" );
 SF_DB::add_post( array( 'type' => 'live', 'dedupe' => 'blk-posted', 'match_id' => 'mm', 'status' => 'posted', 'caption' => 'x', 'posted_at' => gmdate( 'Y-m-d H:i:s' ) ) );
@@ -255,10 +253,11 @@ $row = SF_DB::get_post( $res_id );
 ok( 'posted' === $row['status'], 'a result is sent although three older live posts are waiting on the per-match limit (' . $row['status'] . ')' );
 $w = SF_Poster::wait_reason( SF_DB::get_post( $ids[0] ) );
 ok( false !== strpos( $w, 'already had 1 live posts' ), 'the waiting post says why: ' . $w );
-SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '23:59' ) );
+SF_Options::update( array( 'paused' => 1 ) );
 $w = SF_Poster::wait_reason( SF_DB::get_post( $ids[0] ) );
-ok( false !== strpos( $w, 'Quiet hours' ), 'quiet hours are named as the reason: ' . $w );
-SF_Options::update( array( 'quiet_start' => '00:00', 'quiet_end' => '00:00' ) );
+ok( false !== strpos( $w, 'paused' ), 'a paused site is named as the reason: ' . $w );
+SF_Options::update( array( 'paused' => 0 ) );
+ok( ! method_exists( 'SF_Poster', 'in_quiet_hours' ), 'there are no quiet hours' );
 $ok_now = SF_Poster::publish_one( SF_DB::get_post( $ids[0] ), true );
 ok( 'posted' === $ok_now, 'Post now sends it past the rules' );
 $wpdb->query( "UPDATE wp_sf_posts SET status = 'skipped' WHERE status = 'approved'" );
