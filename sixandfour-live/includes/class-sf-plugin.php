@@ -11,7 +11,53 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class SF_Plugin {
 
+	/** The posting time zone: the one chosen in Setup, otherwise the WordPress one. */
+	public static function tz() {
+		$name = SF_Options::get( 'tz', '' );
+		if ( '' !== $name ) {
+			try {
+				return new DateTimeZone( $name );
+			} catch ( Exception $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement
+			}
+		}
+		return wp_timezone();
+	}
+
+	/** Like wp_date(), in the posting time zone. */
+	public static function date( $format, $ts = null ) {
+		return wp_date( $format, null === $ts ? time() : $ts, self::tz() );
+	}
+
+	/** One-time settings change in version 1.6.0: the post types asked for, every match except women's, manual posts off. */
+	private static function migrate() {
+		if ( get_option( 'sf_v160' ) ) {
+			return;
+		}
+		update_option( 'sf_v160', 1, false );
+		$jobs = array_fill_keys( array( 'live', 'wicket', 'stumps', 'potm', 'milestones', 'table', 'ranking', 'pinned' ), 0 ) + array( 'fixtures' => 1, 'poll' => 1, 'toss' => 1, 'innings' => 1, 'result' => 1, 'summary' => 1 );
+		$o    = SF_Options::all();
+		SF_Options::update(
+			array(
+				'jobs'              => array_merge( $o['jobs'], $jobs ),
+				'cover'             => 'all',
+				'manual_enabled'    => 0,
+				'digest'            => 0,
+				'polls_per_day'     => max( 40, (int) $o['polls_per_day'] ),
+				'poll_hours_before' => max( 3, (int) $o['poll_hours_before'] ),
+				'max_posts_day'     => max( 60, (int) $o['max_posts_day'] ),
+			)
+		);
+		self::reschedule_daily();
+	}
+
+	/** Move the day-start job to the time chosen in Setup. */
+	public static function reschedule_daily() {
+		wp_clear_scheduled_hook( 'sf_daily' );
+		wp_schedule_single_event( self::next_ts( SF_Options::get( 'daily_time', '06:00' ) ), 'sf_daily' );
+	}
+
 	public static function init() {
+		self::migrate();
 		// Version 1.4.2 posts at any hour with no approval step, so the old "Ask me first" setting is switched to Auto-post once.
 		if ( ! get_option( 'sf_auto_v142' ) ) {
 			update_option( 'sf_auto_v142', 1, false );
@@ -65,7 +111,7 @@ class SF_Plugin {
 
 	/** Next time of day (and optionally weekday 1-7 or day of month) in the site's time zone. */
 	public static function next_ts( $time, $dow = null, $dom = null ) {
-		$tz  = wp_timezone();
+		$tz  = self::tz();
 		$now = new DateTime( 'now', $tz );
 		$h   = (int) substr( $time, 0, 2 );
 		$m   = (int) substr( $time, 3, 2 );
@@ -91,7 +137,7 @@ class SF_Plugin {
 			wp_schedule_event( time() + 90, 'sf_five_minutes', 'sf_publish' );
 		}
 		if ( ! wp_next_scheduled( 'sf_daily' ) ) {
-			wp_schedule_single_event( self::next_ts( '08:00' ), 'sf_daily' );
+			wp_schedule_single_event( self::next_ts( SF_Options::get( 'daily_time', '06:00' ) ), 'sf_daily' );
 		}
 		if ( ! wp_next_scheduled( 'sf_weekly' ) ) {
 			wp_schedule_single_event( self::next_ts( '09:00', 1 ), 'sf_weekly' );
@@ -102,7 +148,7 @@ class SF_Plugin {
 	}
 
 	public static function run_daily() {
-		wp_schedule_single_event( self::next_ts( '08:00' ), 'sf_daily' );
+		wp_schedule_single_event( self::next_ts( SF_Options::get( 'daily_time', '06:00' ) ), 'sf_daily' );
 		SF_Engine::daily();
 	}
 

@@ -35,7 +35,7 @@ async function pwLogin(page, user, pass) {
 }
 
 (async () => {
-  php('mobile-reset'); php('clear-locks'); php('reset'); php('subscriber');
+  php('mobile-reset'); php('clear-locks'); php('reset'); php('subscriber'); php('manual-set 1');
   const browser = await chromium.launch();
 
   console.log('1. Home page before setup');
@@ -108,6 +108,10 @@ async function pwLogin(page, user, pass) {
   await gp.click('#a-pause');
   await gp.waitForTimeout(1200);
   ok(php('option', 'paused') === '0', 'Resume is saved');
+
+  php('manual-set 0'); await gp.reload(); await gp.waitForSelector('.sfc-tabs');
+  ok(await gp.locator('[data-tab=post]').count() === 0, 'the Post tab is hidden while manual posts are off');
+  php('manual-set 1');
 
   console.log('6. Console REST rules');
   const noNonce = await gp.request.post('/index.php?rest_route=/sixandfour/v1/console/pause', { data: { pause: true } });

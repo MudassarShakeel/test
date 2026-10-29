@@ -85,12 +85,16 @@ class SF_API {
 			$params['apikey'] = $key;
 			$res              = wp_remote_get( add_query_arg( $params, self::base() . $endpoint ), array( 'timeout' => 20, 'redirection' => 2, 'sslverify' => true ) );
 			if ( is_wp_error( $res ) ) {
-				return new WP_Error( $res->get_error_code(), SF_Secrets::scrub( $res->get_error_message() ) );
+				$e = new WP_Error( $res->get_error_code(), 'The cricket API could not be reached: ' . SF_Secrets::scrub( $res->get_error_message() ) . '.' );
+				update_option( 'sf_last_api_error', array( time(), $e->get_error_message() ), false );
+				return $e;
 			}
 			$code = wp_remote_retrieve_response_code( $res );
 			$body = json_decode( wp_remote_retrieve_body( $res ), true );
 			if ( $code < 200 || $code >= 300 || ! is_array( $body ) ) {
-				return new WP_Error( 'sf_api_http', 'The cricket API answered with status ' . $code . '.' );
+				$e = new WP_Error( 'sf_api_http', 'The cricket API answered with status ' . $code . '.' );
+				update_option( 'sf_last_api_error', array( time(), $e->get_error_message() ), false );
+				return $e;
 			}
 			self::track( $body, $i );
 			if ( isset( $body['status'] ) && 'success' !== $body['status'] ) {
@@ -100,7 +104,12 @@ class SF_API {
 					SF_Log::add( 'API key ' . $i . ' is used up for today. Trying the next key.', 'warning' );
 					continue;
 				}
-				return new WP_Error( 'sf_api_fail', 'The cricket API refused the request: ' . SF_Secrets::scrub( $why ) );
+				$e = new WP_Error( 'sf_api_fail', 'The cricket API refused the request: ' . SF_Secrets::scrub( $why ) . '.' );
+				update_option( 'sf_last_api_error', array( time(), $e->get_error_message() ), false );
+				return $e;
+			}
+			if ( get_option( 'sf_last_api_error' ) ) {
+				delete_option( 'sf_last_api_error' );
 			}
 			return $body;
 		}
@@ -186,13 +195,16 @@ class SF_API {
 		if ( SF_Options::get( 'skip_women', 1 ) && self::is_women( $m ) ) {
 			return false;
 		}
-		// A tournament you follow is always covered. With "top teams" on, matches between those teams are covered too, in any series.
+		$cover = SF_Options::get( 'cover', 'all' );
+		if ( 'all' === $cover ) {
+			return true;   // Every match except women's.
+		}
 		$followed = SF_Options::get( 'followed', array() );
 		if ( ! empty( $followed ) && isset( $followed[ $m['series_id'] ] ) ) {
 			return true;
 		}
-		if ( ! SF_Options::get( 'top_only', 1 ) ) {
-			return empty( $followed );
+		if ( 'top' !== $cover ) {
+			return empty( $followed );   // Followed tournaments only, or everything when none are followed.
 		}
 		$top = array();
 		foreach ( explode( "\n", (string) SF_Options::get( 'top_teams', '' ) ) as $t ) {

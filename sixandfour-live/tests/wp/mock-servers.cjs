@@ -21,7 +21,7 @@ http.createServer((req, res) => {
     }
     if (p.startsWith('/graph/')) {
       if (state.fbFail) return send(res, 400, { error: { message: 'Error validating access token: Session has expired', code: 190 } });
-      if (req.method === 'GET') return send(res, 200, { name: 'Cricket Sport', username: 'cricketsportinfo', fan_count: 9800 });
+      if (req.method === 'GET') return send(res, 200, { name: 'Cricket Sport', username: 'cricketsportinfo', fan_count: 9800, category: 'Sports' });
       if (p.endsWith('/photos')) {
         const text = body.toString('latin1');
         state.fb.push({ kind: 'photo', bytes: body.length, png: text.includes('\x89PNG'), jpeg: text.includes('\xff\xd8\xff'), php: text.includes('<?php'), caption: (text.match(/name="caption"\r\n\r\n([\s\S]*?)\r\n--/) || [])[1] || '', tokenInBody: text.includes('name="access_token"') });

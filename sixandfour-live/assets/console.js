@@ -94,7 +94,8 @@
 		var fb = S.fb.ok ? '<span class="sfc-dot"></span>Connected' : '<span class="sfc-dot bad"></span>Check';
 		var mode = S.paused ? 'Paused' : ( S.mode === 'auto' ? 'Auto-post' : 'Ask me first' );
 		var pending = S.queue.filter( function ( p ) { return p.status === 'pending'; } ).length;
-		var h = '<h2>Today</h2><div class="sfc-grid">' +
+		var hb = ( S.health || [] ).map( function ( x ) { return '<div class="sfc-card sfc-alert ' + x.level + '"><b>' + esc( x.title ) + '</b><div class="sfc-sub">' + esc( x.text ) + '</div></div>'; } ).join( '' );
+		var h = '<h2>Today</h2>' + hb + '<div class="sfc-grid">' +
 			'<div class="sfc-card"><h3>Facebook</h3><div class="sfc-big">' + fb + '</div><div class="sfc-sub">' + esc( S.fb.fans ? S.fb.fans.toLocaleString() + ' followers' : ( S.fb.message || 'Not tested' ) ) + '</div></div>' +
 			'<div class="sfc-card"><h3>Posting</h3><div class="sfc-big">' + esc( mode ) + '</div><div class="sfc-sub">Next check ' + esc( S.next ) + '</div></div>' +
 			'<div class="sfc-card"><h3>Cricket data</h3><div class="sfc-big">' + S.api.hits + ' <span class="sfc-sub" style="font-weight:500">of ' + S.api.limit + '</span></div><div class="sfc-meter"><i style="width:' + Math.min( 100, S.api.limit ? Math.round( S.api.hits * 100 / S.api.limit ) : 0 ) + '%"></i></div></div>' +
@@ -166,10 +167,12 @@
 	function draw() {
 		if ( ! S ) { return; }
 		var pending = S.queue.filter( function ( p ) { return p.status === 'pending' || p.status === 'failed'; } ).length;
+		if ( ! S.manual && tab === 'post' ) { tab = 'home'; }
 		var body = { home: viewHome, queue: viewQueue, post: viewPost, settings: viewSettings }[ tab ]();
 		var scroll = root.querySelector( '.sfc-main' );
 		var keep = scroll ? scroll.scrollTop : 0;
 		var tabs = [ [ 'home', 'Home', 'house' ], [ 'queue', 'Queue', 'tray' ], [ 'post', 'Post', 'plus-circle' ], [ 'settings', 'Settings', 'sliders-horizontal' ] ];
+		if ( ! S.manual ) { tabs = tabs.filter( function ( t ) { return t[ 0 ] !== 'post'; } ); }
 		root.innerHTML = '<header class="sfc-top">' + MARK + '<b>Cricket Sport</b><span class="sp"></span>' + ( S.paused ? '<span class="sfc-pill warn">Paused</span>' : ( S.fb.ok ? '<span class="sfc-pill ok">Live</span>' : '<span class="sfc-pill bad">Check setup</span>' ) ) + '</header>' +
 			'<main class="sfc-main" id="sfc-main"><div class="sfc-wrap">' + body + '</div></main>' +
 			'<nav class="sfc-tabs" aria-label="Sections">' + tabs.map( function ( t ) { return '<button type="button" data-tab="' + t[ 0 ] + '"' + ( tab === t[ 0 ] ? ' aria-current="page"' : '' ) + '>' + ic( t[ 2 ] ) + t[ 1 ] + ( t[ 0 ] === 'queue' && pending ? '<span class="badge">' + pending + '</span>' : '' ) + '</button>'; } ).join( '' ) + '</nav>' +

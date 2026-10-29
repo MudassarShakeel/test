@@ -23,6 +23,17 @@ $cron_off = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
 	<div class="sf-notice sf-warning">Finish <a href="<?php echo esc_url( SF_Admin::url( 'setup' ) ); ?>">Setup</a> to start: the Facebook Page, its access token and the cricket API key.</div>
 <?php endif; ?>
 
+<?php $problems = SF_Health::problems(); ?>
+<div class="sf-group sf-health">
+	<?php if ( ! $problems ) : ?>
+		<div class="sf-row"><div class="sf-l"><b>Everything looks fine</b><span>Facebook, cricket data and the schedule all check out. Press Run full check for a live test.</span></div><span class="sf-pill sf-ok">OK</span></div>
+	<?php else : ?>
+		<?php foreach ( $problems as $pr ) : ?>
+			<div class="sf-row"><div class="sf-l"><b><?php echo esc_html( $pr[2] ); ?></b><span><?php echo esc_html( $pr[3] ); ?></span></div><span class="sf-pill <?php echo 'bad' === $pr[1] ? 'sf-bad' : 'sf-warn'; ?>"><?php echo 'bad' === $pr[1] ? 'Fix' : 'Check'; ?></span></div>
+		<?php endforeach; ?>
+	<?php endif; ?>
+</div>
+
 <div class="sf-grid sf-grid-4">
 	<div class="sf-tile">
 		<h3>Facebook Page</h3>
@@ -62,6 +73,9 @@ $cron_off = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
 <div class="sf-actions">
 	<?php SF_Admin::form_open( 'run_now', 'class="sf-inline"' ); ?>
 		<button class="sf-btn sf-primary" type="submit">Check matches now</button>
+	</form>
+	<?php SF_Admin::form_open( 'health_check', 'class="sf-inline"' ); ?>
+		<button class="sf-btn" type="submit">Run full check</button>
 	</form>
 	<?php SF_Admin::form_open( 'run_daily', 'class="sf-inline"' ); ?>
 		<button class="sf-btn" type="submit">Post today's matches now</button>

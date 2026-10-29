@@ -9,30 +9,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 $o = SF_Options::all();
-$jobs = array(
-	'milestones' => array( 'Milestone alerts', 'Centuries and five-wicket hauls, with a question for fans' ),
-	'stumps'     => array( 'Test match day summaries', 'A post at stumps each day of a Test, then the final result' ),
-	'poll'       => array( 'Pick a side', 'Before a match, fans vote with a reaction and comment their score' ),
+$extra = array(
+	'wicket'     => array( 'Every wicket', 'A card for each wicket in the matches with a live card. This can add many posts.' ),
+	'stumps'     => array( 'Test match day summaries', 'A post at stumps each day of a Test' ),
+	'milestones' => array( 'Milestone alerts', 'Centuries and five-wicket hauls' ),
+	'potm'       => array( 'Top performer card', 'A separate card shortly after the match summary' ),
 	'table'      => array( 'Weekly points table', 'Every Monday at 09:00 for the tournaments you follow' ),
 	'ranking'    => array( 'Monthly team ranking', 'On the 1st at 09:00, worked out from the matches this plugin covered' ),
-	'potm'       => array( 'Top performer card', 'A separate card shortly after the match summary' ),
 	'pinned'     => array( 'Pinned "Today\'s matches" post', 'One text post that the plugin edits through the day' ),
 );
 $core = array(
-	'fixtures' => array( "Today's matches", 'Every day at 08:00' ),
+	'fixtures' => array( 'Day start: today\'s matches', 'One post with every match of the day, at ' . $o['daily_time'] . ' (' . $o['tz'] . ')' ),
+	'poll'     => array( 'Who wins', 'A poll before each match: fans vote with Like or Love and comment their prediction' ),
 	'toss'     => array( 'Toss', 'When the toss is announced in the data' ),
-	'live'     => array( 'Live updates', 'Innings breaks for the matches with their own card' ),
-	'wicket'   => array( 'Wickets', 'A card for each wicket. This can add many posts.' ),
-	'result'   => array( 'Result', 'When a match finishes' ),
-	'summary'  => array( 'Match summary', 'Top scorer, top wicket taker and key numbers' ),
+	'innings'  => array( 'End of each innings', 'Innings break in T20 and ODI. Innings end in a Test.' ),
+	'result'   => array( 'Final result', 'When a match finishes' ),
+	'summary'  => array( 'Match summary', 'Top scorer, top wicket taker and key numbers, after the result' ),
 );
 SF_Admin::form_open( 'save_engage' );
 ?>
 <p class="sf-lede">Posts that give fans something to react to and comment on. Every one ends with a question.</p>
 
-<h2 class="sf-sec">Engagement posts</h2>
+<h2 class="sf-sec">Posts for every match</h2>
+<p class="sf-sub">These go out for every T20, one-day and Test match. Switch any of them off here at any time.</p>
 <div class="sf-group">
-	<?php foreach ( $jobs as $k => $j ) { SF_Admin::switch_row( 'job_' . $k, $o['jobs'][ $k ], $j[0], $j[1] ); } ?>
+	<?php foreach ( $core as $k => $j ) { SF_Admin::switch_row( 'job_' . $k, $o['jobs'][ $k ], $j[0], $j[1] ); } ?>
+</div>
+
+<h2 class="sf-sec">Extra posts (off for now)</h2>
+<div class="sf-group">
+	<?php foreach ( $extra as $k => $j ) { SF_Admin::switch_row( 'job_' . $k, $o['jobs'][ $k ], $j[0], $j[1] ); } ?>
 </div>
 
 <h2 class="sf-sec">Milestones to alert</h2>
@@ -44,11 +50,6 @@ SF_Admin::form_open( 'save_engage' );
 	?>
 </div>
 <p class="sf-sub">Milestone alerts need the scorecard from your cricket API. Hat-tricks need ball-by-ball data, which the free plan does not include.</p>
-
-<h2 class="sf-sec">Match posts</h2>
-<div class="sf-group">
-	<?php foreach ( $core as $k => $j ) { SF_Admin::switch_row( 'job_' . $k, $o['jobs'][ $k ], $j[0], $j[1] ); } ?>
-</div>
 
 <h2 class="sf-sec">Busy match days</h2>
 <div class="sf-group">

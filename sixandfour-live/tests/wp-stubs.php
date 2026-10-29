@@ -83,9 +83,9 @@ function wp_generate_password( $n = 12, $special = true ) {
 function wp_timezone() {
 	return new DateTimeZone( 'UTC' );
 }
-function wp_date( $format, $ts = null ) {
+function wp_date( $format, $ts = null, $tz = null ) {
 	$d = new DateTime( '@' . ( null === $ts ? time() : $ts ) );
-	$d->setTimezone( wp_timezone() );
+	$d->setTimezone( $tz ? $tz : wp_timezone() );
 	return $d->format( $format );
 }
 function wp_mkdir_p( $d ) {
@@ -192,6 +192,7 @@ require SF_DIR . 'includes/class-sf-cards.php';
 require SF_DIR . 'includes/class-sf-samples.php';
 require SF_DIR . 'includes/class-sf-poster.php';
 require SF_DIR . 'includes/class-sf-engine.php';
+require SF_DIR . 'includes/class-sf-health.php';
 require SF_DIR . 'includes/class-sf-security.php';
 require SF_DIR . 'includes/class-sf-webauthn.php';
 require SF_DIR . 'includes/class-sf-passwordless.php';
@@ -218,5 +219,21 @@ if ( ! function_exists( 'wp_strip_all_tags' ) ) {
 if ( ! function_exists( 'home_url' ) ) {
 	function home_url( $p = '' ) {
 		return 'https://c.example.test' . $p;
+	}
+}
+
+if ( ! function_exists( 'wp_timezone_choice' ) ) {
+	function wp_timezone_choice( $selected ) {
+		return '<option value="Asia/Karachi" selected>Karachi</option>';
+	}
+}
+if ( ! function_exists( 'human_time_diff' ) ) {
+	function human_time_diff( $a, $b = 0 ) {
+		return '5 mins';
+	}
+}
+if ( ! function_exists( 'wp_unslash' ) ) {
+	function wp_unslash( $v ) {
+		return $v;
 	}
 }

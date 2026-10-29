@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.5.1
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,15 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.6.0 =
+* Every match (T20, one-day and Test), women's matches skipped, gets these posts and no others: the day start post of today's matches, a "who wins" poll, the toss, the end of each innings, the final result and the match summary. The other post types are off and can be switched on again on the Engage screen.
+* Day start is posted at 06:00 Pakistan time by default. Both the time and the time zone are set in Setup, and match times on cards use that time zone.
+* Which matches: every match except women's (default), top teams plus followed tournaments, or followed tournaments only.
+* Manual posts are off by default and can be switched on in Setup.
+* New "Why is it not posting?" panel on Overview and in the mobile console, with plain reasons and what to do. Run full check tests Facebook, the cricket API and the schedule. A User token or an App ID is now refused with a clear message.
+* Setup shows the exact wp-cron.php path of this WordPress install, for sub-folder installs.
+* Today's matches card lists up to nine matches.
 
 = 1.5.1 =
 * Fixed: when you followed a tournament, top-team matches in other series (such as a tri-series) were skipped. Matches between the top teams are now always covered, and followed tournaments are covered as well.

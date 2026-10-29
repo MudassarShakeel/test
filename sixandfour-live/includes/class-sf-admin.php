@@ -14,7 +14,7 @@ class SF_Admin {
 	const PAGE = 'sixandfour-live';
 
 	public static function tabs() {
-		return array(
+		$tabs = array(
 			'overview'    => 'Overview',
 			'queue'       => 'Post queue',
 			'cards'       => 'Score cards',
@@ -27,12 +27,16 @@ class SF_Admin {
 			'security'    => 'Security',
 			'setup'       => 'Setup',
 		);
+		if ( ! SF_Options::get( 'manual_enabled', 0 ) ) {
+			unset( $tabs['manual'] );
+		}
+		return $tabs;
 	}
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'run_daily', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'block_player_photo', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
+		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'run_daily', 'health_check', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'block_player_photo', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
 			add_action( 'admin_post_sf_' . $a, array( __CLASS__, 'do_' . $a ) );
 		}
 	}
@@ -160,7 +164,13 @@ class SF_Admin {
 			$new[ $kn ] = '-' === $kv ? '' : ( '' !== $kv ? $kv : $old[ $kn ] );
 		}
 		$new['skip_women'] = self::bool( 'skip_women' );
-		$new['top_only']   = self::bool( 'top_only' );
+		$cover             = self::text( 'cover', 'all' );
+		$new['cover']      = in_array( $cover, array( 'all', 'top', 'followed' ), true ) ? $cover : 'all';
+		$tz                = self::text( 'tz', $old['tz'] );
+		$new['tz']         = in_array( $tz, timezone_identifiers_list(), true ) ? $tz : $old['tz'];
+		$dt                = self::text( 'daily_time', $old['daily_time'] );
+		$new['daily_time'] = preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/', $dt ) ? $dt : $old['daily_time'];
+		$new['manual_enabled'] = self::bool( 'manual_enabled' );
 		$teams             = isset( $_POST['top_teams'] ) ? sanitize_textarea_field( wp_unslash( $_POST['top_teams'] ) ) : $old['top_teams']; // phpcs:ignore WordPress.Security.NonceVerification
 		$new['top_teams']  = implode( "\n", array_slice( array_filter( array_map( 'trim', explode( "\n", $teams ) ) ), 0, 60 ) );
 		$new['fb_handle']  = self::text( 'fb_handle', $old['fb_handle'] );
@@ -169,6 +179,7 @@ class SF_Admin {
 		$new['max_posts_day'] = max( 1, min( 100, (int) self::text( 'max_posts_day', 15 ) ) );
 		$new['noindex'] = self::bool( 'noindex' );
 		SF_Options::update( $new );
+		SF_Plugin::reschedule_daily();
 		SF_Poster::protect_dir();
 		$msg = 'Settings saved.';
 		if ( '' !== $new['fb_page_id'] && '' !== $new['fb_token'] && ( $new['fb_token'] !== $old['fb_token'] || $new['fb_page_id'] !== $old['fb_page_id'] ) ) {
@@ -216,6 +227,15 @@ class SF_Admin {
 		}
 		SF_Engine::tick( true );
 		self::done( 'overview', 'success', 'Checked the matches now.' );
+	}
+
+	public static function do_health_check() {
+		self::guard();
+		$bad = SF_Health::problems( true );
+		$n   = count( array_filter( $bad, function ( $r ) {
+			return 'bad' === $r[1];
+		} ) );
+		self::done( 'overview', $bad ? ( $n ? 'error' : 'warning' ) : 'success', $bad ? 'Checked Facebook, the cricket API and the schedule. ' . $bad[0][2] . ': ' . $bad[0][3] : 'Everything checked is working: Facebook, the cricket data and the schedule.' );
 	}
 
 	public static function do_run_daily() {
@@ -372,6 +392,9 @@ class SF_Admin {
 
 	public static function do_manual_post() {
 		self::guard();
+		if ( ! SF_Options::get( 'manual_enabled', 0 ) ) {
+			self::done( 'setup', 'warning', 'Manual posts are switched off. Turn them on in Setup, under Posting.' );
+		}
 		$res = SF_Poster::manual_post(
 			array(
 				'caption'       => isset( $_POST['caption'] ) ? wp_unslash( $_POST['caption'] ) : '', // phpcs:ignore WordPress.Security

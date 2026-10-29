@@ -41,6 +41,10 @@ switch ( $cmd ) {
 		@unlink( WP_CONTENT_DIR . '/mail-capture.json' );
 		echo "ok\n";
 		break;
+	case 'manual-set':
+		SF_Options::update( array( 'manual_enabled' => (int) $argv[3] ) );
+		echo "ok\n";
+		break;
 	case 'option':
 		echo wp_json_encode( SF_Options::get( $argv[3], null ) ), "\n";
 		break;

@@ -62,7 +62,7 @@ async function login(page, user, pass) {
   console.log('4. Administrator');
   await login(page, 'admin', 'Admin#Pass12345');
   ok(/wp-admin/.test(page.url()), 'administrator signs in');
-  const tabs = ['overview', 'queue', 'cards', 'engage', 'tournaments', 'teams', 'players', 'manual', 'security', 'setup'];
+  const tabs = ['overview', 'queue', 'cards', 'engage', 'tournaments', 'teams', 'players', 'security', 'setup'];
   for (const t of tabs) {
     const resp = await page.goto(BASE + '/wp-admin/admin.php?page=sixandfour-live&tab=' + t);
     const body = await page.content();
@@ -141,6 +141,9 @@ async function login(page, user, pass) {
   await page.screenshot({ path: path.join(OUT, 'wp-overview-live.png'), fullPage: true });
 
   console.log('10. Manual post and uploads');
+  await page.goto(BASE + '/wp-admin/admin.php?page=sixandfour-live&tab=manual');
+  ok(!(await page.content()).includes('Post your own picture'), 'the Manual post screen is closed while manual posts are off');
+  php('manual-set 1');
   const jpg = path.join(OUT, 'evil.jpg');
   execSync(`php -r '$im=imagecreatetruecolor(600,400); imagefill($im,0,0,imagecolorallocate($im,40,120,80)); imagejpeg($im,"${jpg}"); file_put_contents("${jpg}", "\\n<?php system(\\"id\\"); ?>", FILE_APPEND);'`);
   await page.goto(BASE + '/wp-admin/admin.php?page=sixandfour-live&tab=manual');

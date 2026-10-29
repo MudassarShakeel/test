@@ -57,7 +57,7 @@ class SF_Facebook {
 		}
 		$res = null;
 		// Ask for the follower count too, but fall back to the name alone if this token may not read it.
-		foreach ( array( 'name,fan_count', 'name' ) as $fields ) {
+		foreach ( array( 'name,fan_count,category', 'name' ) as $fields ) {
 			$url = add_query_arg(
 				array(
 					'fields'       => $fields,
@@ -73,6 +73,19 @@ class SF_Facebook {
 		if ( is_wp_error( $res ) ) {
 			update_option( 'sf_fb_status', array( 'ok' => false, 'message' => $res->get_error_message(), 'at' => time() ), false );
 			return $res;
+		}
+		// A Page has a category. A person or an app does not.
+		if ( isset( $fields ) && false !== strpos( $fields, 'category' ) && empty( $res['category'] ) ) {
+			$err = new WP_Error( 'sf_fb_notpage', 'That ID is a person or an app, not a Facebook Page. Use the id of your Page from me/accounts in the Graph API Explorer.' );
+			update_option( 'sf_fb_status', array( 'ok' => false, 'message' => $err->get_error_message(), 'at' => time() ), false );
+			return $err;
+		}
+		// A Page token answers /me with the Page itself. A User token answers with the person, and cannot post to a Page.
+		$me = self::handle( wp_remote_get( add_query_arg( array( 'fields' => 'id', 'access_token' => $c[1] ), self::base() . 'me' ), array( 'timeout' => 20, 'redirection' => 0, 'sslverify' => true ) ) );
+		if ( ! is_wp_error( $me ) && ! empty( $me['id'] ) && (string) $me['id'] !== (string) $c[0] ) {
+			$err = new WP_Error( 'sf_fb_usertoken', 'This is not the Page token. It belongs to a person or an app (publish_actions), so posting will fail. Use the access_token from the Page entry in me/accounts.' );
+			update_option( 'sf_fb_status', array( 'ok' => false, 'message' => $err->get_error_message(), 'at' => time() ), false );
+			return $err;
 		}
 		update_option(
 			'sf_fb_status',

@@ -41,8 +41,12 @@ class SF_Cards {
 	}
 
 	/** Card pixel sizes by type. */
-	public static function size( $type ) {
-		$land = array( 'live', 'toss', 'result', 'stumps', 'fixtures' );
+	public static function size( $type, $d = null ) {
+		// A day with up to three matches fits a landscape card. More need the tall one.
+		if ( 'fixtures' === $type && is_array( $d ) && isset( $d['rows'] ) && count( $d['rows'] ) <= 3 ) {
+			return array( 1200, 630 );
+		}
+		$land = array( 'live', 'toss', 'result', 'stumps', 'innings' );
 		$sq   = array( 'century', 'fivefor', 'potm', 'poll' );
 		if ( in_array( $type, $land, true ) ) {
 			return array( 1200, 630 );
@@ -68,7 +72,7 @@ class SF_Cards {
 		if ( function_exists( 'wp_raise_memory_limit' ) ) {
 			wp_raise_memory_limit( 'image' ); // Cron runs with a small memory limit, and tall cards need about 40 MB.
 		}
-		list( $w, $h ) = self::size( $type );
+		list( $w, $h ) = self::size( $type, $d );
 		$this->W       = $w;
 		$this->H       = $h;
 		$this->u       = $w / 100;
@@ -89,6 +93,7 @@ class SF_Cards {
 			case 'toss':
 			case 'result':
 			case 'stumps':
+			case 'innings':
 				$this->card_scoreboard( $type, $d );
 				break;
 			case 'summary':
@@ -524,7 +529,7 @@ class SF_Cards {
 	}
 
 	private function card_scoreboard( $type, $d ) {
-		$pill = array( 'live' => 'LIVE', 'toss' => 'TOSS', 'result' => 'RESULT', 'stumps' => 'STUMPS' );
+		$pill = array( 'live' => 'LIVE', 'toss' => 'TOSS', 'result' => 'RESULT', 'stumps' => 'STUMPS', 'innings' => 'INNINGS BREAK' );
 		$text = ! empty( $d['pill'] ) ? $d['pill'] : $pill[ $type ];
 		$y    = $this->head( $text, 'live' === $type && empty( $d['pill'] ) );
 		$y   += 2.2;
@@ -627,7 +632,7 @@ class SF_Cards {
 	}
 
 	private function card_list( $type, $d ) {
-		$tall = 'digest' === $type;
+		$tall = 'digest' === $type || ( 'fixtures' === $type && $this->H > $this->W );
 		$y    = $this->head( 'digest' === $type ? 'LIVE' : 'TODAY', 'digest' === $type );
 		$y   += 1.2;
 		$title = 'digest' === $type ? 'Live scoreboard' : "Today's matches";

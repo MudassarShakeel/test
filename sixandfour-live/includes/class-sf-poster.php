@@ -46,7 +46,7 @@ class SF_Poster {
 
 	/** Start of today in the site's time zone, as a Unix time. */
 	public static function day_start() {
-		$dt = new DateTime( 'today', wp_timezone() );
+		$dt = new DateTime( 'today', SF_Plugin::tz() );
 		return $dt->getTimestamp();
 	}
 
@@ -212,6 +212,9 @@ class SF_Poster {
 	 * @return array [ ok, message ]
 	 */
 	public static function manual_post( array $in ) {
+		if ( ! SF_Options::get( 'manual_enabled', 0 ) ) {
+			return array( 'ok' => false, 'message' => 'Manual posts are switched off. Turn them on in Setup, under Posting.' );
+		}
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		wp_raise_memory_limit( 'image' );
 		$caption = isset( $in['caption'] ) ? sanitize_textarea_field( $in['caption'] ) : '';

@@ -108,18 +108,19 @@ class SF_Console {
 
 	private static function core_jobs() {
 		return array(
+			'fixtures'   => "Day start: today's matches",
+			'poll'       => 'Who wins',
 			'toss'       => 'Toss',
-			'live'       => 'Live updates',
+			'innings'    => 'End of each innings',
+			'result'     => 'Final result',
+			'summary'    => 'Match summary',
 			'wicket'     => 'Every wicket',
 			'stumps'     => 'Test match day summaries',
-			'result'     => 'Result',
-			'summary'    => 'Match summary',
 			'milestones' => 'Milestone alerts',
-			'poll'       => 'Pick a side',
+			'potm'       => 'Top performer card',
 			'table'      => 'Weekly points table',
 			'ranking'    => 'Monthly team ranking',
-			'potm'       => 'Top performer card',
-			'fixtures'   => "Today's matches",
+			'pinned'     => 'Pinned post',
 		);
 	}
 
@@ -185,6 +186,10 @@ class SF_Console {
 			'recent'   => $recent,
 			'jobs'     => $jobs,
 			'log'      => $log,
+			'manual'   => (bool) SF_Options::get( 'manual_enabled', 0 ),
+			'health'   => array_map( function ( $r ) {
+				return array( 'level' => $r[1], 'title' => $r[2], 'text' => $r[3] );
+			}, array_slice( SF_Health::problems(), 0, 3 ) ),
 			'passkeys' => count( SF_Passwordless::passkeys( get_current_user_id() ) ),
 			'user'     => wp_get_current_user()->display_name,
 		);

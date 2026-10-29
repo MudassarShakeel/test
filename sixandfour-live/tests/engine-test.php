@@ -49,7 +49,7 @@ $GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$world ) {
 	}
 	if ( false !== strpos( $url, 'graph.facebook.com' ) ) {
 		if ( 'GET' === $method ) {
-			return sf_json( array( 'name' => 'Cricket Sport', 'username' => 'cricketsportinfo', 'fan_count' => 9800 ) );
+			return sf_json( array( 'name' => 'Cricket Sport', 'username' => 'cricketsportinfo', 'fan_count' => 9800, 'category' => 'Sports' ) );
 		}
 		if ( preg_match( '#/photos$#', $url ) ) {
 			$world['fb_posts'][] = array( 'photo', strlen( $args['body'] ) );
@@ -69,6 +69,8 @@ SF_Options::update( array(
 	'api_key' => 'k', 'fb_page_id' => '123', 'fb_token' => 'tok', 'mode' => 'auto',
 	'max_posts_day' => 50, 'per_match_hour' => 5, 'live_cards' => 2,
 	'followed' => array( 's1' => 'Harbour Cup 2026' ), 'fb_handle' => 'facebook.com/cricketsportinfo',
+	'cover' => 'top', 'digest' => 1, 'polls_per_day' => 10, 'per_match_hour' => 5,
+	'jobs' => array_fill_keys( array( 'fixtures', 'poll', 'toss', 'innings', 'result', 'summary', 'live', 'wicket', 'stumps', 'potm', 'milestones', 'table', 'ranking', 'pinned' ), 1 ),
 ) );
 function posts( $type = null ) {
 	global $wpdb;
@@ -115,8 +117,8 @@ ok( count( posts( 'live' ) ) === $before + 1, 'a wicket card was queued' );
 $sc2 = array( array( 'r' => 168, 'w' => 7, 'o' => 20.0, 'inning' => 'Australia Inning 1' ), array( 'r' => 12, 'w' => 0, 'o' => 1.4, 'inning' => 'England Inning 1' ) );
 $world['matches'][0]['score'] = $sc2;
 tick();
-ok( count( posts( 'live' ) ) === $before + 2, 'an innings break card was queued' );
-$live = posts( 'live' );
+ok( count( posts( 'live' ) ) === $before + 1 && 1 === count( posts( 'innings' ) ), 'an innings break card was queued, as its own post type' );
+$live = posts( 'innings' );
 $last = end( $live );
 ok( 0 === strpos( $last['caption'], 'INNINGS BREAK' ), 'innings break caption: ' . strtok( $last['caption'], "\n" ) );
 
@@ -222,7 +224,7 @@ echo "10. Which matches are covered\n";
 function mk( $a, $b, $series = 'x9', $name = null ) {
 	return SF_API::normalize_match( array_merge( match_json( 'z' . crc32( $a . $b . $series ), $a, $b, time() + 7200, false, false, 'Match not started', array(), $series ), $name ? array( 'name' => $name ) : array() ) );
 }
-SF_Options::update( array( 'followed' => array(), 'top_only' => 1, 'skip_women' => 1 ) );
+SF_Options::update( array( 'followed' => array(), 'cover' => 'top', 'skip_women' => 1 ) );
 ok( SF_API::wanted( mk( 'India', 'Australia' ) ), 'top team v top team is covered' );
 ok( SF_API::wanted( mk( 'UAE', 'USA' ) ), 'short names UAE and USA count as top teams' );
 ok( ! SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings' ) ), 'a club match is skipped when you follow nothing' );
@@ -233,9 +235,12 @@ SF_Options::update( array( 'followed' => array( 'ipl' => 'IPL 2026' ) ) );
 ok( SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings', 'ipl' ) ), 'a tournament you follow is always covered' );
 ok( SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'a top-team match in a series you do not follow is still covered' );
 ok( ! SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings', 'other' ) ), 'a club match in a series you do not follow is skipped' );
-SF_Options::update( array( 'top_only' => 0 ) );
-ok( ! SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'with top teams switched off only followed tournaments are covered' );
-SF_Options::update( array( 'top_only' => 1 ) );
+SF_Options::update( array( 'cover' => 'followed' ) );
+ok( ! SF_API::wanted( mk( 'India', 'Australia', 'other' ) ), 'in followed-only mode a series you do not follow is skipped' );
+SF_Options::update( array( 'cover' => 'all' ) );
+ok( SF_API::wanted( mk( 'Mumbai Indians', 'Chennai Super Kings', 'other' ) ) && SF_API::wanted( mk( 'England', 'Sri Lanka', 'tri' ) ), 'in all-matches mode every series is covered' );
+ok( ! SF_API::wanted( mk( 'England Women', 'Sri Lanka Women', 'tri' ) ), "and women's matches are still skipped" );
+SF_Options::update( array( 'cover' => 'top' ) );
 ok( ! SF_API::wanted( mk( 'Delhi Women', 'Mumbai Women', 'ipl' ) ), "women's matches are skipped even in a followed series" );
 SF_Options::update( array( 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'skip_women' => 1 ) );
 
@@ -350,7 +355,12 @@ $world['matches'][0]['score'][] = array( 'r' => 150, 'w' => 3, 'o' => 40.0, 'inn
 unset( $world['matches'][0]['score'][2] );
 $world['matches'][0]['score'] = array_values( $world['matches'][0]['score'] );
 tick();
-ok( count( posts( 'live' ) ) === $before_live, 'no wicket or innings-break cards for a Test' );
+ok( count( posts( 'live' ) ) === $before_live, 'no wicket cards for a Test' );
+$n_inn = count( posts( 'innings' ) );
+$world['matches'][0]['score'][] = array( 'r' => 20, 'w' => 0, 'o' => 4.0, 'inning' => 'Australia Inning 2' );
+tick();
+$inn = posts( 'innings' );
+ok( count( $inn ) === $n_inn + 1 && 0 === strpos( end( $inn )['caption'], 'INNINGS ENDS' ), 'a Test posts when an innings ends: ' . strtok( end( $inn )['caption'], "\n" ) );
 $world['matches'][0]['status'] = 'Day 3: Stumps - England lead by 120 runs';
 tick();
 ok( 2 === count( posts( 'stumps' ) ), 'day 3 gets its own summary' );
@@ -451,6 +461,37 @@ delete_option( 'sf_player_auto' );
 $n = count( $wiki_calls );
 ok( null === SF_Players::photo( 'Another Player' ) && count( $wiki_calls ) === $n, 'with the switch off nothing is looked up' );
 SF_Options::update( array( 'auto_player_photos' => 1 ) );
+
+require_once SF_DIR . 'includes/class-sf-admin.php';
+echo "15. Clear reasons when nothing posts\n";
+SF_Options::update( array( 'paused' => 1 ) );
+$rows = SF_Health::problems();
+$ids = array_column( $rows, 0 );
+ok( in_array( 'paused', $ids, true ), 'a paused site is named as a problem' );
+SF_Options::update( array( 'paused' => 0 ) );
+$tm = SF_Health::explain_fb( '(#200) The permission(s) publish_actions are not available.' );
+ok( false !== strpos( $tm, 'User token' ) && false !== strpos( $tm, 'me/accounts' ), 'publish_actions is explained as a wrong token: ' . $tm );
+ok( false !== strpos( SF_Health::explain_fb( 'Error validating access token: Session has expired' ), 'expired' ), 'an expired token is explained' );
+update_option( 'sf_next_check', time() - 3600 );
+update_option( 'sf_last_tick', time() - 7200 );
+$cron = array_values( array_filter( SF_Health::report(), function ( $r ) { return 'cron' === $r[0]; } ) );
+ok( 'bad' === $cron[0][1] && false !== strpos( $cron[0][3], 'wp-cron.php' ), 'a missed schedule says what to run: ' . $cron[0][3] );
+// A User token is refused: /me answers with a person, not the Page.
+$GLOBALS['sf_http'] = function ( $method, $url ) {
+	if ( false !== strpos( $url, '/me' ) ) { return sf_json( array( 'id' => '999' ) ); }
+	return sf_json( array( 'name' => 'Cricket Sport', 'category' => 'Sports' ) );
+};
+$v = SF_Facebook::verify();
+ok( is_wp_error( $v ) && 'sf_fb_usertoken' === $v->get_error_code(), 'a User token is refused with a clear message' );
+$GLOBALS['sf_http'] = function ( $method, $url ) {
+	return sf_json( array( 'name' => 'Mudassar' ) );
+};
+$v = SF_Facebook::verify();
+ok( is_wp_error( $v ) && 'sf_fb_notpage' === $v->get_error_code(), 'a profile or app ID is refused (no category)' );
+SF_Options::update( array( 'manual_enabled' => 0 ) );
+$r = SF_Poster::manual_post( array( 'caption' => 'x' ) );
+ok( ! $r['ok'] && false !== strpos( $r['message'], 'switched off' ), 'manual posts are refused while switched off' );
+ok( ! isset( SF_Admin::tabs()['manual'] ), 'and the Manual post screen is hidden' );
 
 echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
 exit( $fail ? 1 : 0 );

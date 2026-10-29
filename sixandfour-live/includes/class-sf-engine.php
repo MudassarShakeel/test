@@ -82,7 +82,7 @@ class SF_Engine {
 	}
 
 	private static function local_time( $ts ) {
-		return wp_date( 'H:i', $ts );
+		return SF_Plugin::date( 'H:i', $ts );
 	}
 
 	private static function tour( $m ) {
@@ -187,12 +187,13 @@ class SF_Engine {
 	public static $catch_up = true;
 
 	private static function catch_up_daily() {
-		$today = wp_date( 'Y-m-d' );
-		if ( ! self::$catch_up || get_option( 'sf_daily_done', '' ) === $today || (int) wp_date( 'G' ) < 8 || (int) wp_date( 'G' ) >= 21 || ! SF_Options::job( 'fixtures' ) ) {
+		$today = SF_Plugin::date( 'Y-m-d' );
+		$at    = SF_Options::get( 'daily_time', '06:00' );
+		if ( ! self::$catch_up || get_option( 'sf_daily_done', '' ) === $today || SF_Plugin::date( 'H:i' ) < $at || (int) SF_Plugin::date( 'G' ) >= 21 || ! SF_Options::job( 'fixtures' ) ) {
 			return;
 		}
 		update_option( 'sf_daily_done', $today, false );
-		SF_Log::add( "The 8 am job had not run, so today's matches are posted now." );
+		SF_Log::add( 'The ' . $at . " day-start job had not run, so today's matches are posted now." );
 		self::daily();
 	}
 
@@ -330,12 +331,12 @@ class SF_Engine {
 					self::post_stumps( $m, $day );
 					$st['days'][ $day ] = 1;
 				}
-			} elseif ( $is_card_match && SF_Options::job( 'live' ) ) {
-				if ( count( $m['innings'] ) > $st['inn'] && $st['inn'] > 0 ) {
-					self::post_innings_break( $m, $st['inn'] );
-				} elseif ( SF_Options::job( 'wicket' ) && count( $m['innings'] ) === $st['inn'] && $cur_w > $st['w'] ) {
-					self::post_wicket( $m, $cur_w );
-				}
+			} elseif ( $is_card_match && SF_Options::job( 'wicket' ) && count( $m['innings'] ) === $st['inn'] && $cur_w > $st['w'] ) {
+				self::post_wicket( $m, $cur_w );
+			}
+			// The end of an innings, for every match and every format.
+			if ( count( $m['innings'] ) > $st['inn'] && $st['inn'] > 0 && SF_Options::job( 'innings' ) ) {
+				self::post_innings_break( $m, $st['inn'] );
 			}
 			$st['inn'] = count( $m['innings'] );
 			$st['w']   = ( count( $m['innings'] ) === $st['inn'] ) ? $cur_w : 0;
@@ -397,17 +398,28 @@ class SF_Engine {
 		SF_Poster::queue( 'live', 'wk:' . $m['id'] . ':' . count( $m['innings'] ) . ':' . $w, $d, $cap, array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] ) );
 	}
 
+	/** The end of an innings. A Test says how the innings ended and where the match stands. */
 	private static function post_innings_break( $m, $inn ) {
 		$d   = self::card_base( $m );
 		$ord = $m['order'];
-		$a   = isset( $m['scores'][ $ord[0] ] ) ? $m['scores'][ $ord[0] ] : null;
-		if ( $a ) {
-			$d['status'] = array( array( $m['teams'][ $ord[0] ]['name'], true ), array( ' finished on ' . $a['r'] . '/' . $a['w'] . '. ' . $m['teams'][ $ord[1] ]['name'] . ' need ', false ), array( ( $a['r'] + 1 ) . ' runs', true ), array( ' to win', false ) );
+		$a   = isset( $m['innings'][ $inn - 1 ] ) ? $m['innings'][ $inn - 1 ] : null;
+		$who = $a ? trim( preg_replace( '/\s*Inning\s*\d+\s*$/i', '', $a['inning'] ) ) : '';
+		if ( ! empty( $m['is_test'] ) ) {
+			$d['pill']   = 'INNINGS END';
+			$out         = $a ? ( $a['w'] >= 10 ? $a['r'] . ' all out' : $a['r'] . '/' . $a['w'] ) : '';
+			$d['status'] = $a ? array( array( $who, true ), array( ' finished on ', false ), array( $out, true ), array( '. ' . self::short_result( $m['status'] ), false ) ) : self::live_status( $m );
+			$cap         = self::caption( 'INNINGS ENDS | ' . self::headline_score( $m ), array( self::short_result( $m['status'] ) . '.' ), null );
 		} else {
-			$d['status'] = self::live_status( $m );
+			$a1 = isset( $m['scores'][ $ord[0] ] ) ? $m['scores'][ $ord[0] ] : null;
+			if ( $a1 ) {
+				$d['pill']   = 'INNINGS BREAK';
+				$d['status'] = array( array( $m['teams'][ $ord[0] ]['name'], true ), array( ' finished on ' . $a1['r'] . '/' . $a1['w'] . '. ' . $m['teams'][ $ord[1] ]['name'] . ' need ', false ), array( ( $a1['r'] + 1 ) . ' runs', true ), array( ' to win', false ) );
+			} else {
+				$d['status'] = self::live_status( $m );
+			}
+			$cap = self::caption( 'INNINGS BREAK | ' . self::headline_score( $m ), array(), null );
 		}
-		$cap = self::caption( 'INNINGS BREAK | ' . self::headline_score( $m ), array(), null );
-		SF_Poster::queue( 'live', 'inn:' . $m['id'] . ':' . $inn, $d, $cap, array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] ) );
+		SF_Poster::queue( 'innings', 'inn:' . $m['id'] . ':' . $inn, $d, $cap, array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] ) );
 	}
 
 	/** The end-of-day summary of a Test match. */
@@ -447,7 +459,7 @@ class SF_Engine {
 				'match_id'    => $m['id'],
 				'series_id'   => $m['series_id'],
 				'series_name' => self::tour( $m ),
-				'played_on'   => wp_date( 'Y-m-d', $m['start'] ? $m['start'] : time() ),
+				'played_on'   => SF_Plugin::date( 'Y-m-d', $m['start'] ? $m['start'] : time() ),
 				'team_a'      => $m['teams'][0]['name'],
 				'team_b'      => $m['teams'][1]['name'],
 				'winner'      => $winner,
@@ -766,7 +778,7 @@ class SF_Engine {
 	private static function todays_matches() {
 		$list = SF_API::last_matches();
 		$out  = array();
-		$today = wp_date( 'Y-m-d' );
+		$today = SF_Plugin::date( 'Y-m-d' );
 		foreach ( $list[1] as $raw ) {
 			if ( ! is_array( $raw ) ) {
 				continue;
@@ -775,7 +787,7 @@ class SF_Engine {
 			if ( '' === $m['id'] || ! SF_API::wanted( $m ) || ! $m['start'] ) {
 				continue;
 			}
-			if ( wp_date( 'Y-m-d', $m['start'] ) === $today ) {
+			if ( SF_Plugin::date( 'Y-m-d', $m['start'] ) === $today ) {
 				$out[] = $m;
 			}
 		}
@@ -813,10 +825,16 @@ class SF_Engine {
 
 	/** Post today's matches. Returns a plain sentence that says what happened, also when nothing was posted. */
 	public static function daily() {
+		$msg = self::daily_run();
+		update_option( 'sf_last_daily', array( time(), $msg ), false );
+		return $msg;
+	}
+
+	private static function daily_run() {
 		if ( ! SF_Options::ready() ) {
 			return 'Finish Setup first.';
 		}
-		update_option( 'sf_daily_done', wp_date( 'Y-m-d' ), false );
+		update_option( 'sf_daily_done', SF_Plugin::date( 'Y-m-d' ), false );
 		$list = SF_API::current_matches( true );
 		if ( is_wp_error( $list ) ) {
 			SF_Log::add( 'Daily fixtures: ' . $list->get_error_message(), 'error' );
@@ -834,7 +852,7 @@ class SF_Engine {
 			return 'No post made. ' . $why;
 		}
 		$rows = array();
-		foreach ( array_slice( $today, 0, 3 ) as $m ) {
+		foreach ( array_slice( $today, 0, 9 ) as $m ) {
 			$rows[] = array(
 				'st'  => self::local_time( $m['start'] ),
 				'a'   => SF_Teams::resolve( $m['teams'][0]['name'], $m['teams'][0]['short'] ),
@@ -844,15 +862,15 @@ class SF_Engine {
 		}
 		$d = array(
 			'tournament' => '',
-			'meta'       => wp_date( 'l j F' ) . ', ' . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' today',
+			'meta'       => SF_Plugin::date( 'l j F' ) . ', ' . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' today',
 			'rows'       => $rows,
 		) + self::foot();
-		if ( count( $today ) > 3 ) {
-			$d['status'] = array( array( ( count( $today ) - 3 ) . ' more matches today. ', true ), array( 'Full list in the pinned post.', false ) );
+		if ( count( $today ) > 9 ) {
+			$d['status'] = array( array( ( count( $today ) - 9 ) . ' more matches today. ', true ), array( 'Follow the page for each one.', false ) );
 		}
 		$first = $today[0];
-		$cap   = self::caption( "TODAY | " . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' on the schedule. First ball at ' . self::local_time( $first['start'] ) . '.', array(), 'day:' . wp_date( 'Y-m-d' ) );
-		$id = SF_Poster::queue( 'fixtures', 'fixtures:' . wp_date( 'Y-m-d' ), $d, $cap );
+		$cap   = self::caption( "TODAY | " . count( $today ) . ( 1 === count( $today ) ? ' match' : ' matches' ) . ' on the schedule. First ball at ' . self::local_time( $first['start'] ) . '.', array(), 'day:' . SF_Plugin::date( 'Y-m-d' ) );
+		$id = SF_Poster::queue( 'fixtures', 'fixtures:' . SF_Plugin::date( 'Y-m-d' ), $d, $cap );
 		self::update_pinned( $today, true );
 		SF_Poster::publish_due();
 		SF_Log::add( "Daily fixtures: queued today's post for " . count( $today ) . ' matches.' );
@@ -898,7 +916,7 @@ class SF_Engine {
 			$lead = $rows[0];
 			$d = array(
 				'tournament' => $name,
-				'meta'       => 'week of ' . wp_date( 'j F' ),
+				'meta'       => 'week of ' . SF_Plugin::date( 'j F' ),
 				'pill'       => 'WEEKLY',
 				'title'      => 'Points table',
 				'cols'       => array( 'P', 'W', 'L', 'NR', 'Pts' ),
@@ -906,7 +924,7 @@ class SF_Engine {
 				'status'     => array( array( $lead['name'], true ), array( ' lead on ' . $lead['pts'] . ' points', false ) ),
 			) + self::foot( 'Who tops the table next week? Comment your pick' );
 			$cap = self::caption( 'POINTS TABLE | ' . $name . ': ' . $lead['name'] . ' lead on ' . $lead['pts'] . ' points.', array(), 'tab:' . $sid );
-			SF_Poster::queue( 'table', 'table:' . $sid . ':' . wp_date( 'o-W' ), $d, $cap, array( 'series_id' => $sid ) );
+			SF_Poster::queue( 'table', 'table:' . $sid . ':' . SF_Plugin::date( 'o-W' ), $d, $cap, array( 'series_id' => $sid ) );
 			$n++;
 		}
 		SF_Poster::publish_due();
@@ -920,7 +938,7 @@ class SF_Engine {
 		if ( ! SF_Options::job( 'ranking' ) ) {
 			return;
 		}
-		$tz    = wp_timezone();
+		$tz    = SF_Plugin::tz();
 		$first = new DateTime( 'first day of last month', $tz );
 		$last  = new DateTime( 'last day of last month', $tz );
 		$rows  = SF_DB::results_between( $first->format( 'Y-m-d' ), $last->format( 'Y-m-d' ) );
@@ -1033,7 +1051,7 @@ class SF_Engine {
 			$push( $m, 'LIVE' );
 		}
 		$upcoming = array_filter( $matches, function ( $m ) {
-			return ! $m['started'] && $m['start'] && wp_date( 'Y-m-d', $m['start'] ) === wp_date( 'Y-m-d' );
+			return ! $m['started'] && $m['start'] && SF_Plugin::date( 'Y-m-d', $m['start'] ) === SF_Plugin::date( 'Y-m-d' );
 		} );
 		usort( $upcoming, function ( $a, $b ) {
 			return $a['start'] <=> $b['start'];
@@ -1050,7 +1068,7 @@ class SF_Engine {
 		$total = count( $rows );
 		$d     = array(
 			'tournament' => '',
-			'meta'       => wp_date( 'l j F' ) . ', ' . $total . ' matches',
+			'meta'       => SF_Plugin::date( 'l j F' ) . ', ' . $total . ' matches',
 			'rows'       => array_slice( $rows, 0, 9 ),
 		) + self::foot();
 		if ( $total > 9 ) {
@@ -1060,13 +1078,13 @@ class SF_Engine {
 		foreach ( array_slice( $live, 0, 4 ) as $m ) {
 			$lines[] = trim( self::headline_score( $m ), '.' );
 		}
-		$cap = self::caption( 'SCOREBOARD | ' . count( $live ) . ' matches live now.', $lines, 'digest:' . wp_date( 'Y-m-d H' ) );
-		SF_Poster::queue( 'digest', 'digest:' . wp_date( 'Y-m-d-H-i' ), $d, $cap );
+		$cap = self::caption( 'SCOREBOARD | ' . count( $live ) . ' matches live now.', $lines, 'digest:' . SF_Plugin::date( 'Y-m-d H' ) );
+		SF_Poster::queue( 'digest', 'digest:' . SF_Plugin::date( 'Y-m-d-H-i' ), $d, $cap );
 		update_option( 'sf_last_digest', time(), false );
 	}
 
 	private static function pinned_text( $matches ) {
-		$lines = array( "Today's matches (updated " . wp_date( 'H:i' ) . ')', '' );
+		$lines = array( "Today's matches (updated " . SF_Plugin::date( 'H:i' ) . ')', '' );
 		$n     = 0;
 		foreach ( $matches as $m ) {
 			if ( $n >= 12 ) {
@@ -1083,7 +1101,7 @@ class SF_Engine {
 			$lines[] = '';
 			$lines[] = ( count( $matches ) - 12 ) . ' more matches today.';
 		}
-		$q = self::question( 'pin:' . wp_date( 'Y-m-d' ) );
+		$q = self::question( 'pin:' . SF_Plugin::date( 'Y-m-d' ) );
 		if ( '' !== $q ) {
 			$lines[] = '';
 			$lines[] = $q . ' Tell us in the comments.';
@@ -1109,7 +1127,7 @@ class SF_Engine {
 			return;
 		}
 		$today = array_values( array_filter( $matches, function ( $m ) {
-			return $m['start'] && wp_date( 'Y-m-d', $m['start'] ) === wp_date( 'Y-m-d' );
+			return $m['start'] && SF_Plugin::date( 'Y-m-d', $m['start'] ) === SF_Plugin::date( 'Y-m-d' );
 		} ) );
 		usort( $today, function ( $a, $b ) {
 			return $a['start'] <=> $b['start'];

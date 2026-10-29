@@ -127,3 +127,6 @@ textarea.sf-field { max-width: none; }
 	.sf-wrap table { display: block; overflow-x: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .sf-wrap * { transition: none !important; } }
+
+.sf-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.sf-stack label { display: block; line-height: 1.4; }

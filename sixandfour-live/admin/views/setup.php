@@ -12,6 +12,7 @@ $o  = SF_Options::all();
 $fb = get_option( 'sf_fb_status', array() );
 $fb = is_array( $fb ) ? $fb : array();
 $cron_url = site_url( 'wp-cron.php?doing_wp_cron' );
+$cron_file = ABSPATH . 'wp-cron.php';
 SF_Admin::form_open( 'save_setup' );
 ?>
 <p class="sf-lede">Connections and posting rules. Tokens are stored in your WordPress database and are never shown again.</p>
@@ -26,6 +27,10 @@ SF_Admin::form_open( 'save_setup' );
 		</div>
 	</div>
 	<div class="sf-row"><label class="sf-l" for="max_posts_day"><b>Posts per day</b><span>Keeps the Page from feeling spammy. Manual posts do not count.</span></label><input class="sf-field sf-narrow" id="max_posts_day" name="max_posts_day" type="number" min="1" max="100" value="<?php echo (int) $o['max_posts_day']; ?>"></div>
+	<div class="sf-row"><label class="sf-l" for="tz"><b>Time zone for posting</b><span>Used for the day start and the match times on cards. Now it is <?php echo esc_html( SF_Plugin::date( 'H:i' ) ); ?> there.</span></label>
+		<select class="sf-field sf-narrow" id="tz" name="tz"><?php echo wp_timezone_choice( $o['tz'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></select></div>
+	<div class="sf-row"><label class="sf-l" for="daily_time"><b>Day start post</b><span>Today's matches are posted at this time, in that time zone</span></label><input class="sf-field sf-narrow" id="daily_time" name="daily_time" type="time" value="<?php echo esc_attr( $o['daily_time'] ); ?>"></div>
+	<?php SF_Admin::switch_row( 'manual_enabled', $o['manual_enabled'], 'Allow manual posts', 'Shows the Manual post screen here and the Post tab in the mobile console. Off by default.' ); ?>
 </div>
 
 <h2 class="sf-sec">Facebook Page</h2>
@@ -50,8 +55,15 @@ SF_Admin::form_open( 'save_setup' );
 <div class="sf-group">
 	<?php
 	SF_Admin::switch_row( 'skip_women', $o['skip_women'], 'Skip women\'s matches', 'Leaves them out of every post and saves API calls.' );
-	SF_Admin::switch_row( 'top_only', $o['top_only'], 'Always cover matches between the top teams', 'Any series, for example a tri-series. A tournament you follow on the Tournaments screen is covered as well, so club leagues still work.' );
 	?>
+	<div class="sf-row sf-block">
+		<div class="sf-l"><b>Which matches</b></div>
+		<div class="sf-stack">
+			<label><input type="radio" name="cover" value="all" <?php checked( $o['cover'], 'all' ); ?>> <b>Every match</b>, except women's. Any series, any team, including tri-series.</label>
+			<label><input type="radio" name="cover" value="top" <?php checked( $o['cover'], 'top' ); ?>> <b>Top teams only</b> (the list below), plus the tournaments you follow.</label>
+			<label><input type="radio" name="cover" value="followed" <?php checked( $o['cover'], 'followed' ); ?>> <b>Followed tournaments only.</b> Everything if you follow none.</label>
+		</div>
+	</div>
 	<div class="sf-row sf-block"><label for="top_teams"><b>Top teams</b> <span class="sf-muted">One per line. Both teams must be on the list.</span></label><textarea class="sf-field" id="top_teams" name="top_teams" rows="8"><?php echo esc_textarea( $o['top_teams'] ); ?></textarea></div>
 	<?php $st = SF_API::stats(); ?>
 	<div class="sf-row"><div class="sf-l"><b>Cricket calls today</b><span><?php echo (int) $st['hits']; ?> of <?php echo (int) $st['limit']; ?> used over <?php echo (int) $st['keys']; ?> key<?php echo 1 === (int) $st['keys'] ? '' : 's'; ?>. The plugin checks often only around live matches.</span></div></div>
@@ -69,7 +81,8 @@ SF_Admin::form_open( 'save_setup' );
 	<p>WordPress only runs scheduled jobs when someone visits the site. On a quiet site, use a real cron job so scores are checked every 5 minutes.</p>
 	<ol class="sf-steps">
 		<li>In <code>wp-config.php</code>, add this line above "That's all, stop editing":<br><code>define( 'DISABLE_WP_CRON', true );</code></li>
-		<li>In Hostinger hPanel, open Advanced, then Cron Jobs, and add a job every 5 minutes with this command:<br><code>wget -q -O - "<?php echo esc_html( $cron_url ); ?>" &gt;/dev/null 2&gt;&amp;1</code></li>
+		<li>In Hostinger hPanel, open Advanced, then Cron Jobs. Choose PHP, set it to every 5 minutes (<code>*/5 * * * *</code>), and use this file as the command. This is the exact path of this WordPress install, which matters when it lives in a sub folder:<br><code><?php echo esc_html( $cron_file ); ?></code></li>
+		<li>If your plan has no PHP option, add a job with this command instead:<br><code>wget -q -O - "<?php echo esc_html( $cron_url ); ?>" &gt;/dev/null 2&gt;&amp;1</code></li>
 	</ol>
 	<p class="sf-sub">Status: <?php echo ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) ? 'WordPress cron is switched off, so your real cron job must be running.' : 'WordPress cron is on, so jobs run when the site gets visits.'; ?></p>
 </div>
