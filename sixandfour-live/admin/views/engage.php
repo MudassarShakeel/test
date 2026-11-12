@@ -28,6 +28,9 @@ $core = array(
 );
 SF_Admin::form_open( 'save_engage' );
 ?>
+<?php if ( SF_Options::video_mode() ) : ?>
+	<div class="sf-notice sf-warning">Result video only is on in Setup, so the switches below are paused. Your choices are kept and come back when you switch to Pictures and text.</div>
+<?php endif; ?>
 <p class="sf-lede">Posts that give fans something to react to and comment on. Every one ends with a question.</p>
 
 <h2 class="sf-sec">Posts for every match</h2>

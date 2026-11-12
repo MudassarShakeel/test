@@ -468,8 +468,57 @@ class SF_Engine {
 		);
 	}
 
+	/** A team's score for the video, such as 312 & 145/3 in a Test. */
+	public static function score_for_video( $m, $idx, $s ) {
+		return self::score_text( $m, $idx, $s );
+	}
+
+	public static function best_batter_for_video( $p ) {
+		$b = self::best_batter( $p['batters'] );
+		if ( ! $b ) {
+			return null;
+		}
+		return array( 'label' => 'Top scorer', 'name' => $b['name'], 'stat' => $b['r'] . ( $b['out'] ? '' : '*' ), 'small' => '(' . $b['b'] . ' balls)', 'detail' => $b['4s'] . ' fours, ' . $b['6s'] . ' sixes' );
+	}
+
+	public static function best_bowler_for_video( $p ) {
+		$b = self::best_bowler( $p['bowlers'] );
+		if ( ! $b || $b['w'] < 1 ) {
+			return null;
+		}
+		return array( 'label' => 'Top wicket taker', 'name' => $b['name'], 'stat' => $b['w'] . '/' . $b['r'], 'small' => '(' . self::overs( $b['o'] ) . ' overs)', 'detail' => 'Economy ' . number_format( $b['eco'], 2 ) );
+	}
+
+	/** Result video mode: one video after the result, nothing else. */
+	private static function finish_video( $m ) {
+		$dedupe = 'video:' . $m['id'];
+		if ( SF_DB::exists( $dedupe ) ) {
+			return;
+		}
+		$p = array( 'batters' => array(), 'bowlers' => array() );
+		if ( SF_API::budget_ok() ) {
+			$sc = SF_API::scorecard( $m['id'], true );
+			if ( ! is_wp_error( $sc ) ) {
+				$p = SF_API::parse_scorecard( $sc, $m );
+			} else {
+				SF_Log::add( 'No scorecard for ' . $m['name'] . ', so the video will have no top players: ' . $sc->get_error_message(), 'warning' );
+			}
+		}
+		$payload = SF_Video::payload( $m, $p );
+		if ( ! $payload ) {
+			SF_Log::add( 'No video for ' . $m['name'] . ': the result has no winner (' . $m['status'] . ').' );
+			return;
+		}
+		$cap = self::caption( 'RESULT | ' . ( self::tour( $m ) ? self::tour( $m ) . ': ' : '' ) . self::short_result( $m['status'] ) . '.', self::credits( array() ), null );
+		SF_Poster::queue_video( $dedupe, $payload, $cap, array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] ) );
+	}
+
 	private static function finish_match( $m ) {
 		self::store_result( $m );
+		if ( SF_Options::video_mode() ) {
+			self::finish_video( $m );
+			return;
+		}
 		$extra = array( 'match_id' => $m['id'], 'series_id' => $m['series_id'] );
 
 		if ( SF_Options::job( 'result' ) ) {
@@ -1014,7 +1063,7 @@ class SF_Engine {
 	/* ------------------------------------------------------------------ */
 
 	private static function maybe_digest( $matches, $live, $card_ids, $o ) {
-		if ( empty( $o['digest'] ) ) {
+		if ( empty( $o['digest'] ) || SF_Options::video_mode() ) {
 			return;
 		}
 		$extra_live = array_filter( $live, function ( $m ) use ( $card_ids ) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, Audio, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 
-export type Team = { name: string; flag: string; score: string; overs: string; won?: boolean };
+export type Team = { name: string; flag?: string | null; initials?: string; score: string; overs: string; won?: boolean };
 export type Star = { label: string; name: string; stat: string; small: string; detail: string };
 export type Match = {
 	tournament: string;
@@ -11,14 +11,16 @@ export type Match = {
 	margin: string;
 	teams: Team[];
 	toSpare: string;
-	bat: Star;
-	bowl: Star;
+	bat?: Star | null;
+	bowl?: Star | null;
 	link: string;
-	audio: string | null;
+	audio?: string | null;
 	music?: string | null;
 	musicVolume?: number;
 	scenes: { score: number; stars: number; outro: number; end: number };
 };
+
+const asset = (p: string) => (/^https?:/.test(p) ? p : staticFile(p));
 
 const NAVY = '#0A1B44';
 const NAVY2 = '#12306F';
@@ -103,7 +105,11 @@ const TeamRow: React.FC<{ t: Team; delay: number; y: number }> = ({ t, delay, y 
 	const p = useIn(delay);
 	return (
 		<div style={{ position: 'absolute', left: 60, right: 60, top: y, height: 240, borderRadius: 44, background: t.won ? '#16398A' : '#102A66', border: `3px solid ${t.won ? CYAN : '#1F3F8F'}`, display: 'flex', alignItems: 'center', padding: '0 44px', transform: `translateX(${(1 - p) * -900}px)`, opacity: p }}>
-			<Img src={staticFile(t.flag)} style={{ width: 150, height: 112, borderRadius: 16, objectFit: 'cover' }} />
+			{t.flag ? (
+				<Img src={staticFile(t.flag)} style={{ width: 150, height: 112, borderRadius: 16, objectFit: 'cover' }} />
+			) : (
+				<div style={{ width: 150, height: 112, borderRadius: 24, background: NAVY, color: CYAN, fontFamily: 'Inter', fontWeight: 800, fontSize: 52, display: 'grid', placeItems: 'center' }}>{t.initials || t.name.slice(0, 3).toUpperCase()}</div>
+			)}
 			<div style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: 76, color: '#fff', marginLeft: 40, flex: 1, letterSpacing: -1.5 }}>{t.name}</div>
 			<div style={{ textAlign: 'right' }}>
 				<div style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: 112, color: t.won ? CYAN : '#fff', letterSpacing: -3, lineHeight: 1 }}>{t.score}</div>
@@ -167,8 +173,10 @@ export const ResultVideo: React.FC<Match> = (m) => {
 		// Fades a scene out near its end.
 		return { from, dur: to - from };
 	};
+	const hasStars = Boolean(m.bat || m.bowl);
+	const starsAt = hasStars ? m.scenes.stars : m.scenes.outro;
 	const A = fade(0, f(m.scenes.score) + 12);
-	const B = fade(f(m.scenes.score), f(m.scenes.stars) + 12);
+	const B = fade(f(m.scenes.score), f(starsAt) + 12);
 	const C = fade(f(m.scenes.stars), f(m.scenes.outro) + 12);
 	const D = fade(f(m.scenes.outro), end);
 	return (
@@ -177,12 +185,12 @@ export const ResultVideo: React.FC<Match> = (m) => {
 			<Background />
 			{m.music ? (
 				<Audio
-					src={staticFile(m.music)}
+					src={asset(m.music)}
 					// Quiet under a voice, a little louder when there is none, and a fade-out over the last two seconds.
 					volume={(frame) => (m.musicVolume ?? 0.3) * (m.audio ? 0.45 : 1) * interpolate(frame, [end - 2 * fps, end], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })}
 				/>
 			) : null}
-			{m.audio ? <Audio src={staticFile(m.audio)} /> : null}
+			{m.audio ? <Audio src={asset(m.audio)} /> : null}
 			<Sequence from={A.from} durationInFrames={A.dur}>
 				<Header pill="MATCH RESULT" link={m.link} />
 				<Headline m={m} />
@@ -193,11 +201,13 @@ export const ResultVideo: React.FC<Match> = (m) => {
 				<TeamRow t={m.teams[1]} delay={Math.round(fps * 3.2)} y={830} />
 				<ResultBar m={m} delay={Math.round(fps * 5.6)} y={1150} />
 			</Sequence>
-			<Sequence from={C.from} durationInFrames={C.dur}>
-				<Header pill="STAND-OUTS" link={m.link} />
-				<StarCard s={m.bat} delay={0} y={420} />
-				<StarCard s={m.bowl} delay={Math.round(fps * 3)} y={1010} />
-			</Sequence>
+			{hasStars ? (
+				<Sequence from={C.from} durationInFrames={C.dur}>
+					<Header pill="STAND-OUTS" link={m.link} />
+					{m.bat ? <StarCard s={m.bat} delay={0} y={m.bowl ? 420 : 640} /> : null}
+					{m.bowl ? <StarCard s={m.bowl} delay={m.bat ? Math.round(fps * 3) : 0} y={m.bat ? 1010 : 640} /> : null}
+				</Sequence>
+			) : null}
 			<Sequence from={D.from} durationInFrames={D.dur}>
 				<Outro m={m} />
 			</Sequence>

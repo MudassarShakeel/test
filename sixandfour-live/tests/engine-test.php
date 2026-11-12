@@ -510,5 +510,99 @@ $cap = $fx ? end( $fx )['caption'] : '';
 ok( false !== strpos( $cap, 'Which match are you watching today?' ) && false === strpos( $cap, 'Great knock' ), 'the day start caption asks about today, not about a knock' );
 ok( 1 === preg_match( '/\d\d:\d\d  \S.* v \S/', $cap ), 'the caption lists the matches as text too' );
 
+echo "17. Result video mode\n";
+SF_Options::update( array( 'post_mode' => 'video', 'video_url' => 'https://video.example.test', 'video_key' => 'secret-key-1', 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'cover' => 'all', 'paused' => 0, 'max_posts_day' => 60 ) );
+$svc = array( 'calls' => array(), 'status' => 'rendering', 'auth' => true, 'fb' => array() );
+$GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$svc, &$world ) {
+	if ( false !== strpos( $url, 'video.example.test' ) ) {
+		$svc['calls'][] = $method . ' ' . parse_url( $url, PHP_URL_PATH );
+		if ( ! $svc['auth'] ) {
+			return array( 'code' => 401, 'body' => '{"error":"Wrong key."}' );
+		}
+		if ( 'POST' === $method ) {
+			$svc['sent'] = json_decode( $args['body'], true );
+			$svc['bearer'] = $args['headers']['Authorization'];
+			return array( 'code' => 202, 'body' => '{"id":"abcdef0123456789","status":"queued"}' );
+		}
+		if ( false !== strpos( $url, '/health' ) ) {
+			return sf_json( array( 'ok' => true ) );
+		}
+		$out = array( 'status' => $svc['status'] );
+		if ( 'done' === $svc['status'] ) {
+			$out['url'] = 'https://video.example.test/videos/abcdef0123456789.mp4';
+		}
+		if ( 'failed' === $svc['status'] ) {
+			$out['error'] = 'Chrome crashed';
+		}
+		return sf_json( $out );
+	}
+	if ( false !== strpos( $url, 'graph.facebook.com' ) && preg_match( '#/videos$#', $url ) ) {
+		$svc['fb'][] = $args['body'];
+		return sf_json( array( 'id' => 'V123' ) );
+	}
+	if ( false !== strpos( $url, 'api.cricapi.com' ) ) {
+		return sf_json( array( 'status' => 'success', 'data' => $world['matches'], 'info' => array( 'hitsToday' => 1, 'hitsLimit' => 100 ) ) );
+	}
+	return array( 'code' => 404, 'body' => '' );
+};
+global $wpdb;
+$wpdb->query( "UPDATE wp_sf_posts SET status = 'skipped' WHERE status IN ('approved','pending')" );
+$n_before = count( posts() );
+$score = array( array( 'r' => 168, 'w' => 7, 'o' => 20.0, 'inning' => 'Australia Inning 1' ), array( 'r' => 171, 'w' => 4, 'o' => 18.3, 'inning' => 'England Inning 1' ) );
+$world['matches'] = array( match_json( 'vid1', 'England', 'Australia', time() - 3600, true, false, 'England need 12 runs', $score, 's1' ) );
+tick();
+$world['matches'] = array( match_json( 'vid1', 'England', 'Australia', time() - 3600, true, true, 'England won by 6 wickets (9 balls remaining)', $score, 's1' ) );
+tick();
+$vids = posts( 'video' );
+ok( 1 === count( $vids ), 'one video is queued after the result' );
+ok( count( posts() ) === $n_before + 1, 'and nothing else is queued: no toss, poll, innings, result picture or summary' );
+$pl = json_decode( $vids[0]['payload'], true );
+ok( 'England' === $pl['winner'] && 'Australia' === $pl['loser'] && '6 wickets' === $pl['margin'] && '9 balls to spare' === $pl['toSpare'], 'the video data has the winner, margin and balls to spare' );
+ok( 'flags/eng.png' === $pl['teams'][1]['flag'] || 'flags/eng.png' === $pl['teams'][0]['flag'], 'national teams send their flag file name' );
+SF_Poster::publish_due();
+$row = SF_DB::get_post( (int) $vids[0]['id'] );
+ok( 'approved' === $row['status'] && false !== strpos( (string) $row['payload'], '_job' ), 'the first run starts the render and keeps the post waiting' );
+ok( 'Bearer secret-key-1' === $svc['bearer'] && 'England' === $svc['sent']['winner'], 'the service gets the key and the match data' );
+ok( false !== strpos( SF_Poster::wait_reason( $row ), 'being made' ), 'the queue says the video is being made: ' . SF_Poster::wait_reason( $row ) );
+$force = function () { global $wpdb; $wpdb->query( "UPDATE wp_sf_posts SET scheduled_at = '2000-01-01 00:00:00' WHERE type = 'video'" ); };
+$force();
+SF_Poster::publish_due();
+ok( 'approved' === SF_DB::get_post( (int) $vids[0]['id'] )['status'] && empty( $svc['fb'] ), 'while it renders nothing is posted' );
+$svc['status'] = 'done';
+$force();
+SF_Poster::publish_due();
+$row = SF_DB::get_post( (int) $vids[0]['id'] );
+ok( 'posted' === $row['status'] && 'V123' === $row['fb_post_id'], 'when it is ready the video is posted to Facebook' );
+ok( 1 === count( $svc['fb'] ) && 'https://video.example.test/videos/abcdef0123456789.mp4' === $svc['fb'][0]['file_url'] && false !== strpos( $svc['fb'][0]['description'], 'RESULT' ) && 'tok' === $svc['fb'][0]['access_token'], 'Facebook is given the video address, the caption and the token' );
+// A failed render.
+$svc['status'] = 'rendering';
+$world['matches'] = array( match_json( 'vid2', 'India', 'Pakistan', time() - 3600, true, false, 'India need 5 runs', $score, 's1' ) );
+tick();
+$world['matches'] = array( match_json( 'vid2', 'India', 'Pakistan', time() - 3600, true, true, 'India won by 3 wickets', $score, 's1' ) );
+tick();
+SF_Poster::publish_due();
+$force();
+$svc['status'] = 'failed';
+SF_Poster::publish_due();
+$f = array_values( array_filter( posts( 'video' ), function ( $r ) { return false !== strpos( $r['dedupe'], 'vid2' ); } ) );
+ok( 'failed' === $f[0]['status'] && false !== strpos( $f[0]['error'], 'Chrome crashed' ), 'a failed render shows the reason: ' . $f[0]['error'] );
+// A wrong key.
+$svc['auth'] = false;
+$world['matches'] = array( match_json( 'vid3', 'England', 'India', time() - 3600, true, false, 'India need 5 runs', $score, 's1' ) );
+tick();
+$world['matches'] = array( match_json( 'vid3', 'England', 'India', time() - 3600, true, true, 'England won by 10 runs', $score, 's1' ) );
+tick();
+SF_Poster::publish_due();
+$f = array_values( array_filter( posts( 'video' ), function ( $r ) { return false !== strpos( $r['dedupe'], 'vid3' ); } ) );
+ok( 'failed' === $f[0]['status'] && false !== strpos( $f[0]['error'], 'refused the key' ), 'a wrong service key fails at once with a clear message: ' . $f[0]['error'] );
+$svc['auth'] = true;
+SF_Options::update( array( 'video_url' => '' ) );
+$h = array_column( SF_Health::problems(), 0 );
+ok( in_array( 'video', $h, true ), 'video mode without a service is reported as a problem' );
+SF_Options::update( array( 'video_url' => 'https://video.example.test' ) );
+ok( true === SF_Video::ping(), 'Test service reaches the service' );
+SF_Options::update( array( 'post_mode' => 'cards' ) );
+ok( SF_Options::job( 'toss' ) && SF_Options::job( 'poll' ), 'switching back to pictures brings the Engage choices back' );
+
 echo "\n", $fail ? "$fail FAILED\n" : "All checks passed\n";
 exit( $fail ? 1 : 0 );

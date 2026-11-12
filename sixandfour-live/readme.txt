@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.6.3
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,11 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.7.0 =
+* New: Result video only. In Setup, Posting format, choose Result video only to post a single video after each result. Every picture post and every other post is switched off while it is selected, and your Engage choices come back when you switch back to Pictures and text.
+* The video is made by a small render service (the video-service folder) that you run on a VPS. The plugin sends it the match data, waits for the MP4 and posts it to the Page. The video has an animated scoreboard, the top players, original background music and an optional voiceover.
+* Setup has the service address, the key, voiceover and music switches, and a Test service button. The status panel reports a missing or unreachable service in plain words.
 
 = 1.6.3 =
 * New choice in Setup, Which matches: Full member teams only. Both sides must be one of the 12 ICC full members, in any series. A teams, youth sides, associates and domestic teams are left out. Women's matches are still skipped.

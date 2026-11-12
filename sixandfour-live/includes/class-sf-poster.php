@@ -92,6 +92,79 @@ class SF_Poster {
 		return SF_DB::add_post( $row );
 	}
 
+	/** A video post. The render service makes the video when it is time to send it. */
+	public static function queue_video( $dedupe, array $payload, $caption, array $extra = array() ) {
+		if ( SF_DB::exists( $dedupe ) ) {
+			return 0;
+		}
+		$mode = SF_Options::get( 'mode', 'auto' );
+		return SF_DB::add_post(
+			array(
+				'type'     => 'video',
+				'dedupe'   => $dedupe,
+				'match_id' => isset( $extra['match_id'] ) ? $extra['match_id'] : '',
+				'series_id' => isset( $extra['series_id'] ) ? $extra['series_id'] : '',
+				'status'   => 'auto' === $mode ? 'approved' : 'pending',
+				'caption'  => $caption,
+				'payload'  => wp_json_encode( $payload ),
+			)
+		);
+	}
+
+	/** Make the video, then post it. Takes several runs: start the render, wait for it, then send. */
+	private static function publish_video( array $row ) {
+		$id      = (int) $row['id'];
+		$payload = json_decode( (string) $row['payload'], true );
+		$payload = is_array( $payload ) ? $payload : array();
+		$fail    = function ( $msg ) use ( $id ) {
+			SF_DB::update_post( $id, array( 'status' => 'failed', 'error' => $msg ) );
+			SF_Log::add( 'Video post ' . $id . ' failed: ' . $msg, 'error' );
+			return 'failed';
+		};
+		$later   = function ( $seconds, $extra = array() ) use ( $id ) {
+			SF_DB::update_post( $id, array_merge( array( 'scheduled_at' => gmdate( 'Y-m-d H:i:s', time() + $seconds ) ), $extra ) );
+			return 'waiting';
+		};
+		if ( empty( $payload['_job'] ) ) {
+			$job = SF_Video::submit( $payload );
+			if ( is_wp_error( $job ) ) {
+				$n = (int) $row['attempts'] + 1;
+				if ( $n >= 4 || in_array( $job->get_error_code(), array( 'sf_video_key', 'sf_video_setup' ), true ) ) {
+					return $fail( $job->get_error_message() );
+				}
+				return $later( 5 * MINUTE_IN_SECONDS, array( 'attempts' => $n, 'error' => $job->get_error_message() ) );
+			}
+			$payload['_job']  = $job;
+			$payload['_from'] = time();
+			SF_DB::update_post( $id, array( 'payload' => wp_json_encode( $payload ), 'error' => null ) );
+			return $later( 45 );
+		}
+		$st = SF_Video::status( $payload['_job'] );
+		if ( is_wp_error( $st ) ) {
+			return $later( 2 * MINUTE_IN_SECONDS, array( 'error' => $st->get_error_message() ) );
+		}
+		if ( 'failed' === $st['status'] ) {
+			return $fail( 'The video could not be made: ' . ( '' !== $st['error'] ? $st['error'] : 'the video service reported a failure.' ) );
+		}
+		if ( 'done' !== $st['status'] ) {
+			if ( time() - (int) $payload['_from'] > 30 * MINUTE_IN_SECONDS ) {
+				return $fail( 'The video was not ready after 30 minutes. Check the video service.' );
+			}
+			return $later( 45 );
+		}
+		$fb = SF_Facebook::video( $st['url'], $row['caption'] );
+		if ( is_wp_error( $fb ) ) {
+			$n     = (int) $row['attempts'] + 1;
+			$fatal = in_array( $fb->get_error_code(), array( 'sf_fb_190', 'sf_fb_setup' ), true );
+			if ( $fatal || $n >= 3 ) {
+				return $fail( $fb->get_error_message() );
+			}
+			return $later( 5 * MINUTE_IN_SECONDS, array( 'attempts' => $n, 'error' => $fb->get_error_message() ) );
+		}
+		SF_DB::update_post( $id, array( 'status' => 'posted', 'fb_post_id' => (string) $fb, 'posted_at' => gmdate( 'Y-m-d H:i:s' ), 'error' => null ) );
+		return 'posted';
+	}
+
 	/** A text-only post. */
 	public static function queue_text( $type, $dedupe, $caption, array $extra = array() ) {
 		if ( SF_DB::exists( $dedupe ) ) {
@@ -155,6 +228,12 @@ class SF_Poster {
 				return 'This match already had ' . (int) $o['per_match_hour'] . ' live posts in the last hour.';
 			}
 		}
+		if ( 'video' === $row['type'] ) {
+			$pl = json_decode( (string) $row['payload'], true );
+			if ( is_array( $pl ) && ! empty( $pl['_job'] ) ) {
+				return 'The video is being made by the video service. It is posted when it is ready, usually within a few minutes.';
+			}
+		}
 		if ( ! empty( $row['scheduled_at'] ) && strtotime( $row['scheduled_at'] . ' UTC' ) > time() ) {
 			return 'Scheduled for ' . wp_date( 'j M, H:i', strtotime( $row['scheduled_at'] . ' UTC' ) ) . '.';
 		}
@@ -186,6 +265,10 @@ class SF_Poster {
 			if ( self::is_live_type( $row['type'] ) && '' !== $row['match_id'] && SF_DB::count_posted_since( time() - HOUR_IN_SECONDS, $row['match_id'] ) >= (int) $o['per_match_hour'] ) {
 				return 'waiting';
 			}
+		}
+
+		if ( 'video' === $row['type'] ) {
+			return self::publish_video( $row );
 		}
 
 		$path = self::image_path( $row );

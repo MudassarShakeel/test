@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class SF_DB {
 
-	const VERSION = '1';
+	const VERSION = '2';
 
 	public static function posts() {
 		global $wpdb;
@@ -39,6 +39,7 @@ class SF_DB {
 			status varchar(16) NOT NULL DEFAULT 'pending',
 			caption longtext NOT NULL,
 			image varchar(255) NOT NULL DEFAULT '',
+			payload longtext NULL,
 			fb_post_id varchar(64) NOT NULL DEFAULT '',
 			error text NULL,
 			attempts tinyint(3) unsigned NOT NULL DEFAULT 0,

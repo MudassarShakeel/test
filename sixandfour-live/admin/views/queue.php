@@ -17,7 +17,7 @@ $render = function ( $p, $buttons ) {
 	$img = SF_Poster::image_url( $p );
 	?>
 	<div class="sf-item">
-		<div class="sf-thumb"><?php if ( $img ) : ?><img src="<?php echo esc_url( $img ); ?>" alt=""><?php else : ?><div class="sf-textonly">Text post</div><?php endif; ?></div>
+		<div class="sf-thumb"><?php if ( $img ) : ?><img src="<?php echo esc_url( $img ); ?>" alt=""><?php elseif ( 'video' === $p['type'] ) : ?><div class="sf-textonly">Video</div><?php else : ?><div class="sf-textonly">Text post</div><?php endif; ?></div>
 		<div class="sf-body">
 			<div class="sf-meta"><span class="sf-pill sf-warn"><?php echo esc_html( ucfirst( $p['status'] ) ); ?></span> <?php echo esc_html( ucfirst( $p['type'] ) ); ?> <span class="sf-muted"><?php echo esc_html( wp_date( 'j M, H:i', strtotime( $p['created_at'] . ' UTC' ) ) ); ?></span></div>
 			<?php if ( $p['error'] ) : ?><p class="sf-err"><?php echo esc_html( $p['error'] ); ?></p><?php endif; ?>

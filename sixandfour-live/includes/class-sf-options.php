@@ -28,6 +28,11 @@ class SF_Options {
 			'skip_women'        => 1,
 			'top_teams'         => "India\nAustralia\nEngland\nSouth Africa\nNew Zealand\nPakistan\nSri Lanka\nBangladesh\nWest Indies\nAfghanistan\nZimbabwe\nIreland\nNetherlands\nScotland\nNepal\nUnited Arab Emirates\nUnited States of America\nNamibia\nOman\nCanada",
 			'cover'             => 'all', // all (every match except women's), full (ICC full members only), top (top teams and followed tournaments) or followed.
+			'post_mode'         => 'cards', // cards (pictures and text) or video (only a video after each result).
+			'video_url'         => '',      // The render service that makes the video.
+			'video_key'         => '',
+			'video_voice'       => 1,
+			'video_music'       => 1,
 			'tz'                => 'Asia/Karachi', // The time zone for the day start and for match times on cards.
 			'daily_time'        => '06:00',        // When the day's matches are posted, in that time zone.
 			'manual_enabled'    => 0,              // Manual posts from the admin and the mobile console.
@@ -76,7 +81,7 @@ class SF_Options {
 	}
 
 	/** Settings that are encrypted before they are saved. */
-	const SECRETS = array( 'fb_token', 'api_key', 'api_key2', 'api_key3', 'api_key4' );
+	const SECRETS = array( 'fb_token', 'api_key', 'api_key2', 'api_key3', 'api_key4', 'video_key' );
 
 	public static function all() {
 		$o = get_option( self::KEY, array() );
@@ -124,8 +129,16 @@ class SF_Options {
 		}
 	}
 
+	/** True when only a video is posted, after each result. Every other post type is off while it is. */
+	public static function video_mode() {
+		return 'video' === self::get( 'post_mode', 'cards' );
+	}
+
 	public static function job( $name ) {
 		$o = self::all();
+		if ( 'video' === $o['post_mode'] ) {
+			return 'result' === $name;
+		}
 		return ! empty( $o['jobs'][ $name ] );
 	}
 

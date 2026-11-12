@@ -143,6 +143,31 @@ class SF_Facebook {
 		return isset( $res['post_id'] ) ? $res['post_id'] : ( isset( $res['id'] ) ? $res['id'] : '' );
 	}
 
+	/** Post a video that Facebook fetches from a public https address. Returns the video id. */
+	public static function video( $file_url, $description ) {
+		$c = self::creds();
+		if ( is_wp_error( $c ) ) {
+			return $c;
+		}
+		$res = self::handle(
+			wp_remote_post(
+				self::base() . rawurlencode( $c[0] ) . '/videos',
+				array(
+					'timeout'     => 60,
+					'redirection' => 0,
+					'sslverify'   => true,
+					'body'        => array(
+						'file_url'     => $file_url,
+						'description'  => self::clean( $description ),
+						'published'    => 'true',
+						'access_token' => $c[1],
+					),
+				)
+			)
+		);
+		return is_wp_error( $res ) ? $res : ( isset( $res['id'] ) ? $res['id'] : '' );
+	}
+
 	/** Facebook allows about 63,000 characters. Stay well under it. */
 	private static function clean( $text ) {
 		return mb_substr( (string) $text, 0, 5000 );

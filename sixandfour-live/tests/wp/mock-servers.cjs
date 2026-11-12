@@ -27,6 +27,7 @@ http.createServer((req, res) => {
         state.fb.push({ kind: 'photo', bytes: body.length, png: text.includes('\x89PNG'), jpeg: text.includes('\xff\xd8\xff'), php: text.includes('<?php'), caption: (text.match(/name="caption"\r\n\r\n([\s\S]*?)\r\n--/) || [])[1] || '', tokenInBody: text.includes('name="access_token"') });
         return send(res, 200, { id: 'P' + state.fb.length, post_id: '1_' + state.fb.length });
       }
+      if (p.endsWith('/videos')) { const q = new URLSearchParams(body.toString()); state.fb.push({ kind: 'video', file_url: q.get('file_url'), description: q.get('description'), tokenInBody: q.has('access_token') }); return send(res, 200, { id: 'V' + state.fb.length }); }
       if (p.endsWith('/feed')) { state.fb.push({ kind: 'feed', body: body.toString() }); return send(res, 200, { id: '1_feed' + state.fb.length }); }
       state.fbEdits.push({ path: p, body: body.toString() });
       return send(res, 200, { success: true });

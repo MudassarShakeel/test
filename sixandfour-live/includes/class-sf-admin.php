@@ -36,7 +36,7 @@ class SF_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'run_daily', 'health_check', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'block_player_photo', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
+		foreach ( array( 'save_setup', 'test_fb', 'test_api', 'run_now', 'run_daily', 'health_check', 'test_video', 'queue_action', 'save_engage', 'follow', 'unfollow', 'search_series', 'save_teams', 'save_players', 'block_player_photo', 'manual_post', 'create_pinned', 'sample', 'save_security', 'save_signin', 'create_home', 'restore_home' ) as $a ) {
 			add_action( 'admin_post_sf_' . $a, array( __CLASS__, 'do_' . $a ) );
 		}
 	}
@@ -171,6 +171,14 @@ class SF_Admin {
 		$dt                = self::text( 'daily_time', $old['daily_time'] );
 		$new['daily_time'] = preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/', $dt ) ? $dt : $old['daily_time'];
 		$new['manual_enabled'] = self::bool( 'manual_enabled' );
+		$mode              = self::text( 'post_mode', 'cards' );
+		$new['post_mode']  = 'video' === $mode ? 'video' : 'cards';
+		$vurl              = esc_url_raw( trim( self::text( 'video_url', $old['video_url'] ) ) );
+		$new['video_url']  = ( '' === $vurl || 0 === strpos( $vurl, 'https://' ) || 0 === strpos( $vurl, 'http://127.0.0.1' ) || 0 === strpos( $vurl, 'http://localhost' ) ) ? rtrim( $vurl, '/' ) : $old['video_url'];
+		$vkey              = isset( $_POST['video_key'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['video_key'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$new['video_key']  = '-' === $vkey ? '' : ( '' !== $vkey ? $vkey : $old['video_key'] );
+		$new['video_voice'] = self::bool( 'video_voice' );
+		$new['video_music'] = self::bool( 'video_music' );
 		$teams             = isset( $_POST['top_teams'] ) ? sanitize_textarea_field( wp_unslash( $_POST['top_teams'] ) ) : $old['top_teams']; // phpcs:ignore WordPress.Security.NonceVerification
 		$new['top_teams']  = implode( "\n", array_slice( array_filter( array_map( 'trim', explode( "\n", $teams ) ) ), 0, 60 ) );
 		$new['fb_handle']  = self::text( 'fb_handle', $old['fb_handle'] );
@@ -227,6 +235,12 @@ class SF_Admin {
 		}
 		SF_Engine::tick( true );
 		self::done( 'overview', 'success', 'Checked the matches now.' );
+	}
+
+	public static function do_test_video() {
+		self::guard();
+		$r = SF_Video::ping();
+		self::done( 'setup', is_wp_error( $r ) ? 'error' : 'success', is_wp_error( $r ) ? 'Video service: ' . $r->get_error_message() : 'The video service answered and is ready.' );
 	}
 
 	public static function do_health_check() {

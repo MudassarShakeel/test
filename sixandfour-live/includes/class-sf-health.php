@@ -68,6 +68,18 @@ class SF_Health {
 			$add( 'jobs', 'warn', 'Every post type is switched off', 'Turn on at least one on the Engage screen.' );
 		}
 
+		// Result video mode.
+		if ( SF_Options::video_mode() ) {
+			if ( ! SF_Video::configured() ) {
+				$add( 'video', 'bad', 'Result video is on but the video service is not set', 'Only videos are posted in this mode, and none can be made. Add the video service address and key in Setup, or switch Posting format back to Pictures and text.' );
+			} elseif ( $deep ) {
+				$ping = SF_Video::ping();
+				$add( 'video', is_wp_error( $ping ) ? 'bad' : 'ok', is_wp_error( $ping ) ? 'The video service is not answering' : 'Video service ready', is_wp_error( $ping ) ? $ping->get_error_message() . ' Check that it is running and that the address is https.' : 'It answered the check.' );
+			} else {
+				$add( 'video', 'ok', 'Result video only', 'A video is posted after each result. Pictures and other posts are off.' );
+			}
+		}
+
 		// Facebook.
 		if ( '' !== $o['fb_page_id'] && '' !== $o['fb_token'] ) {
 			if ( $deep ) {

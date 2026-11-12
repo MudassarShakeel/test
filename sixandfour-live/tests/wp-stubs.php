@@ -132,7 +132,7 @@ class SF_Test_WPDB {
 	public function __construct() {
 		$this->pdo = new PDO( 'sqlite::memory:' );
 		$this->pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-		$this->pdo->exec( 'CREATE TABLE wp_sf_posts (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, dedupe TEXT UNIQUE, match_id TEXT DEFAULT "", series_id TEXT DEFAULT "", status TEXT DEFAULT "pending", caption TEXT, image TEXT DEFAULT "", fb_post_id TEXT DEFAULT "", error TEXT NULL, attempts INTEGER DEFAULT 0, scheduled_at TEXT NULL, created_at TEXT, posted_at TEXT NULL)' );
+		$this->pdo->exec( 'CREATE TABLE wp_sf_posts (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, dedupe TEXT UNIQUE, match_id TEXT DEFAULT "", series_id TEXT DEFAULT "", status TEXT DEFAULT "pending", caption TEXT, image TEXT DEFAULT "", payload TEXT NULL, fb_post_id TEXT DEFAULT "", error TEXT NULL, attempts INTEGER DEFAULT 0, scheduled_at TEXT NULL, created_at TEXT, posted_at TEXT NULL)' );
 		$this->pdo->exec( 'CREATE TABLE wp_sf_results (id INTEGER PRIMARY KEY AUTOINCREMENT, match_id TEXT UNIQUE, series_id TEXT, series_name TEXT, played_on TEXT, team_a TEXT, team_b TEXT, winner TEXT, result_type TEXT)' );
 	}
 	public function get_charset_collate() {
@@ -191,6 +191,7 @@ require SF_DIR . 'includes/class-sf-playerphotos.php';
 require SF_DIR . 'includes/class-sf-cards.php';
 require SF_DIR . 'includes/class-sf-samples.php';
 require SF_DIR . 'includes/class-sf-poster.php';
+require SF_DIR . 'includes/class-sf-video.php';
 require SF_DIR . 'includes/class-sf-engine.php';
 require SF_DIR . 'includes/class-sf-health.php';
 require SF_DIR . 'includes/class-sf-security.php';
@@ -235,5 +236,15 @@ if ( ! function_exists( 'human_time_diff' ) ) {
 if ( ! function_exists( 'wp_unslash' ) ) {
 	function wp_unslash( $v ) {
 		return $v;
+	}
+}
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $v ) {
+		return json_encode( $v );
+	}
+}
+if ( ! function_exists( 'esc_url_raw' ) ) {
+	function esc_url_raw( $u ) {
+		return $u;
 	}
 }

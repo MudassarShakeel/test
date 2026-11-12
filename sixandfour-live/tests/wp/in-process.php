@@ -43,7 +43,7 @@ ok( $id1 > 0 && 0 === $id2, 'the same event cannot be queued twice' );
 ok( 'pending' === SF_DB::get_post( $id1 )['status'], 'a post can be read back' );
 
 echo "3. Secrets\n";
-SF_Options::update( array( 'fb_token' => 'EAAB1234567890SECRETTOKENVALUE', 'api_key' => 'cricket-key-123456', 'fb_page_id' => '123456', 'mode' => 'auto' ) );
+SF_Options::update( array( 'fb_token' => 'EAAB1234567890SECRETTOKENVALUE', 'api_key' => 'cricket-key-123456', 'fb_page_id' => '123456', 'mode' => 'auto', 'post_mode' => 'cards' ) );
 $raw = get_option( SF_Options::KEY );
 $dump = maybe_serialize( $raw );
 ok( 0 === strpos( $raw['fb_token'], 'sf1:' ) && 0 === strpos( $raw['api_key'], 'sf1:' ), 'token and API key are encrypted in wp_options' );
