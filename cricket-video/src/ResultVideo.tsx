@@ -15,6 +15,8 @@ export type Match = {
 	bowl: Star;
 	link: string;
 	audio: string | null;
+	music?: string | null;
+	musicVolume?: number;
 	scenes: { score: number; stars: number; outro: number; end: number };
 };
 
@@ -173,6 +175,13 @@ export const ResultVideo: React.FC<Match> = (m) => {
 		<AbsoluteFill style={{ background: NAVY }}>
 			<style>{fontCss}</style>
 			<Background />
+			{m.music ? (
+				<Audio
+					src={staticFile(m.music)}
+					// Quiet under a voice, a little louder when there is none, and a fade-out over the last two seconds.
+					volume={(frame) => (m.musicVolume ?? 0.3) * (m.audio ? 0.45 : 1) * interpolate(frame, [end - 2 * fps, end], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })}
+				/>
+			) : null}
 			{m.audio ? <Audio src={staticFile(m.audio)} /> : null}
 			<Sequence from={A.from} durationInFrames={A.dur}>
 				<Header pill="MATCH RESULT" link={m.link} />
