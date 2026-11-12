@@ -1,0 +1,17 @@
+{
+  "tournament": "Harbour Cup 2026",
+  "meta": "T20, Match 14, Harbour Oval",
+  "winner": "England",
+  "loser": "Australia",
+  "margin": "6 wickets",
+  "teams": [
+    { "name": "Australia", "flag": "flags/aus.png", "score": "168/7", "overs": "20.0 ov" },
+    { "name": "England", "flag": "flags/eng.png", "score": "171/4", "overs": "18.3 ov", "won": true }
+  ],
+  "toSpare": "9 balls to spare",
+  "bat": { "label": "Top scorer", "name": "Oliver Hartley", "stat": "78*", "small": "(46 balls)", "detail": "7 fours, 3 sixes" },
+  "bowl": { "label": "Top wicket taker", "name": "Sam Whitlock", "stat": "3/24", "small": "(4 overs)", "detail": "Economy 6.00" },
+  "link": "facebook.com/cricketsportinfo",
+  "audio": null,
+  "scenes": { "score": 4.0, "stars": 11.0, "outro": 17.0, "end": 21.5 }
+}
