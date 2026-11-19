@@ -173,6 +173,7 @@ class SF_Admin {
 		$new['manual_enabled'] = self::bool( 'manual_enabled' );
 		$mode              = self::text( 'post_mode', 'cards' );
 		$new['post_mode']  = 'video' === $mode ? 'video' : 'cards';
+		$new['video_engine'] = 'service' === self::text( 'video_engine', 'browser' ) ? 'service' : 'browser';
 		$vurl              = esc_url_raw( trim( self::text( 'video_url', $old['video_url'] ) ) );
 		$new['video_url']  = ( '' === $vurl || 0 === strpos( $vurl, 'https://' ) || 0 === strpos( $vurl, 'http://127.0.0.1' ) || 0 === strpos( $vurl, 'http://localhost' ) ) ? rtrim( $vurl, '/' ) : $old['video_url'];
 		$vkey              = isset( $_POST['video_key'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['video_key'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification

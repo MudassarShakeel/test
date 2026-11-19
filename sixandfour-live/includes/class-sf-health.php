@@ -69,7 +69,20 @@ class SF_Health {
 		}
 
 		// Result video mode.
-		if ( SF_Options::video_mode() ) {
+		if ( SF_Options::video_mode() && 'browser' === SF_Options::get( 'video_engine', 'browser' ) ) {
+			$stuck = 0;
+			foreach ( array_merge( SF_DB::posts_by_status( 'approved', 10 ), SF_DB::posts_by_status( 'pending', 10 ) ) as $vp ) {
+				$pl = json_decode( (string) $vp['payload'], true );
+				if ( 'video' === $vp['type'] && is_array( $pl ) && empty( $pl['_file'] ) && time() - strtotime( $vp['created_at'] . ' UTC' ) > 10 * MINUTE_IN_SECONDS ) {
+					$stuck++;
+				}
+			}
+			if ( $stuck ) {
+				$add( 'video', 'bad', $stuck . ' result video' . ( 1 === $stuck ? ' is' : 's are' ) . ' waiting for an open page', 'Videos are made in an open browser page. Open the plugin screen or the mobile console in Chrome or Edge, on a computer or an Android phone, and keep it open. It makes the video by itself, or switch to a render service in Setup.' );
+			} else {
+				$add( 'video', 'ok', 'Result video only (browser)', 'A video is made in an open page after each result. Keep the plugin screen or the mobile console open during matches.' );
+			}
+		} elseif ( SF_Options::video_mode() ) {
 			if ( ! SF_Video::configured() ) {
 				$add( 'video', 'bad', 'Result video is on but the video service is not set', 'Only videos are posted in this mode, and none can be made. Add the video service address and key in Setup, or switch Posting format back to Pictures and text.' );
 			} elseif ( $deep ) {

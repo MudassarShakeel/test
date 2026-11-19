@@ -60,7 +60,14 @@ SF_Admin::form_open( 'save_setup' );
 			<label><input type="radio" name="post_mode" value="video" <?php checked( $o['post_mode'], 'video' ); ?>> <b>Result video only.</b> One video after each result. Every picture post and other post is off while this is selected, and your Engage choices come back when you switch back.</label>
 		</div>
 	</div>
-	<div class="sf-row"><label class="sf-l" for="video_url"><b>Video service address</b><span>The render service that makes the video (see the video-service folder). It must be https, so Facebook can fetch the video.</span></label><input class="sf-field" id="video_url" name="video_url" type="url" placeholder="https://video.example.com" value="<?php echo esc_attr( $o['video_url'] ); ?>"></div>
+	<div class="sf-row sf-block">
+		<div class="sf-l"><b>How the video is made</b></div>
+		<div class="sf-stack">
+			<label><input type="radio" name="video_engine" value="browser" <?php checked( $o['video_engine'], 'browser' ); ?>> <b>In an open browser page (free).</b> Keep the plugin screen or the mobile console open in Chrome or Edge. When a match ends the page makes the video by itself and the plugin posts it. Music only, no voiceover.</label>
+			<label><input type="radio" name="video_engine" value="service" <?php checked( $o['video_engine'], 'service' ); ?>> <b>On a render service.</b> Fully automatic, needs a small server (the video-service folder). Can add a voiceover.</label>
+		</div>
+	</div>
+	<div class="sf-row"><label class="sf-l" for="video_url"><b>Video service address</b><span>Only for the render service. It must be https, so Facebook can fetch the video.</span></label><input class="sf-field" id="video_url" name="video_url" type="url" placeholder="https://video.example.com" value="<?php echo esc_attr( $o['video_url'] ); ?>"></div>
 	<div class="sf-row"><label class="sf-l" for="video_key"><b>Video service key</b><span><?php echo $o['video_key'] ? 'A key is saved. Leave blank to keep it. Type - to remove it.' : 'The API_KEY you set on the service.'; ?></span></label><input class="sf-field" id="video_key" name="video_key" type="password" autocomplete="new-password" placeholder="<?php echo $o['video_key'] ? '••••••••••••' : 'Paste the key'; ?>"></div>
 	<?php
 	SF_Admin::switch_row( 'video_voice', $o['video_voice'], 'Voiceover', 'The service reads the result aloud (needs an ElevenLabs key on the service). Without one the video has music only.' );

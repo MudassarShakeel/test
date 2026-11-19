@@ -16,7 +16,7 @@ function ok( $c, $l ) {
 }
 global $wpdb;
 $wpdb->query( 'DELETE FROM ' . SF_DB::posts() );
-SF_Options::update( array( 'fb_page_id' => '123456', 'fb_token' => 'EAAB1234567890SECRETTOKENVALUE', 'api_key' => 'k', 'post_mode' => 'video', 'video_url' => 'http://127.0.0.1:8200', 'video_key' => 'testkey', 'mode' => 'auto', 'paused' => 0, 'video_voice' => 0, 'max_posts_day' => 60 ) );
+SF_Options::update( array( 'fb_page_id' => '123456', 'fb_token' => 'EAAB1234567890SECRETTOKENVALUE', 'api_key' => 'k', 'post_mode' => 'video', 'video_engine' => 'service', 'video_url' => 'http://127.0.0.1:8200', 'video_key' => 'testkey', 'mode' => 'auto', 'paused' => 0, 'video_voice' => 0, 'max_posts_day' => 60 ) );
 echo "Video service\n";
 ok( true === SF_Video::ping(), 'the service answers the health check' );
 $payload = json_decode( file_get_contents( getenv( 'SF_VIDEO_JOB' ) ), true );

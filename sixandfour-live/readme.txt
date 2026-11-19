@@ -4,7 +4,7 @@ Tags: cricket, facebook, scores, social, auto post
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,11 @@ The free API data does not include the official award. The plugin picks the stan
 Yes. Auto-post is the default. Choose Ask me first in Setup if you want to approve each post.
 
 == Changelog ==
+
+= 1.8.0 =
+* The result video can now be made for free in an open browser page, with no server. Keep the plugin screen or the mobile console open in Chrome or Edge. When a match ends the page draws the video, encodes it as H.264 MP4 with background music, uploads it, and the plugin posts it to the Page. This is the new default way to make the video (Setup, How the video is made). The render service is still available.
+* Updating switches Posting format to Result video only, as requested. Choose Pictures and text in Setup to go back.
+* Plain messages for the usual problems: a video waiting for an open page, a server upload limit that is too small, and a browser that cannot encode video.
 
 = 1.7.0 =
 * New: Result video only. In Setup, Posting format, choose Result video only to post a single video after each result. Every picture post and every other post is switched off while it is selected, and your Engage choices come back when you switch back to Pictures and text.

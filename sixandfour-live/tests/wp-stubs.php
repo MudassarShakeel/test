@@ -192,6 +192,7 @@ require SF_DIR . 'includes/class-sf-cards.php';
 require SF_DIR . 'includes/class-sf-samples.php';
 require SF_DIR . 'includes/class-sf-poster.php';
 require SF_DIR . 'includes/class-sf-video.php';
+require SF_DIR . 'includes/class-sf-videomaker.php';
 require SF_DIR . 'includes/class-sf-engine.php';
 require SF_DIR . 'includes/class-sf-health.php';
 require SF_DIR . 'includes/class-sf-security.php';

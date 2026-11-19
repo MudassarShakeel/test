@@ -29,6 +29,7 @@ class SF_Options {
 			'top_teams'         => "India\nAustralia\nEngland\nSouth Africa\nNew Zealand\nPakistan\nSri Lanka\nBangladesh\nWest Indies\nAfghanistan\nZimbabwe\nIreland\nNetherlands\nScotland\nNepal\nUnited Arab Emirates\nUnited States of America\nNamibia\nOman\nCanada",
 			'cover'             => 'all', // all (every match except women's), full (ICC full members only), top (top teams and followed tournaments) or followed.
 			'post_mode'         => 'cards', // cards (pictures and text) or video (only a video after each result).
+			'video_engine'      => 'browser', // browser (an open page makes it, free) or service (a render service makes it).
 			'video_url'         => '',      // The render service that makes the video.
 			'video_key'         => '',
 			'video_voice'       => 1,

@@ -125,6 +125,32 @@ class SF_Poster {
 			SF_DB::update_post( $id, array_merge( array( 'scheduled_at' => gmdate( 'Y-m-d H:i:s', time() + $seconds ) ), $extra ) );
 			return 'waiting';
 		};
+		if ( 'browser' === SF_Options::get( 'video_engine', 'browser' ) ) {
+			if ( empty( $payload['_file'] ) ) {
+				// Waiting for an open page to make it. Give up after 12 hours.
+				if ( time() - strtotime( $row['created_at'] . ' UTC' ) > 12 * HOUR_IN_SECONDS ) {
+					return $fail( 'No open page made the video in 12 hours. Open the plugin or the mobile console in Chrome or Edge and keep it open during matches.' );
+				}
+				return $later( 3 * MINUTE_IN_SECONDS );
+			}
+			$path = self::dir()['path'] . $payload['_file'];
+			if ( ! is_readable( $path ) ) {
+				unset( $payload['_file'] );
+				SF_DB::update_post( $id, array( 'payload' => wp_json_encode( $payload ) ) );
+				return $later( 60 );
+			}
+			$fb = SF_Facebook::video( SF_VideoMaker::file_url( $payload['_file'] ), $row['caption'] );
+			if ( is_wp_error( $fb ) ) {
+				$n     = (int) $row['attempts'] + 1;
+				$fatal = in_array( $fb->get_error_code(), array( 'sf_fb_190', 'sf_fb_setup' ), true );
+				if ( $fatal || $n >= 3 ) {
+					return $fail( $fb->get_error_message() );
+				}
+				return $later( 5 * MINUTE_IN_SECONDS, array( 'attempts' => $n, 'error' => $fb->get_error_message() ) );
+			}
+			SF_DB::update_post( $id, array( 'status' => 'posted', 'fb_post_id' => (string) $fb, 'posted_at' => gmdate( 'Y-m-d H:i:s' ), 'error' => null ) );
+			return 'posted';
+		}
 		if ( empty( $payload['_job'] ) ) {
 			$job = SF_Video::submit( $payload );
 			if ( is_wp_error( $job ) ) {
@@ -230,6 +256,9 @@ class SF_Poster {
 		}
 		if ( 'video' === $row['type'] ) {
 			$pl = json_decode( (string) $row['payload'], true );
+			if ( is_array( $pl ) && 'browser' === SF_Options::get( 'video_engine', 'browser' ) ) {
+				return empty( $pl['_file'] ) ? 'Waiting for an open page to make the video. Open the plugin or the mobile console in Chrome or Edge and keep it open. It makes the video by itself.' : 'The video is made and goes out on the next run.';
+			}
 			if ( is_array( $pl ) && ! empty( $pl['_job'] ) ) {
 				return 'The video is being made by the video service. It is posted when it is ready, usually within a few minutes.';
 			}

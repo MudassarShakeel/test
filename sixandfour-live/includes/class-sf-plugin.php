@@ -58,6 +58,12 @@ class SF_Plugin {
 
 	public static function init() {
 		self::migrate();
+		// Version 1.8.0: result video only, made in an open browser page, as asked. Switch back in Setup, Posting format.
+		if ( ! get_option( 'sf_v180' ) ) {
+			update_option( 'sf_v180', 1, false );
+			SF_Options::update( array( 'post_mode' => 'video', 'video_engine' => 'browser' ) );
+		}
+		SF_VideoMaker::init();
 		// Version 1.4.2 posts at any hour with no approval step, so the old "Ask me first" setting is switched to Auto-post once.
 		if ( ! get_option( 'sf_auto_v142' ) ) {
 			update_option( 'sf_auto_v142', 1, false );

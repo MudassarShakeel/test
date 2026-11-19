@@ -511,7 +511,7 @@ ok( false !== strpos( $cap, 'Which match are you watching today?' ) && false ===
 ok( 1 === preg_match( '/\d\d:\d\d  \S.* v \S/', $cap ), 'the caption lists the matches as text too' );
 
 echo "17. Result video mode\n";
-SF_Options::update( array( 'post_mode' => 'video', 'video_url' => 'https://video.example.test', 'video_key' => 'secret-key-1', 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'cover' => 'all', 'paused' => 0, 'max_posts_day' => 60 ) );
+SF_Options::update( array( 'post_mode' => 'video', 'video_engine' => 'service', 'video_url' => 'https://video.example.test', 'video_key' => 'secret-key-1', 'followed' => array( 's1' => 'Harbour Cup 2026' ), 'cover' => 'all', 'paused' => 0, 'max_posts_day' => 60 ) );
 $svc = array( 'calls' => array(), 'status' => 'rendering', 'auth' => true, 'fb' => array() );
 $GLOBALS['sf_http'] = function ( $method, $url, $args ) use ( &$svc, &$world ) {
 	if ( false !== strpos( $url, 'video.example.test' ) ) {
